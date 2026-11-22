@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Karma">
+<meta name="theme-color" content="#0a2c20">
+<meta name="format-detection" content="telephone=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Karma</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23114a35'/%3E%3Ctext x='32' y='45' font-size='38' text-anchor='middle' fill='%23f3c552' font-family='sans-serif' font-weight='700'%3EK%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-screen="start">
+
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="s-H" viewBox="0 0 24 24"><path fill="currentColor" d="M12 21.2S3.2 15.6 3.2 9.7c0-3.1 2.4-5.4 5.1-5.4 1.6 0 2.9.8 3.7 2.1.8-1.3 2.1-2.1 3.7-2.1 2.7 0 5.1 2.3 5.1 5.4 0 5.9-8.8 11.5-8.8 11.5z"/></symbol>
+  <symbol id="s-D" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.2 19.6 12 12 21.8 4.4 12z"/></symbol>
+  <symbol id="s-S" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.4c2.7 3.7 8.2 6.7 8.2 11.3 0 2.5-1.9 4.2-4.2 4.2-1.3 0-2.4-.5-3.2-1.4.2 2 .9 3.6 2.3 4.9H8.9c1.4-1.3 2.1-2.9 2.3-4.9-.8.9-1.9 1.4-3.2 1.4-2.3 0-4.2-1.7-4.2-4.2C3.8 9.1 9.3 6.1 12 2.4z"/></symbol>
+  <symbol id="s-C" viewBox="0 0 24 24"><g fill="currentColor"><circle cx="12" cy="7" r="4.3"/><circle cx="6.7" cy="13.7" r="4.3"/><circle cx="17.3" cy="13.7" r="4.3"/><path d="M12 10.5c.1 5-.6 8.3-3 10.9h6c-2.4-2.6-3.1-5.9-3-10.9z"/></g></symbol>
+  <symbol id="s-J" viewBox="0 0 24 24"><path fill="currentColor" d="M12 1.8l2.9 6.6 7.2.7-5.4 4.8 1.6 7L12 17.2l-6.3 3.7 1.6-7-5.4-4.8 7.2-.7z"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M6 21V4M6 5h11.5l-2.6 4 2.6 4H6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+</svg>
+
+<div id="app">
+
+  <!-- ===== Start ===== -->
+  <section id="start" class="screen scrolly">
+    <div class="start-inner">
+      <div class="logo-fan" id="logoFan" aria-hidden="true"></div>
+      <h1 class="logo">KARMA</h1>
+      <p class="tagline">Das Kartenspiel für eure Runde</p>
+
+      <label class="field">
+        <span>Dein Name</span>
+        <input id="inName" type="text" maxlength="14" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="z. B. Mia">
+      </label>
+
+      <div id="startErr" class="alert" hidden></div>
+
+      <button id="btnResume" class="btn" hidden>Letztes Spiel fortsetzen</button>
+      <button id="btnCreate" class="btn">Raum erstellen</button>
+
+      <div class="or"><span>oder beitreten</span></div>
+
+      <div class="join-row">
+        <input id="inCode" class="code-in" type="text" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="CODE" aria-label="Raumcode">
+        <button id="btnJoin" class="btn sec">Beitreten</button>
+      </div>
+
+      <button id="btnRules" class="btn ghost" data-act="rules">Regeln</button>
+      <div class="build">Version __BUILD__</div>
+    </div>
+  </section>
+
+  <!-- ===== Verbinden / Fehler ===== -->
+  <section id="connect" class="screen">
+    <div class="con-box">
+      <div id="conSpin" class="spinner" aria-hidden="true"></div>
+      <h2 id="conTitle">Verbinde …</h2>
+      <p id="conMsg"></p>
+      <button id="btnConBack" class="btn sec">Zur Startseite</button>
+    </div>
+  </section>
+
+  <!-- ===== Lobby ===== -->
+  <section id="lobby" class="screen">
+    <header class="topbar">
+      <button class="icon-btn" data-act="menu" aria-label="Menü"><svg viewBox="0 0 24 24"><use href="#i-menu"/></svg></button>
+      <div class="tb-title">Lobby</div>
+      <span class="tb-side"></span>
+    </header>
+    <div class="lobby-body scrolly">
+      <div class="code-card">
+        <div class="code-label">Raumcode</div>
+        <div id="lobbyCode" class="code-big">–</div>
+        <button id="btnShare" class="btn sec small" data-act="share">Link teilen</button>
+      </div>
+      <p id="lobbyHint" class="hint"></p>
+      <div id="lobbyList" class="plist"></div>
+      <button id="btnAddBot" class="btn sec host-only">Bot hinzufügen</button>
+    </div>
+    <footer class="foot">
+      <button id="btnStart" class="btn host-only">Spiel starten</button>
+      <div id="lobbyWait" class="wait guest-only">Warte auf den Host …</div>
+    </footer>
+  </section>
+
+  <!-- ===== Tauschphase ===== -->
+  <section id="swap" class="screen">
+    <header class="topbar">
+      <button class="icon-btn" data-act="menu" aria-label="Menü"><svg viewBox="0 0 24 24"><use href="#i-menu"/></svg></button>
+      <div class="tb-title">Karten tauschen</div>
+      <span class="tb-side"></span>
+    </header>
+    <div class="swap-body">
+      <p id="swHint" class="hint"></p>
+      <div class="sw-label">Deine offenen Karten</div>
+      <div id="swUp" class="sw-row"></div>
+      <div class="sw-label">Deine Handkarten</div>
+      <div id="swHand" class="sw-row"></div>
+      <div id="swReady" class="chips"></div>
+      <div id="swStart" class="sw-start"></div>
+    </div>
+    <footer class="foot row">
+      <button id="btnUndo" class="btn sec">Rückgängig</button>
+      <button id="btnReady" class="btn">Bereit</button>
+    </footer>
+  </section>
+
+  <!-- ===== Spiel ===== -->
+  <section id="game" class="screen">
+    <header class="topbar g-top">
+      <button class="icon-btn" data-act="menu" aria-label="Menü"><svg viewBox="0 0 24 24"><use href="#i-menu"/></svg></button>
+      <div id="turn" class="tbar" aria-live="polite"></div>
+      <span id="gCode" class="tb-side"></span>
+    </header>
+
+    <div id="table" class="table">
+      <div id="oppTop" class="opp-top"></div>
+      <div id="mid" class="mid">
+        <div id="oppL" class="opp-side l"></div>
+        <div id="center" class="center">
+          <svg id="ring" class="ring" viewBox="0 0 100 110" aria-hidden="true">
+            <ellipse cx="50" cy="55" rx="45" ry="50" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2.5 5"/>
+            <path fill="currentColor" d="M45 -1 56 5 45 11z"/>
+            <path fill="currentColor" d="M55 99 44 105 55 111z"/>
+          </svg>
+          <div id="stock" class="stock empty" role="img" aria-label="Nachziehstapel">
+            <span id="stockCards" class="stock-cards"></span>
+            <span id="stockCount" class="stock-count"></span>
+          </div>
+          <button id="pileTap" class="pile-tap" aria-label="Ablagestapel">
+            <span id="burnGlow" class="burn-glow" aria-hidden="true"></span>
+            <span id="pile" class="pile"></span>
+            <span id="pileCount" class="pile-count"></span>
+          </button>
+        </div>
+        <div id="oppR" class="opp-side r"></div>
+      </div>
+      <div class="req-row">
+        <div id="req" class="chip"></div>
+        <div id="tinfo" class="tinfo"></div>
+      </div>
+      <div id="gToast" class="g-toast" aria-live="polite"></div>
+      <div id="won" class="won">
+        <div class="won-box" role="status">
+          <svg class="won-star" viewBox="0 0 24 24" aria-hidden="true"><use href="#s-J"/></svg>
+          <h2 id="wonTitle"></h2>
+          <p id="wonText"></p>
+          <div class="won-btns">
+            <button id="btnWonRematch" class="btn sec small host-only">Neue Runde</button>
+            <button id="btnWonClose" class="btn small">Weiter</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="mine" class="mine">
+      <button id="btnGiveUp" class="give-up" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-flag"/></svg><span>Aufgeben</span></button>
+      <div id="myTable" class="my-table"></div>
+      <div class="hand-wrap">
+        <div id="handInfo" class="hand-info" hidden></div>
+        <div id="handScroll" class="hand-scroll scrollx"><div id="hand" class="hand"></div></div>
+      </div>
+      <div id="actions" class="actions">
+        <div id="actHint" class="act-hint"></div>
+        <button id="btnPickup" class="btn sec" hidden>Stapel aufnehmen</button>
+        <button id="btnPlay" class="btn" hidden>Legen</button>
+      </div>
+      <div id="donePanel" class="done-panel">
+        <div id="doneTitle" class="done-title"></div>
+        <div id="doneText" class="done-text"></div>
+        <button id="btnDoneRematch" class="btn small host-only">Neue Runde</button>
+      </div>
+    </div>
+    <div id="cwProbe" class="cw-probe" aria-hidden="true"></div>
+
+    <div id="over" class="over">
+      <div class="over-box scrolly">
+        <svg id="overStar" class="over-star" viewBox="0 0 24 24" aria-hidden="true"><use href="#s-J"/></svg>
+        <h2 id="overTitle"></h2>
+        <p id="overNote" class="over-note" hidden></p>
+        <div id="overList" class="over-list"></div>
+        <div class="over-btns host-only">
+          <button id="btnRematch" class="btn">Neue Runde</button>
+          <button id="btnToLobby" class="btn sec">Zur Lobby</button>
+        </div>
+        <div class="wait guest-only">Warte auf den Host …</div>
+      </div>
+    </div>
+  </section>
+
+  <div id="net" class="net-banner" role="status"></div>
+
+  <!-- ===== Regeln ===== -->
+  <div id="sheetRules" class="sheet-wrap" data-sheet>
+    <div class="sheet scrolly" role="dialog" aria-label="Regeln">
+      <div class="sheet-head"><h2>Regeln</h2><button class="icon-btn" data-act="close" aria-label="Schließen"><svg viewBox="0 0 24 24"><use href="#i-x"/></svg></button></div>
+      <div class="rules-text">
+        <h3>Ziel</h3>
+        <p>Werde als Erster alle deine Karten los: Handkarten, offene und verdeckte Karten. Die anderen spielen weiter um die Plätze 2, 3, 4 … Wer zuletzt noch Karten hat, hat verloren. Für 2 bis 6 Spieler, mit 52 Karten und 2 Jokern.</p>
+
+        <h3>Vorbereitung</h3>
+        <p>Jeder bekommt 9 Karten: <b>3 verdeckte</b>, darauf <b>3 offene</b> und <b>3 Handkarten</b>. Alle übrigen Karten bilden den Nachziehstapel.</p>
+        <p>Vor dem Start darfst du <b>genau eine</b> Handkarte gegen eine deiner offenen Karten tauschen. In der ersten Runde wird ausgelost, wer beginnt – danach beginnt immer der <b>Verlierer der letzten Runde</b>. Gespielt wird zunächst im Uhrzeigersinn.</p>
+        <p class="rank-line"><span>Rangfolge</span>3 · 4 · 5 · 6 · 7 · 8 · 9 · 10 · Bube · Dame · König · Ass</p>
+        <p><b>Sonderkarten</b> sind die 2, die 7, die 10 und die beiden Joker. Sie dürfen <b>immer</b> gelegt werden – auch auf Bube, Dame, König und Ass. Einzige Ausnahme: Auf einem Joker geht nichts (nur Rot auf Schwarz).</p>
+
+        <h3>Dein Zug</h3>
+        <p>Lege eine Karte, die <b>mindestens so hoch</b> ist wie die oberste Karte des Ablagestapels – oder eine Sonderkarte (2, 7, 10, Joker), die geht immer. Mehrere Karten desselben Werts darfst du zusammen legen oder einzeln, ganz wie du willst; zusammen gelegt ist das ein einziger Zug.</p>
+
+        <h3>Nachziehen</h3>
+        <p>Nach deinem Zug ziehst du nach, bis du wieder 3 Handkarten hast. Erst dann ist der Nächste dran. Ist der Nachziehstapel leer, wird nicht mehr gezogen: Spiele deine Hand herunter, danach kommen deine offenen und zuletzt deine verdeckten Karten an die Reihe.</p>
+
+        <h3>Aufnehmen</h3>
+        <p>Kannst du keine erlaubte Karte legen, <b>musst</b> du den <b>ganzen Ablagestapel</b> auf die Hand nehmen. Hast du danach weniger als 3 Handkarten, ziehst du auf 3 auf.</p>
+        <p>Du <b>darfst</b> den Stapel auch <b>freiwillig</b> aufnehmen, obwohl du legen könntest – ein taktischer Zug, etwa um gute Karten aufzusparen. Das geht in jedem Zug, solange Karten im Ablagestapel liegen. Der Knopf „Stapel aufnehmen“ steht dann klein links unten, und die App fragt kurz nach.</p>
+        <p>Nach dem Aufnehmen spielst du <b>sofort selbst</b> eine Karte aus der Hand. Der Stapel ist leer, du wählst also frei. Dann geht es normal mit dem Nächsten weiter.</p>
+
+        <h3>Sonderkarten</h3>
+        <ul class="special">
+          <li><b>2</b><span><i>Freie Karte</i> – darf immer gelegt werden. Auf eine 2 passt danach jede Karte.</span></li>
+          <li><b>3</b><span><i>Richtungswechsel</i> – die Spielrichtung dreht sich sofort. Bei genau 2 Spielern ist stattdessen der Leger direkt nochmal dran. Die 3 ist <b>keine</b> Sonderkarte, die immer geht: Sie hat ihren normalen Wert und ist die niedrigste Karte. Sie passt also nur auf eine 2, eine 3, den leeren Stapel oder nach einer 7. Auf eine 3 passt danach jede Karte.</span></li>
+          <li><b>7</b><span><i>Niedriger spielen</i> – darf immer gelegt werden. Der Nächste muss dann <b>unter 7</b> bleiben (3, 4, 5, 6) oder eine Sonderkarte legen: eine 2, noch eine 7, eine 10 oder einen Joker. Gilt nur für den direkt nächsten Spieler und endet auch, wenn er aufnimmt.</span></li>
+          <li><b>10</b><span><i>Stapel entfernen</i> – darf immer gelegt werden. Der ganze Ablagestapel samt 10 ist dauerhaft aus dem Spiel. Mehrere 10er entfernen ihn nur einmal. Der Nächste beginnt einfach mit einer eigenen, beliebigen Karte.</span></li>
+          <li><b>Joker</b><span><i>Stapel aufzwingen</i> – darf immer gelegt werden. Der Nächste muss den ganzen Ablagestapel aufnehmen und spielt danach selbst aus. Der Joker wirkt <b>nur einmal</b>: Beim Aufnehmen ist er – wie die 10 – für diese Runde <b>aus dem Spiel</b>. Er kommt nicht mit auf die Hand und kann nicht noch einmal gelegt werden. Den <b>schwarzen</b> Joker kann man mit dem <b>roten</b> kontern: Dann nimmt der darauffolgende Spieler auf, und beide Joker sind weg. Umgekehrt geht das nicht, und auch eine 10 hebt einen Joker nicht auf. Die beiden Joker sind verschiedene Karten und werden nie zusammen gelegt.</span></li>
+        </ul>
+
+        <h3>Offene Karten</h3>
+        <p>Du spielst sie erst, wenn du keine Handkarten mehr hast – dann wie normale Karten.</p>
+        <ul>
+          <li>Passt keine und es liegen noch <b>zwei oder drei</b> offene Karten: Du nimmst nur den Ablagestapel auf, die offenen Karten bleiben liegen.</li>
+          <li>Passt deine <b>letzte</b> offene Karte nicht: Du nimmst sie zusammen mit dem Ablagestapel auf die Hand.</li>
+          <li>In beiden Fällen spielst du danach sofort eine Karte aus der Hand.</li>
+        </ul>
+
+        <h3>Verdeckte Karten</h3>
+        <p>Sie sind dran, wenn Hand und offene Karten weg sind. Pro Zug deckst du <b>eine</b> Karte blind auf.</p>
+        <ul>
+          <li>Passt sie, ist dein Zug beendet.</li>
+          <li>Passt sie nicht, nimmst du sie mit dem ganzen Ablagestapel auf die Hand und spielst sofort eine Karte aus der Hand.</li>
+        </ul>
+
+        <h3>Spielende und Plätze</h3>
+        <p>Wer seine letzte Karte ablegt, ist fertig und wird ab da übersprungen. Der Erste ist <b>Sieger</b> (Platz 1), der Nächste bekommt Platz 2, dann 3, 4, 5 …</p>
+        <p>Die Runde endet, sobald nur noch einer Karten hat. Er ist der <b>Verlierer</b> – und macht in der nächsten Runde den ersten Zug.</p>
+
+        <h3>Aufgeben</h3>
+        <p>Sind nur noch <b>zwei Spieler</b> im Spiel, darf jeder der beiden jederzeit aufgeben – auch wenn er gerade nicht am Zug ist. Zum Beispiel, wenn du einen riesigen Stapel aufnehmen musstest und dein Gegner nur noch ein, zwei Karten hat. Wer aufgibt, ist der Verlierer; der andere bekommt den nächsten freien Platz. Den Knopf „Aufgeben“ findest du dann links neben deinen Tischkarten und im Menü.</p>
+
+        <h3>So legt die App offene Punkte aus</h3>
+        <p class="muted">Wo die Hausregeln nichts Genaues sagen, gilt hier:</p>
+        <ul>
+          <li><b>Auf einem Joker:</b> Es darf nichts darauf gelegt werden – auch keine 2, keine 7 und keine 10. Einzige Ausnahme ist der rote Joker auf dem schwarzen. Joker selbst gehen auf jede andere Karte und auf den leeren Stapel.</li>
+          <li><b>Joker auf leerem Stapel:</b> Es gibt nichts aufzunehmen. Der Nächste räumt den Joker nur ab (er ist aus dem Spiel) und spielt dann frei aus – ohne Handkarten mit seinen offenen oder verdeckten Karten.</li>
+          <li><b>Kontern ist freiwillig:</b> Wer den roten Joker hat, darf stattdessen aufnehmen.</li>
+          <li><b>Freiwillig aufnehmen:</b> Geht auch, wenn du bei den offenen oder verdeckten Karten bist – also auch, statt eine verdeckte Karte aufzudecken. Gegen einen Joker gibt es keine Wahl: Da musst du aufnehmen (oder Schwarz mit Rot kontern).</li>
+          <li><b>Einzige Ausnahme:</b> Bist du zu zweit nach deiner eigenen 3 sofort noch einmal dran, darfst du in diesem Zusatz-Zug nicht aufnehmen – sonst könnte man „3 legen, aufnehmen, 3 legen …“ endlos wiederholen, ohne dass der andere drankommt.</li>
+          <li><b>Nach jedem Aufnehmen</b> (nichts passt, freiwillig, Joker, letzte offene Karte, verdeckte Karte passt nicht) bleibst du am Zug und spielst aus der Hand – auch mehrere gleiche Karten, Sonderkarten wirken dabei ganz normal.</li>
+          <li><b>Letzte offene Karte:</b> Sie kommt beim Aufnehmen mit auf die Hand, wenn sie nicht gepasst hätte – also auch, wenn ein Joker dich zum Aufnehmen zwingt (der Joker selbst ist trotzdem aus dem Spiel). Nimmst du freiwillig auf, obwohl sie gepasst hätte, bleibt sie liegen.</li>
+          <li><b>3:</b> Mehrere 3er in einem Zug drehen die Richtung nur einmal; einzeln nacheinander gelegte 3er drehen sie jedes Mal. „Genau 2 Spieler“ heißt: Nur noch zwei haben Karten. Dann ist der Leger nochmal dran – außer die 3 war seine letzte Karte.</li>
+          <li><b>Verdeckt gegen Joker:</b> Liegt der rote Joker oben, nimmst du direkt auf. Liegt der schwarze oben, darfst du aufnehmen oder aufdecken – ein aufgedeckter roter Joker kontert. Passt die aufgedeckte Karte nicht, nimmst du sie mit dem Stapel auf, und der Joker ist aus dem Spiel.</li>
+          <li><b>Neue Runde:</b> Der Host kann eine neue Runde starten, sobald es einen Sieger gibt. Bricht er eine laufende Runde dafür ab, gibt es keinen Verlierer – dann wird wieder ausgelost, wer beginnt. Das gilt auch, wenn der Verlierer den Raum verlassen hat.</li>
+          <li><b>Aufgeben:</b> Geht nur, solange genau zwei Spieler noch Karten haben. Bots geben nie auf.</li>
+          <li><b>Sicherheitsnetz gegen Endlosschleifen:</b> Ganz selten kann sich eine Runde festfahren, etwa wenn zwei Spieler nur noch hohe Karten im Kreis aufnehmen und ausspielen. Entsteht exakt dieselbe Stellung zum dritten Mal, prüft die App, ob überhaupt noch ein Fortschritt möglich ist. Nur wenn nachweislich nicht, endet die Runde als „festgefahren“: Es gibt keinen Verlierer, wer noch Karten hat, teilt sich die übrigen Plätze, und die nächste Runde beginnt ein ausgeloster Spieler.</li>
+        </ul>
+
+        <h3>Bedienung</h3>
+        <p>Karte antippen und „Legen“ drücken, den Ablagestapel antippen – oder die Karte einfach in die Tischmitte ziehen. Mehrere gleiche Karten nacheinander antippen, um sie zusammen zu legen. Neu gezogene Karten leuchten kurz blau auf.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Menü ===== -->
+  <div id="sheetMenu" class="sheet-wrap" data-sheet>
+    <div class="sheet scrolly" role="dialog" aria-label="Menü">
+      <div class="sheet-head"><h2>Menü</h2><button class="icon-btn" data-act="close" aria-label="Schließen"><svg viewBox="0 0 24 24"><use href="#i-x"/></svg></button></div>
+      <div class="menu-code"><span>Raum</span><b id="menuCode"></b><button class="btn sec small" data-act="share">Link teilen</button></div>
+      <div id="menuList" class="plist compact"></div>
+      <div class="menu-btns">
+        <p id="menuNote" class="muted menu-note" hidden></p>
+        <button id="btnMenuRematch" class="btn" hidden>Neue Runde</button>
+        <button class="btn sec" data-act="rules">Regeln</button>
+        <button id="btnMenuGiveUp" class="btn sec" hidden>Aufgeben</button>
+        <button id="btnMenuLobby" class="btn sec">Zurück zur Lobby</button>
+        <button id="btnLeave" class="btn danger">Spiel verlassen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Link anzeigen ===== -->
+  <div id="sheetLink" class="sheet-wrap" data-sheet>
+    <div class="sheet" role="dialog" aria-label="Link">
+      <div class="sheet-head"><h2>Einladungslink</h2><button class="icon-btn" data-act="close" aria-label="Schließen"><svg viewBox="0 0 24 24"><use href="#i-x"/></svg></button></div>
+      <p class="muted">Schick diesen Link an deine Mitspieler:</p>
+      <textarea id="linkOut" class="link-out" readonly rows="3"></textarea>
+    </div>
+  </div>
+
+  <!-- ===== Rückfrage ===== -->
+  <div id="confirm" class="sheet-wrap center-wrap">
+    <div class="dialog" role="alertdialog" aria-labelledby="cfTitle">
+      <h2 id="cfTitle"></h2>
+      <p id="cfText"></p>
+      <div class="dialog-btns">
+        <button id="cfNo" class="btn sec">Abbrechen</button>
+        <button id="cfYes" class="btn"></button>
+      </div>
+    </div>
+  </div>
+
+  <div id="fx" class="fx" aria-hidden="true"></div>
+  <div id="toast" class="toast" role="status"></div>
+</div>
+
+<script src="engine.js"></script>
+<script src="net.js"></script>
+<script src="mqtt.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
