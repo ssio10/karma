@@ -107,6 +107,7 @@
       <div id="swHand" class="sw-row"></div>
       <div id="swReady" class="chips"></div>
       <div id="swStart" class="sw-start"></div>
+      <div id="swClock" class="sw-clock" aria-live="off"></div>
     </div>
     <footer class="foot row">
       <button id="btnUndo" class="btn sec">Rückgängig</button>
@@ -118,7 +119,7 @@
   <section id="game" class="screen">
     <header class="topbar g-top">
       <button class="icon-btn" data-act="menu" aria-label="Menü"><svg viewBox="0 0 24 24"><use href="#i-menu"/></svg></button>
-      <div id="turn" class="tbar" aria-live="polite"></div>
+      <div id="turn" class="tbar"><span id="turnText" aria-live="polite"></span><b id="turnSec" class="tsec" aria-hidden="true" hidden></b><i id="turnBar" class="tfill" hidden></i></div>
       <span id="gCode" class="tb-side"></span>
     </header>
 
@@ -209,12 +210,15 @@
 
         <h3>Vorbereitung</h3>
         <p>Jeder bekommt 9 Karten: <b>3 verdeckte</b>, darauf <b>3 offene</b> und <b>3 Handkarten</b>. Alle übrigen Karten bilden den Nachziehstapel.</p>
-        <p>Vor dem Start darfst du <b>genau eine</b> Handkarte gegen eine deiner offenen Karten tauschen. In der ersten Runde wird ausgelost, wer beginnt – danach beginnt immer der <b>Verlierer der letzten Runde</b>. Gespielt wird zunächst im Uhrzeigersinn.</p>
+        <p>Vor dem Start darfst du <b>genau eine</b> Handkarte gegen eine deiner offenen Karten tauschen. Dafür ist <b>eine Minute</b> Zeit. Hast du „Bereit“ zu früh gedrückt, kommst du mit „Zurück“ noch einmal zum Tauschen – bis die Runde beginnt. Sind alle bereit, geht es nach drei Sekunden los; nach einer Minute beginnt die Runde auf jeden Fall. In der ersten Runde wird ausgelost, wer beginnt – danach beginnt immer der <b>Verlierer der letzten Runde</b>. Gespielt wird zunächst im Uhrzeigersinn.</p>
         <p class="rank-line"><span>Rangfolge</span>3 · 4 · 5 · 6 · 7 · 8 · 9 · 10 · Bube · Dame · König · Ass</p>
         <p><b>Sonderkarten</b> sind die 2, die 7, die 10 und die beiden Joker. Sie dürfen <b>immer</b> gelegt werden – auch auf Bube, Dame, König und Ass. Einzige Ausnahme: Auf einem Joker geht nichts (nur Rot auf Schwarz).</p>
 
         <h3>Dein Zug</h3>
-        <p>Lege eine Karte, die <b>mindestens so hoch</b> ist wie die oberste Karte des Ablagestapels – oder eine Sonderkarte (2, 7, 10, Joker), die geht immer. Mehrere Karten desselben Werts darfst du zusammen legen oder einzeln, ganz wie du willst; zusammen gelegt ist das ein einziger Zug.</p>
+        <p>Lege eine Karte, die <b>mindestens so hoch</b> ist wie die oberste Karte des Ablagestapels – oder eine Sonderkarte (2, 7, 10, Joker), die geht immer. Mehrere <b>Handkarten</b> desselben Werts darfst du zusammen legen oder einzeln, ganz wie du willst; zusammen gelegt ist das ein einziger Zug. Von den offenen Karten auf dem Tisch geht immer nur eine pro Zug.</p>
+
+        <h3>Zeitlimit</h3>
+        <p>Für jeden Zug hast du <b>50 Sekunden</b>. Die Zeit läuft oben neben „Du bist dran“. Ist sie um, wird für dich gespielt: die <b>niedrigste passende Karte</b>, Sonderkarten erst, wenn nichts anderes geht. Passt nichts, nimmst du den Stapel auf – und hast danach wieder 50 Sekunden zum Ausspielen. Bei verdeckten Karten wird eine zufällige aufgedeckt.</p>
 
         <h3>Nachziehen</h3>
         <p>Nach deinem Zug ziehst du nach, bis du wieder 3 Handkarten hast. Erst dann ist der Nächste dran. Ist der Nachziehstapel leer, wird nicht mehr gezogen: Spiele deine Hand herunter, danach kommen deine offenen und zuletzt deine verdeckten Karten an die Reihe.</p>
@@ -234,7 +238,7 @@
         </ul>
 
         <h3>Offene Karten</h3>
-        <p>Du spielst sie erst, wenn du keine Handkarten mehr hast – dann wie normale Karten.</p>
+        <p>Du spielst sie erst, wenn du keine Handkarten mehr hast. Pro Zug darfst du <b>nur eine</b> offene Karte legen – auch wenn zwei oder drei gleiche daliegen. Die nächste kommt erst in deinem nächsten Zug dran.</p>
         <ul>
           <li>Passt keine und es liegen noch <b>zwei oder drei</b> offene Karten: Du nimmst nur den Ablagestapel auf, die offenen Karten bleiben liegen.</li>
           <li>Passt deine <b>letzte</b> offene Karte nicht: Du nimmst sie zusammen mit dem Ablagestapel auf die Hand.</li>
@@ -245,7 +249,7 @@
         <p>Sie sind dran, wenn Hand und offene Karten weg sind. Pro Zug deckst du <b>eine</b> Karte blind auf.</p>
         <ul>
           <li>Passt sie, ist dein Zug beendet.</li>
-          <li>Passt sie nicht, nimmst du sie mit dem ganzen Ablagestapel auf die Hand und spielst sofort eine Karte aus der Hand.</li>
+          <li>Passt sie nicht, nimmst du sie mit dem ganzen Ablagestapel auf die Hand und spielst sofort eine Karte aus der Hand. <b>Nur du</b> siehst, welche Karte es war – die anderen sehen sie nicht.</li>
         </ul>
 
         <h3>Spielende und Plätze</h3>
@@ -263,7 +267,7 @@
           <li><b>Kontern ist freiwillig:</b> Wer den roten Joker hat, darf stattdessen aufnehmen.</li>
           <li><b>Freiwillig aufnehmen:</b> Geht auch, wenn du bei den offenen oder verdeckten Karten bist – also auch, statt eine verdeckte Karte aufzudecken. Gegen einen Joker gibt es keine Wahl: Da musst du aufnehmen (oder Schwarz mit Rot kontern).</li>
           <li><b>Einzige Ausnahme:</b> Bist du zu zweit nach deiner eigenen 3 sofort noch einmal dran, darfst du in diesem Zusatz-Zug nicht aufnehmen – sonst könnte man „3 legen, aufnehmen, 3 legen …“ endlos wiederholen, ohne dass der andere drankommt.</li>
-          <li><b>Nach jedem Aufnehmen</b> (nichts passt, freiwillig, Joker, letzte offene Karte, verdeckte Karte passt nicht) bleibst du am Zug und spielst aus der Hand – auch mehrere gleiche Karten, Sonderkarten wirken dabei ganz normal.</li>
+          <li><b>Nach jedem Aufnehmen</b> (nichts passt, freiwillig, Joker, letzte offene Karte, verdeckte Karte passt nicht) bleibst du am Zug und spielst aus der Hand – auch mehrere gleiche Karten, Sonderkarten wirken dabei ganz normal. Musst du ohne Handkarte von den offenen Karten ausspielen, geht auch hier nur eine.</li>
           <li><b>Letzte offene Karte:</b> Sie kommt beim Aufnehmen mit auf die Hand, wenn sie nicht gepasst hätte – also auch, wenn ein Joker dich zum Aufnehmen zwingt (der Joker selbst ist trotzdem aus dem Spiel). Nimmst du freiwillig auf, obwohl sie gepasst hätte, bleibt sie liegen.</li>
           <li><b>3:</b> Mehrere 3er in einem Zug drehen die Richtung nur einmal; einzeln nacheinander gelegte 3er drehen sie jedes Mal. „Genau 2 Spieler“ heißt: Nur noch zwei haben Karten. Dann ist der Leger nochmal dran – außer die 3 war seine letzte Karte.</li>
           <li><b>Verdeckt gegen Joker:</b> Liegt der rote Joker oben, nimmst du direkt auf. Liegt der schwarze oben, darfst du aufnehmen oder aufdecken – ein aufgedeckter roter Joker kontert. Passt die aufgedeckte Karte nicht, nimmst du sie mit dem Stapel auf, und der Joker ist aus dem Spiel.</li>
@@ -273,7 +277,8 @@
         </ul>
 
         <h3>Bedienung</h3>
-        <p>Karte antippen und „Legen“ drücken, den Ablagestapel antippen – oder die Karte einfach in die Tischmitte ziehen. Mehrere gleiche Karten nacheinander antippen, um sie zusammen zu legen. Neu gezogene Karten leuchten kurz blau auf.</p>
+        <p>Karte antippen und „Legen“ drücken, den Ablagestapel antippen – oder die Karte einfach in die Tischmitte ziehen. Mehrere gleiche Handkarten nacheinander antippen, um sie zusammen zu legen. Neu gezogene Karten leuchten kurz blau auf.</p>
+        <p>Im Menü gibt es den Schalter <b>Spielhilfe</b>. Ist er an, steht am Stapel, was gerade passt, und unpassende Karten sind abgedunkelt. Ist er aus, gibt es beides nicht – legen kannst du trotzdem nur, was erlaubt ist. Jeder stellt das für sich ein.</p>
       </div>
     </div>
   </div>
@@ -288,6 +293,7 @@
         <p id="menuNote" class="muted menu-note" hidden></p>
         <button id="btnMenuRematch" class="btn" hidden>Neue Runde</button>
         <button class="btn sec" data-act="rules">Regeln</button>
+        <button id="btnHelp" class="btn sec" aria-pressed="true">Spielhilfe: an</button>
         <button id="btnMenuGiveUp" class="btn sec" hidden>Aufgeben</button>
         <button id="btnMenuLobby" class="btn sec">Zurück zur Lobby</button>
         <button id="btnLeave" class="btn danger">Spiel verlassen</button>

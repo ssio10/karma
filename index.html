@@ -226,10 +226,23 @@ body.is-host .guest-only { display: none !important; }
 .pchip i { width: 14px; text-align: center; font-style: normal; flex: none; }
 .pchip.ok { color: #0d2a1e; background: #7fdca4; }
 .sw-start { font-size: 13px; color: var(--mute); text-align: center; min-height: 18px; }
+.sw-clock { font-size: 15px; font-weight: 700; color: var(--ink); text-align: center; min-height: 20px; font-variant-numeric: tabular-nums; }
+.sw-clock.low { color: #ff8b7e; }
+.sw-clock.go { color: var(--gold); }
 
 /* ---------- Spieltisch ---------- */
 .g-top { height: 44px; }
 .tbar { flex: 1; min-width: 0; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 999px; padding: 0 14px; font-weight: 700; font-size: 16px; background: var(--panel); color: var(--ink); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; transition: background .2s, color .2s; }
+.tbar { position: relative; }
+.tbar #turnText { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.tsec { flex: none; margin-left: 8px; min-width: 2ch; text-align: right; font-variant-numeric: tabular-nums; opacity: .75; }
+.tfill { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: currentColor; opacity: .5; transform-origin: 0 50%; transition: transform .25s linear; }
+.tbar.low .tsec { opacity: 1; color: #ff8b7e; }
+.tbar.low .tfill { opacity: 1; background: #ff5a4d; }
+.tbar.me.low .tsec { color: #a3140a; }
+.tbar.me.low .tfill { background: #c8261a; }
+.tbar [hidden] { display: none; }
+.chip.off { visibility: hidden; }
 .tbar.me { background: linear-gradient(180deg, #f8d573, #e9b33b); color: #241a02; font-size: 17px; box-shadow: 0 0 0 3px rgba(243, 197, 82, .25), 0 4px 14px rgba(0, 0, 0, .3); }
 .table { flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; }
 .opp-top { flex: none; display: flex; justify-content: space-evenly; align-items: flex-start; padding: 2px 4px 0; min-height: 4px; }
@@ -581,7 +594,7 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
       </div>
 
       <button id="btnRules" class="btn ghost" data-act="rules">Regeln</button>
-      <div class="build">Version 2026-11-22 00:14</div>
+      <div class="build">Version 2026-11-22 18:41</div>
     </div>
   </section>
 
@@ -633,6 +646,7 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
       <div id="swHand" class="sw-row"></div>
       <div id="swReady" class="chips"></div>
       <div id="swStart" class="sw-start"></div>
+      <div id="swClock" class="sw-clock" aria-live="off"></div>
     </div>
     <footer class="foot row">
       <button id="btnUndo" class="btn sec">Rückgängig</button>
@@ -644,7 +658,7 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
   <section id="game" class="screen">
     <header class="topbar g-top">
       <button class="icon-btn" data-act="menu" aria-label="Menü"><svg viewBox="0 0 24 24"><use href="#i-menu"/></svg></button>
-      <div id="turn" class="tbar" aria-live="polite"></div>
+      <div id="turn" class="tbar"><span id="turnText" aria-live="polite"></span><b id="turnSec" class="tsec" aria-hidden="true" hidden></b><i id="turnBar" class="tfill" hidden></i></div>
       <span id="gCode" class="tb-side"></span>
     </header>
 
@@ -735,12 +749,15 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
 
         <h3>Vorbereitung</h3>
         <p>Jeder bekommt 9 Karten: <b>3 verdeckte</b>, darauf <b>3 offene</b> und <b>3 Handkarten</b>. Alle übrigen Karten bilden den Nachziehstapel.</p>
-        <p>Vor dem Start darfst du <b>genau eine</b> Handkarte gegen eine deiner offenen Karten tauschen. In der ersten Runde wird ausgelost, wer beginnt – danach beginnt immer der <b>Verlierer der letzten Runde</b>. Gespielt wird zunächst im Uhrzeigersinn.</p>
+        <p>Vor dem Start darfst du <b>genau eine</b> Handkarte gegen eine deiner offenen Karten tauschen. Dafür ist <b>eine Minute</b> Zeit. Hast du „Bereit“ zu früh gedrückt, kommst du mit „Zurück“ noch einmal zum Tauschen – bis die Runde beginnt. Sind alle bereit, geht es nach drei Sekunden los; nach einer Minute beginnt die Runde auf jeden Fall. In der ersten Runde wird ausgelost, wer beginnt – danach beginnt immer der <b>Verlierer der letzten Runde</b>. Gespielt wird zunächst im Uhrzeigersinn.</p>
         <p class="rank-line"><span>Rangfolge</span>3 · 4 · 5 · 6 · 7 · 8 · 9 · 10 · Bube · Dame · König · Ass</p>
         <p><b>Sonderkarten</b> sind die 2, die 7, die 10 und die beiden Joker. Sie dürfen <b>immer</b> gelegt werden – auch auf Bube, Dame, König und Ass. Einzige Ausnahme: Auf einem Joker geht nichts (nur Rot auf Schwarz).</p>
 
         <h3>Dein Zug</h3>
-        <p>Lege eine Karte, die <b>mindestens so hoch</b> ist wie die oberste Karte des Ablagestapels – oder eine Sonderkarte (2, 7, 10, Joker), die geht immer. Mehrere Karten desselben Werts darfst du zusammen legen oder einzeln, ganz wie du willst; zusammen gelegt ist das ein einziger Zug.</p>
+        <p>Lege eine Karte, die <b>mindestens so hoch</b> ist wie die oberste Karte des Ablagestapels – oder eine Sonderkarte (2, 7, 10, Joker), die geht immer. Mehrere <b>Handkarten</b> desselben Werts darfst du zusammen legen oder einzeln, ganz wie du willst; zusammen gelegt ist das ein einziger Zug. Von den offenen Karten auf dem Tisch geht immer nur eine pro Zug.</p>
+
+        <h3>Zeitlimit</h3>
+        <p>Für jeden Zug hast du <b>50 Sekunden</b>. Die Zeit läuft oben neben „Du bist dran“. Ist sie um, wird für dich gespielt: die <b>niedrigste passende Karte</b>, Sonderkarten erst, wenn nichts anderes geht. Passt nichts, nimmst du den Stapel auf – und hast danach wieder 50 Sekunden zum Ausspielen. Bei verdeckten Karten wird eine zufällige aufgedeckt.</p>
 
         <h3>Nachziehen</h3>
         <p>Nach deinem Zug ziehst du nach, bis du wieder 3 Handkarten hast. Erst dann ist der Nächste dran. Ist der Nachziehstapel leer, wird nicht mehr gezogen: Spiele deine Hand herunter, danach kommen deine offenen und zuletzt deine verdeckten Karten an die Reihe.</p>
@@ -760,7 +777,7 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
         </ul>
 
         <h3>Offene Karten</h3>
-        <p>Du spielst sie erst, wenn du keine Handkarten mehr hast – dann wie normale Karten.</p>
+        <p>Du spielst sie erst, wenn du keine Handkarten mehr hast. Pro Zug darfst du <b>nur eine</b> offene Karte legen – auch wenn zwei oder drei gleiche daliegen. Die nächste kommt erst in deinem nächsten Zug dran.</p>
         <ul>
           <li>Passt keine und es liegen noch <b>zwei oder drei</b> offene Karten: Du nimmst nur den Ablagestapel auf, die offenen Karten bleiben liegen.</li>
           <li>Passt deine <b>letzte</b> offene Karte nicht: Du nimmst sie zusammen mit dem Ablagestapel auf die Hand.</li>
@@ -771,7 +788,7 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
         <p>Sie sind dran, wenn Hand und offene Karten weg sind. Pro Zug deckst du <b>eine</b> Karte blind auf.</p>
         <ul>
           <li>Passt sie, ist dein Zug beendet.</li>
-          <li>Passt sie nicht, nimmst du sie mit dem ganzen Ablagestapel auf die Hand und spielst sofort eine Karte aus der Hand.</li>
+          <li>Passt sie nicht, nimmst du sie mit dem ganzen Ablagestapel auf die Hand und spielst sofort eine Karte aus der Hand. <b>Nur du</b> siehst, welche Karte es war – die anderen sehen sie nicht.</li>
         </ul>
 
         <h3>Spielende und Plätze</h3>
@@ -789,7 +806,7 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
           <li><b>Kontern ist freiwillig:</b> Wer den roten Joker hat, darf stattdessen aufnehmen.</li>
           <li><b>Freiwillig aufnehmen:</b> Geht auch, wenn du bei den offenen oder verdeckten Karten bist – also auch, statt eine verdeckte Karte aufzudecken. Gegen einen Joker gibt es keine Wahl: Da musst du aufnehmen (oder Schwarz mit Rot kontern).</li>
           <li><b>Einzige Ausnahme:</b> Bist du zu zweit nach deiner eigenen 3 sofort noch einmal dran, darfst du in diesem Zusatz-Zug nicht aufnehmen – sonst könnte man „3 legen, aufnehmen, 3 legen …“ endlos wiederholen, ohne dass der andere drankommt.</li>
-          <li><b>Nach jedem Aufnehmen</b> (nichts passt, freiwillig, Joker, letzte offene Karte, verdeckte Karte passt nicht) bleibst du am Zug und spielst aus der Hand – auch mehrere gleiche Karten, Sonderkarten wirken dabei ganz normal.</li>
+          <li><b>Nach jedem Aufnehmen</b> (nichts passt, freiwillig, Joker, letzte offene Karte, verdeckte Karte passt nicht) bleibst du am Zug und spielst aus der Hand – auch mehrere gleiche Karten, Sonderkarten wirken dabei ganz normal. Musst du ohne Handkarte von den offenen Karten ausspielen, geht auch hier nur eine.</li>
           <li><b>Letzte offene Karte:</b> Sie kommt beim Aufnehmen mit auf die Hand, wenn sie nicht gepasst hätte – also auch, wenn ein Joker dich zum Aufnehmen zwingt (der Joker selbst ist trotzdem aus dem Spiel). Nimmst du freiwillig auf, obwohl sie gepasst hätte, bleibt sie liegen.</li>
           <li><b>3:</b> Mehrere 3er in einem Zug drehen die Richtung nur einmal; einzeln nacheinander gelegte 3er drehen sie jedes Mal. „Genau 2 Spieler“ heißt: Nur noch zwei haben Karten. Dann ist der Leger nochmal dran – außer die 3 war seine letzte Karte.</li>
           <li><b>Verdeckt gegen Joker:</b> Liegt der rote Joker oben, nimmst du direkt auf. Liegt der schwarze oben, darfst du aufnehmen oder aufdecken – ein aufgedeckter roter Joker kontert. Passt die aufgedeckte Karte nicht, nimmst du sie mit dem Stapel auf, und der Joker ist aus dem Spiel.</li>
@@ -799,7 +816,8 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
         </ul>
 
         <h3>Bedienung</h3>
-        <p>Karte antippen und „Legen“ drücken, den Ablagestapel antippen – oder die Karte einfach in die Tischmitte ziehen. Mehrere gleiche Karten nacheinander antippen, um sie zusammen zu legen. Neu gezogene Karten leuchten kurz blau auf.</p>
+        <p>Karte antippen und „Legen“ drücken, den Ablagestapel antippen – oder die Karte einfach in die Tischmitte ziehen. Mehrere gleiche Handkarten nacheinander antippen, um sie zusammen zu legen. Neu gezogene Karten leuchten kurz blau auf.</p>
+        <p>Im Menü gibt es den Schalter <b>Spielhilfe</b>. Ist er an, steht am Stapel, was gerade passt, und unpassende Karten sind abgedunkelt. Ist er aus, gibt es beides nicht – legen kannst du trotzdem nur, was erlaubt ist. Jeder stellt das für sich ein.</p>
       </div>
     </div>
   </div>
@@ -814,6 +832,7 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
         <p id="menuNote" class="muted menu-note" hidden></p>
         <button id="btnMenuRematch" class="btn" hidden>Neue Runde</button>
         <button class="btn sec" data-act="rules">Regeln</button>
+        <button id="btnHelp" class="btn sec" aria-pressed="true">Spielhilfe: an</button>
         <button id="btnMenuGiveUp" class="btn sec" hidden>Aufgeben</button>
         <button id="btnMenuLobby" class="btn sec">Zurück zur Lobby</button>
         <button id="btnLeave" class="btn danger">Spiel verlassen</button>
@@ -929,7 +948,7 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
   }
 
   /* players: [{name, bot}] (2–6). opts: {rng, startSeat (sonst zufällig), startBy ('loser', wenn der
-   * Verlierer der Vorrunde beginnt)} */
+   * Verlierer der Vorrunde beginnt), holdStart (Runde beginnt erst mit startPlay())} */
   function createGame(players, opts) {
     opts = opts || {};
     var n = players.length;
@@ -949,6 +968,7 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
     }
     return {
       players: ps,
+      holdStart: !!opts.holdStart,   // true: sind alle bereit, startet die Runde erst mit startPlay() (Host zählt herunter)
       phase: 'swap',        // 'swap' → 'play' → 'over'
       turn: -1,             // Sitz, der am Zug ist (nur in 'play')
       dir: 1,               // 1 = im Uhrzeigersinn (aufsteigende Sitze), -1 = gegen
@@ -1123,7 +1143,8 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
       var by = {};
       o.playable.forEach(function (c) { (by[rank(c)] = by[rank(c)] || []).push(c); });
       Object.keys(by).forEach(function (r) {
-        for (var k = 1; k <= by[r].length; k++) acts.push({ t: 'play', cards: by[r].slice(0, k) });
+        var max = o.zone === 'up' ? 1 : by[r].length;   // offene Karten: nur eine pro Zug
+        for (var k = 1; k <= max; k++) acts.push({ t: 'play', cards: by[r].slice(0, k) });
       });
     }
     if (o.canPickup) acts.push({ t: 'pickup' });
@@ -1252,6 +1273,7 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
 
   /* Aktionen:
    *  {t:'ready', swap?: {hand: cardId, up: slot 0..2}}   Tauschphase: optional 1:1 tauschen, dann bereit
+   *  {t:'unready'}                                       Tauschphase: „bereit“ zurücknehmen, der eigene Tausch wird rückgängig
    *  {t:'play', cards: [cardId,...]}                     eine oder mehrere Karten gleichen Werts
    *  {t:'flip', slot: 0..2}                              verdeckte Karte blind spielen
    *  {t:'pickup'}                                        Ablagestapel aufnehmen
@@ -1262,6 +1284,7 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
     if (!a || typeof a !== 'object') return fail('bad-action');
     if (typeof seat !== 'number' || seat % 1 !== 0 || seat < 0 || seat >= s.players.length) return fail('bad-seat');
     if (a.t === 'ready') return applyReady(s, seat, a);
+    if (a.t === 'unready') return applyUnready(s, seat);
     if (s.phase !== 'play') return fail('wrong-phase');
     if (a.t === 'giveup') return applyGiveUp(s, seat);
     if (s.turn !== seat) return fail('not-your-turn');
@@ -1280,12 +1303,43 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
       if (hi < 0 || !(sl === 0 || sl === 1 || sl === 2) || !p.up[sl]) return fail('bad-swap');
       var tmp = p.hand[hi]; p.hand[hi] = p.up[sl]; p.up[sl] = tmp;
       p.swapped = true;
+      p.swap = { slot: sl, was: p.hand[hi] };   // was = die Karte, die vorher offen lag (jetzt auf der Hand)
       swapInfo = { slot: sl };
     }
     p.ready = true;
-    var all = s.players.every(function (q) { return q.ready; });
-    if (all) { s.phase = 'play'; s.turn = s.startSeat; }
-    setEv(s, { t: all ? 'start' : 'ready', seat: seat, swap: swapInfo });
+    var all = allReady(s);
+    if (all && !s.holdStart) { s.phase = 'play'; s.turn = s.startSeat; }
+    var ev = { t: all && !s.holdStart ? 'start' : 'ready', seat: seat, swap: swapInfo };
+    if (all && s.holdStart) ev.all = true;
+    setEv(s, ev);
+    return { ok: true };
+  }
+  function allReady(s) { return s.players.every(function (q) { return q.ready; }); }
+  /* „Bereit“ zurücknehmen, solange die Runde nicht läuft. Der eigene Tausch wird dabei rückgängig gemacht. */
+  function applyUnready(s, seat) {
+    var p = s.players[seat];
+    if (s.phase !== 'swap') return fail('wrong-phase');
+    if (!p.ready) return fail('not-ready');
+    var swapInfo = null;
+    if (p.swap) {
+      var sl = p.swap.slot, hi = p.hand.indexOf(p.swap.was);
+      if (hi >= 0 && p.up[sl]) { var tmp = p.hand[hi]; p.hand[hi] = p.up[sl]; p.up[sl] = tmp; swapInfo = { slot: sl }; }
+    }
+    p.swap = null;
+    p.swapped = false;
+    p.ready = false;
+    setEv(s, { t: 'unready', seat: seat, swap: swapInfo });
+    return { ok: true };
+  }
+  /* Runde beginnen (nur mit holdStart nötig). force: auch wenn nicht alle bereit sind – wer noch
+   * nicht bereit war, spielt mit den Karten, die er hat. */
+  function startPlay(s, force) {
+    if (s.phase !== 'swap') return fail('wrong-phase');
+    if (!force && !allReady(s)) return fail('not-ready');
+    s.players.forEach(function (q) { q.ready = true; });
+    s.phase = 'play';
+    s.turn = s.startSeat;
+    setEv(s, { t: 'start', seat: -1, swap: null, forced: !!force });
     return { ok: true };
   }
 
@@ -1298,6 +1352,8 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
       var cards = a.cards;
       if (!Array.isArray(cards) || !cards.length || cards.length > 4) return fail('no-cards');
       if (o.zone !== 'hand' && o.zone !== 'up') return fail('must-flip');
+      // Von den offenen Tischkarten darf pro Zug nur eine gelegt werden – auch bei gleichen Werten.
+      if (o.zone === 'up' && cards.length > 1) return fail('one-up');
       var src = o.zone === 'hand' ? p.hand : p.up;
       var r0 = null;
       for (var i = 0; i < cards.length; i++) {
@@ -1351,8 +1407,12 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
 
   /* Sicht eines Spielers: fremde Handkarten, alle verdeckten Karten und der Nachziehstapel bleiben geheim. */
   function viewFor(s, seat) {
+    var ev = JSON.parse(JSON.stringify(s.ev));
+    // Eine verdeckte Karte, die nicht passt, sieht nur ihr Besitzer: sie geht mit dem Stapel auf seine Hand.
+    if (ev && ev.t === 'flipfail' && ev.seat !== seat) ev.card = null;
     return {
       phase: s.phase,
+      allReady: s.phase === 'swap' && allReady(s),
       you: seat,
       turn: s.turn,
       dir: s.dir,
@@ -1371,7 +1431,7 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
       again: !!s.again,
       req: requirement(s),
       seq: s.seq,
-      ev: JSON.parse(JSON.stringify(s.ev)),
+      ev: ev,
       players: s.players.map(function (p, i) {
         return {
           name: p.name,
@@ -1432,11 +1492,42 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
       if (acts.length) return acts[Math.floor(Math.random() * acts.length)];
     }
     var cards = [pick];
-    if (botValue(pick) < 20) {
-      var src = o.zone === 'hand' ? p.hand : p.up.filter(Boolean);
-      cards = src.filter(function (c) { return rank(c) === rank(pick); });
+    if (botValue(pick) < 20 && o.zone === 'hand') {   // mehrere gleiche nur aus der Hand
+      cards = p.hand.filter(function (c) { return rank(c) === rank(pick); });
     }
     return { t: 'play', cards: cards };
+  }
+
+  /* Zug, den der Timer für einen Spieler macht, dessen Zeit abgelaufen ist: die niedrigste passende Karte
+   * (einzeln), Sonderkarten 2, 7, 10 und Joker erst, wenn nichts anderes geht. Passt nichts: aufnehmen.
+   * Bei verdeckten Karten wird eine zufällige aufgedeckt. Dreht sich die Partie im Kreis, wird gewürfelt. */
+  function autoValue(c) {
+    var r = rank(c);
+    if (r === 2) return 20;
+    if (r === 7) return 21;
+    if (r === 10) return 22;
+    if (r >= 15) return 8 + r;   // schwarzer Joker 23, roter 24
+    return r;
+  }
+  function autoAction(s, seat, rng) {
+    var p = s.players[seat], o = options(s, seat);
+    if (!p || !o) return null;
+    if (o.zone === 'down') {
+      if (!o.canFlip) return o.canPickup ? { t: 'pickup' } : null;
+      var slots = [];
+      for (var i = 0; i < 3; i++) if (p.down[i]) slots.push(i);
+      return { t: 'flip', slot: slots[Math.min(slots.length - 1, Math.floor((rng || Math.random)() * slots.length))] };
+    }
+    if (!o.playable.length) return o.canPickup ? { t: 'pickup' } : null;
+    // Wiederholt sich die Stellung (z. B. alle sind weg und der Timer spielt allein), wird gewürfelt:
+    // Eine feste Regel würde sich sonst endlos im Kreis drehen.
+    if (s.rep && s.rep[hashKey(positionKey(s))] >= 2) {
+      var acts = legalActions(s).filter(function (x) { return x.t !== 'play' || x.cards.length === 1; });
+      if (acts.length) return acts[Math.min(acts.length - 1, Math.floor((rng || Math.random)() * acts.length))];
+    }
+    var pick = o.playable[0];
+    o.playable.forEach(function (c) { if (autoValue(c) < autoValue(pick)) pick = c; });
+    return { t: 'play', cards: [pick] };
   }
 
   return {
@@ -1445,7 +1536,8 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
     createGame: createGame, applyAction: applyAction, viewFor: viewFor,
     options: options, requirement: requirement, canPlayOn: canPlayOn,
     topCard: topCard, zoneOf: zoneOf, nextSeat: nextSeat, activeCount: activeCount,
-    legalActions: legalActions, botAction: botAction, canGiveUp: canGiveUp
+    legalActions: legalActions, botAction: botAction, canGiveUp: canGiveUp,
+    startPlay: startPlay, autoAction: autoAction
   };
 });
 
@@ -1480,7 +1572,10 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
   var MAX_AGE = 12 * 3600 * 1000;
   var BOT_NAMES = ['Bot Ada', 'Bot Ben', 'Bot Cleo', 'Bot Dino', 'Bot Elli'];
   /* Zeiten in ms – in Tests überschreibbar */
-  var T = { tick: 400, ping: 3000, hostDead: 10000, playerDead: 10000, resend: 1200, hello: 1500, joinTimeout: 9000, bot: 900, sweep: 2000 };
+  var T = { tick: 400, ping: 3000, hostDead: 10000, playerDead: 10000, resend: 1200, hello: 1500, joinTimeout: 9000, bot: 900, sweep: 2000,
+    turn: 50000,    // Zeit pro Zug; danach zieht der Host automatisch (0 = kein Zeitlimit)
+    swap: 60000,    // Zeit für die Tauschphase; danach beginnt die Runde, auch wenn nicht alle bereit sind (0 = kein Limit)
+    start: 3000 };  // sind alle bereit: so lange kann man „Bereit“ noch zurücknehmen (0 = Runde beginnt sofort)
 
   function randId(len, alpha) {
     alpha = alpha || ID_ALPHA;
@@ -1576,6 +1671,7 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
     var onUpdate = opts.onUpdate || function () {};
 
     var role = null, tr = null, online = false, tickTimer = null, botTimer = null, closeTimer = null;
+    var clock = null, clockTimer = null;   // Host: laufendes Zeitlimit {key, base, swapEnd, end, total, kind: 'turn'|'swap'|'start'}
     var H = null;   // Host:  {code, epoch, ver, players:[{pid,name,bot,local,auto,left,online,seen,ack}], kicked:[pid], game}
     var C = null;   // Gast:  {code, pid, name, epoch, ver, got, seat, lobby, view, error, pending, seq, started, hostSeen, nextPing, nextHello, nextResend, hostOnline}
     var session = { snap: idleSnap() };
@@ -1653,6 +1749,8 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
     function teardown() {
       if (tickTimer) { clearInterval(tickTimer); tickTimer = null; }
       if (botTimer) { clearTimeout(botTimer); botTimer = null; }
+      if (clockTimer) { clearTimeout(clockTimer); clockTimer = null; }
+      clock = null;
       if (tr) { var old = tr; tr = null; old.onMessage = null; old.onStatus = null; try { old.close(); } catch (e) {} }
       online = false;
     }
@@ -1674,12 +1772,58 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
       if (!p || p.bot || p.local || !tr) return;
       tr.publish('p/' + p.pid, {
         t: 'state', epoch: H.epoch, ver: H.ver, round: H.round || 0, ack: p.ack || 0, seat: i,
-        lobby: lobbyInfo(), view: H.game ? E.viewFor(H.game, i) : null
+        lobby: lobbyInfo(), view: H.game ? E.viewFor(H.game, i) : null, clock: clockMsg()
       });
+    }
+
+    /* ---------- Zeitlimit (führt der Host) ----------
+     * Zug: T.turn ab jedem neuen Spielstand; läuft die Zeit ab, macht der Host den Zug (E.autoAction).
+     * Tauschphase: T.swap ab Rundenbeginn; danach beginnt die Runde, auch wenn nicht alle bereit sind.
+     * Sind alle bereit, beginnt sie nach T.start – bis dahin kann jeder „Bereit“ noch zurücknehmen.
+     * Die Gäste bekommen mit jedem Stand die Restzeit und rechnen sie auf ihre eigene Uhr um. */
+    function clockMsg() {
+      if (!clock || !clock.end) return null;
+      return { left: Math.max(0, clock.end - Date.now()), total: clock.total, kind: clock.kind };
+    }
+    function armClock() {
+      if (role !== 'host' || !H) return;
+      var g = H.game, now = Date.now(), next = null;
+      if (g && g.phase === 'swap') {
+        var base = 'swap:' + (H.round || 0);
+        var swapEnd = clock && clock.base === base ? clock.swapEnd : (T.swap > 0 ? now + T.swap : 0);
+        var all = g.holdStart && g.players.every(function (q) { return q.ready; });
+        if (all) {
+          var goEnd = clock && clock.key === base + ':go' ? clock.end : now + T.start;
+          if (swapEnd && swapEnd < goEnd) goEnd = swapEnd;
+          next = { key: base + ':go', base: base, swapEnd: swapEnd, end: goEnd, total: T.start, kind: 'start' };
+        } else {
+          next = { key: base, base: base, swapEnd: swapEnd, end: swapEnd, total: T.swap, kind: 'swap' };
+        }
+      } else if (g && g.phase === 'play' && T.turn > 0) {
+        var key = 'play:' + (H.round || 0) + ':' + g.seq;
+        next = clock && clock.key === key ? clock : { key: key, end: now + T.turn, total: T.turn, kind: 'turn' };
+      }
+      clock = next;
+      if (clockTimer) { clearTimeout(clockTimer); clockTimer = null; }
+      if (clock && clock.end) clockTimer = setTimeout(onClock, Math.max(0, clock.end - now));
+    }
+    function onClock() {
+      clockTimer = null;
+      if (role !== 'host' || !H || !H.game || !clock || !clock.end) return;
+      if (Date.now() < clock.end) return armClock();
+      var g = H.game;
+      if (g.phase === 'swap') {
+        if (E.startPlay(g, clock.kind !== 'start').ok) return bump();
+      } else if (g.phase === 'play') {
+        var seat = g.turn, a = E.autoAction(g, seat);
+        if (a && E.applyAction(g, seat, a).ok) { g.ev.auto = true; return bump(); }
+      }
+      clock.end = 0;   // nichts zu tun: nicht in einer Schleife weiter feuern
     }
     function deny(pid, why) { if (tr) tr.publish('p/' + pid, { t: 'deny', why: why }); }
     function bump() {
       H.ver++;
+      armClock();
       save();
       for (var i = 0; i < H.players.length; i++) sendState(i);
       emit();
@@ -1730,6 +1874,7 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
       for (var i = ps.length - 1; i >= 0; i--) if (H.loserPid && ps[i].pid === H.loserPid) { opts.startSeat = i; opts.startBy = 'loser'; }
       H.loserPid = null;
       H.round = (H.round || 0) + 1;   // Aktionen tragen die Rundennummer: Nachzügler aus einer alten Runde zählen nicht
+      if (T.start > 0) opts.holdStart = true;   // alle bereit → kurzer Countdown, erst dann beginnt die Runde (siehe armClock)
       return E.createGame(ps.map(function (q) { return { name: q.name, bot: !!q.bot }; }), opts);
     }
     function removePlayer(i) { H.players.splice(i, 1); }
@@ -1794,6 +1939,8 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
         if (p.bot || p.local) return;
         if (p.online && now - (p.seen || 0) > T.playerDead) { p.online = false; changed = true; }
       });
+      // Falls der Zeitgeber des Zeitlimits verschluckt wurde (Seite war im Hintergrund): hier nachholen.
+      if (clock && clock.end && now >= clock.end) onClock();
       if (changed) bump();
     }
     function nextBotName() {
@@ -1807,6 +1954,7 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
     function startHost() {
       role = 'host';
       openTransport(H.code, 'h', hostOnMsg);
+      armClock();
       save();
       emit();
       driveBots();
@@ -1907,6 +2055,8 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
         C.epoch = m.epoch; C.ver = m.ver; C.got = true; C.error = null;
         C.seat = m.seat; C.lobby = m.lobby; C.view = m.view;
         C.round = typeof m.round === 'number' ? m.round : 0;
+        C.clock = m.clock && typeof m.clock.left === 'number'
+          ? { end: Date.now() + m.clock.left, total: m.clock.total, kind: m.clock.kind } : null;
         var ack = typeof m.ack === 'number' ? m.ack | 0 : 0;
         C.pending = C.pending.filter(function (x) { return x.n > ack; });
         if (C.seq < ack) C.seq = ack;
@@ -2017,6 +2167,13 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
     session.wake = function () {
       if (tr) tr.kick();
       if (role === 'client' && C) { C.nextPing = 0; C.nextHello = 0; C.nextResend = 0; clientTick(); }
+    };
+
+    /* Laufendes Zeitlimit auf der eigenen Uhr: {end (ms), total (ms), kind: 'turn'|'swap'|'start'} oder null. */
+    session.clock = function () {
+      if (role === 'host') return clock && clock.end ? { end: clock.end, total: clock.total, kind: clock.kind } : null;
+      if (role === 'client' && C && C.got) return C.clock || null;
+      return null;
     };
 
     /* Diagnose: Zustand der Relay-Verbindungen (falls der Transport das anbietet). */
@@ -2662,6 +2819,8 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
   var lock = false, afterLock = null;
   var handNodes = {}, handOrder = [], pileNodes = {};
   var swapSel = null, swapPrev = null;
+  /* Spielhilfe (pro Gerät): Hinweis am Stapel, welche Karten passen, und unpassende Karten abgedunkelt. */
+  var help = sGet(LS, 'karma.help') !== '0';
   var press = null, drag = null, dragDone = null;
   var cwCache = 0;
   var hashOwned = false;
@@ -3024,15 +3183,18 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
       });
     });
     var hint;
-    if (p.ready) hint = 'Du bist bereit. Warte auf die anderen …';
-    else if (opt && opt.kind === 'ready') hint = 'Wird gesendet …';
+    if (opt && (opt.kind === 'ready' || opt.kind === 'unready')) hint = 'Wird gesendet …';
+    else if (p.ready) hint = (v.allReady ? 'Alle sind bereit, gleich geht es los.' : 'Du bist bereit. Warte auf die anderen …') + ' Mit „Zurück“ kannst du noch einmal tauschen.';
     else if (swapPrev) hint = 'Getauscht! Passt das so? Dann tippe auf „Bereit“.';
     else if (swapSel) hint = 'Jetzt die Karte antippen, mit der du tauschen willst.';
     else hint = 'Du darfst genau eine Handkarte mit einer offenen Karte tauschen. Antippen oder ziehen.';
     $('swHint').textContent = hint;
     $('btnUndo').disabled = !(edit && swapPrev);
-    $('btnReady').disabled = !edit;
-    $('btnReady').textContent = 'Bereit';
+    var back = p.ready && !(opt && opt.kind === 'ready');
+    $('btnReady').disabled = back ? !!opt : !edit;
+    $('btnReady').textContent = back ? 'Zurück' : 'Bereit';
+    $('btnReady').className = back ? 'btn sec' : 'btn';
+    tickClock();
     var chips = $('swReady');
     clear(chips);
     v.players.forEach(function (q, i) {
@@ -3082,6 +3244,16 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
     renderSwap();
     if (!session.act(a)) { opt = null; renderSwap(); }
   }
+  /* „Bereit“ zurücknehmen: geht, bis die Runde läuft. Der Tausch ist dann wieder offen. */
+  function doUnready() {
+    if (!cur || cur.stage !== 'game' || !cur.view || cur.view.phase !== 'swap' || !myPlayer().ready || opt) return;
+    opt = { kind: 'unready', seq: cur.view.seq, after: snapCount };
+    renderSwap();
+    if (!session.act({ t: 'unready' })) { opt = null; renderSwap(); }
+  }
+  function readyButton() {
+    if (cur && cur.stage === 'game' && cur.view && cur.view.phase === 'swap' && myPlayer().ready) doUnready(); else doReady();
+  }
 
   /* ---------- Spieltisch: Anzeigezustand ---------- */
 
@@ -3090,7 +3262,7 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
     var pile = ov ? ov.pile : v.pile;
     if (ov && ov.holdSeat === me) ov.pile.forEach(function (c) { hide[c] = 1; });
     if (ov && ov.hide) ov.hide.forEach(function (c) { hide[c] = 1; });
-    var o = opt && opt.kind !== 'ready' && opt.seq === v.seq ? opt : null;
+    var o = opt && opt.kind !== 'ready' && opt.kind !== 'unready' && opt.seq === v.seq ? opt : null;
     if (o && o.kind === 'play') {
       pile = pile.concat(o.cards);
       o.cards.forEach(function (c) { hide[c] = 1; });
@@ -3106,21 +3278,20 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
   var STATES = ['ok', 'no', 'sel', 'match'];
   function cardState(d, id) {
     if (sel.indexOf(id) >= 0) return 'sel';
-    if (d.my.playable.indexOf(id) < 0) return 'no';
-    if (sel.length && E.rank(sel[0]) === E.rank(id)) return 'match';
+    if (d.my.playable.indexOf(id) < 0) return help ? 'no' : 'ok';   // ohne Spielhilfe sehen alle Karten gleich aus
+    if (d.my.zone === 'hand' && sel.length && E.rank(sel[0]) === E.rank(id)) return 'match';   // mehrere gleiche nur aus der Hand
     return 'ok';
   }
   function setState(node, st) {
     for (var i = 0; i < STATES.length; i++) node.classList.toggle(STATES[i], STATES[i] === st);
   }
   /* Was jetzt passt – nur zur Anzeige. Ob eine Karte wirklich geht, sagt allein die Engine (view.my.playable).
-   * Die Sonderkarten 2, 7, 10 und Joker gehen immer; genannt werden die, die nicht ohnehin „höher“ sind. */
+   * Die Sonderkarten 2, 7, 10 und Joker gehen immer – sie werden immer alle genannt. */
+  var ALWAYS = ' · immer: 2, 7, 10, Joker';
   function reqText(req) {
     switch (req.k) {
-      case 'min':
-        return (req.rank >= 14 ? 'Ass' : rankName(req.rank) + ' oder höher') + ' · 2' +
-          (req.rank > 7 ? ' · 7' : '') + (req.rank > 10 ? ' · 10' : '') + ' · Joker';
-      case 'seven': return '7 oder niedriger · 2 · 10 · Joker';
+      case 'min': return (req.rank >= 14 ? 'Ass' : rankName(req.rank) + ' oder höher') + ALWAYS;
+      case 'seven': return 'Unter 7 (3 bis 6)' + ALWAYS;
       case 'jokerB': return 'Schwarzer Joker: aufnehmen oder mit Rot kontern';
       case 'jokerR': return 'Roter Joker: aufnehmen';
       default: return 'Beliebige Karte';
@@ -3161,11 +3332,38 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
     $('btnDoneRematch').hidden = !running;
   }
   function renderTop(d) {
-    var v = d.v, t = $('turn');
-    if (v.phase === 'over') { t.className = 'tbar'; t.textContent = 'Runde beendet'; }
-    else if (v.turn === d.me) { t.className = 'tbar me'; t.textContent = 'Du bist dran'; }
-    else { t.className = 'tbar'; t.textContent = nameOf(v, v.turn) + ' ist dran'; }
+    var v = d.v, t = $('turn'), x = $('turnText');
+    if (v.phase === 'over') { t.className = 'tbar'; x.textContent = 'Runde beendet'; }
+    else if (v.turn === d.me) { t.className = 'tbar me'; x.textContent = 'Du bist dran'; }
+    else { t.className = 'tbar'; x.textContent = nameOf(v, v.turn) + ' ist dran'; }
+    tickClock();
   }
+
+  /* ---------- Zeitlimit: Anzeige ---------- */
+
+  /* Die Uhr führt der Host; session.clock() gibt das Ende auf der eigenen Uhr. Viermal pro Sekunde nachgeführt. */
+  function tickClock() {
+    var v = cur && cur.stage === 'game' ? cur.view : null, c = v && session.clock ? session.clock() : null;
+    var left = c ? c.end - Date.now() : 0, secs = Math.max(0, Math.ceil(left / 1000));
+    var turn = !!c && c.kind === 'turn' && v.phase === 'play';
+    var t = $('turn'), sec = $('turnSec'), bar = $('turnBar');
+    sec.hidden = bar.hidden = !turn;
+    if (turn) {
+      if (sec.textContent !== String(secs)) sec.textContent = String(secs);
+      bar.style.transform = 'scaleX(' + Math.max(0, Math.min(1, left / c.total)).toFixed(3) + ')';
+    }
+    t.classList.toggle('low', turn && secs <= 10);
+    var txt = '', go = false;
+    if (c && v.phase === 'swap') {
+      go = c.kind === 'start';
+      txt = go ? 'Alle bereit – los geht’s in ' + Math.max(1, secs) + ' …'
+        : c.kind === 'swap' ? 'Noch ' + secs + (secs === 1 ? ' Sekunde' : ' Sekunden') + ' zum Tauschen' : '';
+    }
+    var sw = $('swClock');
+    if (sw.textContent !== txt) sw.textContent = txt;
+    sw.className = 'sw-clock' + (go ? ' go' : c && c.kind === 'swap' && secs <= 10 ? ' low' : '');
+  }
+  setInterval(tickClock, 250);
   function oppPanel(d, seat) {
     var v = d.v, p = v.players[seat], info = cur.lobby && cur.lobby.players[seat] || {};
     var box = el('div', 'opp');
@@ -3253,7 +3451,7 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
     renderStock(d.stock);
     var ended = v.phase === 'over' && !ov;
     chip.textContent = ended ? 'Runde beendet' : reqText(req);
-    chip.className = 'chip' + (ended ? '' : req.k === 'jokerR' ? ' warn' : req.k === 'jokerB' ? ' dark' : '');
+    chip.className = 'chip' + (ended ? '' : req.k === 'jokerR' ? ' warn' : req.k === 'jokerB' ? ' dark' : '') + (!help && !ended ? ' off' : '');
     ring.classList.toggle('ccw', v.dir === -1);
     ring.classList.toggle('none', n < 3);
     var info = $('tinfo'), again = v.phase === 'play' && !!v.ev && v.ev.repeat >= 2, parts = [];
@@ -3614,6 +3812,7 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
     if (opt) {
       var answered = !snap.isHost && snap.pending === 0 && snap._n > opt.after;
       if (opt.kind === 'ready') { if (v.phase !== 'swap' || (me && me.ready) || answered) opt = null; }
+      else if (opt.kind === 'unready') { if (v.phase !== 'swap' || (me && !me.ready) || answered) opt = null; }
       else if (v.seq !== opt.seq) { had = opt; opt = null; }
       else if (answered) { opt = null; toast('Das hat nicht geklappt – bitte nochmal.'); }
     }
@@ -3629,6 +3828,10 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
     }
 
     var ev = v.ev, p = null;
+    if (pv && ev && ev.seq === v.seq && v.seq > pv.seq && !skip) {
+      if (ev.auto) toast(ev.seat === v.you ? 'Zeit abgelaufen – es wurde für dich gespielt' : 'Zeit abgelaufen: Für ' + nameOf(v, ev.seat) + ' wurde gespielt');
+      else if (ev.t === 'start' && ev.forced) toast('Zeit abgelaufen – die Runde beginnt');
+    }
     var anim = !skip && pv && pv.phase === 'play' && ev && ev.seq === v.seq && v.seq === pv.seq + 1 && pv.turn === ev.seat &&
       doc.visibilityState !== 'hidden' && body.getAttribute('data-screen') === 'game';
     if (anim) {
@@ -3654,7 +3857,7 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
   }
   function revealPlayable() {
     var sc = $('handScroll'), v = cur && cur.view;
-    if (!v || !v.my || v.my.zone !== 'hand' || !sc.classList.contains('scrolls')) return;
+    if (!help || !v || !v.my || v.my.zone !== 'hand' || !sc.classList.contains('scrolls')) return;
     var first = -1;
     for (var i = 0; i < handOrder.length && first < 0; i++) if (v.my.playable.indexOf(handOrder[i]) >= 0) first = i;
     if (first < 0) return;
@@ -3758,6 +3961,23 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
     g.style.transition = 'transform 380ms cubic-bezier(.45,0,.7,.6), opacity 380ms ease-in';
     g.style.transform = 'translate3d(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px,0) scale(' + (seat === me ? 1 : 0.5) + ')';
     g.style.opacity = seat === me ? '0.2' : '0';
+    return wait(400).then(function () { drop(g); });
+  }
+
+  /* Eine verdeckte Karte fliegt verdeckt zu ihrem Besitzer (fremder Blindzug, der nicht passt). */
+  function flyBackTo(from, seat, me) {
+    if (!from) return Promise.resolve();
+    var node = seat === me ? $('handScroll') : (oppPanelNode(seat) || $('table'));
+    var t = rectOf(node), g = cardBack('ghost');
+    g.style.setProperty('--w', from.w + 'px');
+    g.style.left = from.x + 'px';
+    g.style.top = from.y + 'px';
+    $('fx').appendChild(g);
+    void g.offsetWidth;
+    var dx = t.x + t.w / 2 - (from.x + from.w / 2), dy = t.y + t.h / 2 - (from.y + from.h / 2);
+    g.style.transition = 'transform 380ms cubic-bezier(.45,0,.7,.6), opacity 380ms ease-in';
+    g.style.transform = 'translate3d(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px,0) scale(.6)';
+    g.style.opacity = '0';
     return wait(400).then(function () { drop(g); });
   }
 
@@ -3919,9 +4139,17 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
     return takeAway(pv, v, pv.pile, dr, upFrom);
   }
   function animFlipFail(pv, v) {
-    var ev = v.ev, me = v.you, dr = drawInfo(pv, v), shown = pv.pile.concat([ev.card]);
+    var ev = v.ev, me = v.you, dr = drawInfo(pv, v);
     lock = true;
     var from = srcRect(ev.seat, 'down', ev.card, ev.slot, me);
+    if (!ev.card) {
+      /* Fremde verdeckte Karte, die nicht passt: Sie bleibt geheim und geht verdeckt mit dem Stapel auf die Hand. */
+      var hl = [nameOf(v, ev.seat) + ': verdeckte Karte passt nicht', takesLine(ev, v)], hg = goneLine(ev);
+      if (hg) hl.push(hg);
+      gToast(hl, false, hg ? 2100 : 1700);
+      return Promise.all([takeAway(pv, v, pv.pile, dr, null), flyBackTo(from, ev.seat, me)]);
+    }
+    var shown = pv.pile.concat([ev.card]);
     ov = holdDraw({ pile: shown, holdSeat: ev.seat, holdN: ev.n, req: pv.req, burned: pv.burned }, dr);
     renderGame();
     return flyToPile([ev.card], [from]).then(function () {
@@ -3939,10 +4167,10 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
   function tapCard(id, zone) {
     var d = display();
     if (!d.my || d.my.zone !== zone) return;
-    if (d.my.playable.indexOf(id) < 0) { shake(myCardNode(id)); flashReq(); return; }
+    if (d.my.playable.indexOf(id) < 0) { shake(myCardNode(id)); if (help) flashReq(); else toast('Diese Karte passt nicht'); return; }
     var i = sel.indexOf(id);
     if (i >= 0) sel.splice(i, 1);
-    else if (sel.length && E.rank(sel[0]) === E.rank(id)) sel.push(id);
+    else if (zone === 'hand' && sel.length && E.rank(sel[0]) === E.rank(id)) sel.push(id);   // offene Karten: nur eine pro Zug
     else sel = [id];
     renderMineWith(d);
   }
@@ -3950,8 +4178,12 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
   function tryPlay(ids, rects) {
     var d = display();
     if (!ids.length || !d.my || d.my.zone === 'down') return false;
+    if (d.my.zone === 'up' && ids.length > 1) ids = ids.slice(0, 1);   // offene Karten: nur eine pro Zug
     for (var i = 0; i < ids.length; i++) {
-      if (d.my.playable.indexOf(ids[i]) < 0 || E.rank(ids[i]) !== E.rank(ids[0])) { flashReq(); return false; }
+      if (d.my.playable.indexOf(ids[i]) < 0 || E.rank(ids[i]) !== E.rank(ids[0])) {
+        if (help) flashReq(); else { var bad = myCardNode(ids[i]); if (bad) shake(bad); toast('Diese Karte passt nicht'); }
+        return false;
+      }
     }
     if (lock) { afterLock = function () { tryPlay(ids, null); }; return true; }
     if (!rects) rects = ids.map(function (id) { var n = myCardNode(id); return n ? rectOf(n) : null; });
@@ -4196,7 +4428,20 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
   on('btnAddBot', function () { session.lobby({ op: 'addBot' }); });
   on('btnStart', function () { session.lobby({ op: 'start' }); });
   on('btnUndo', function () { if (swapEditable()) { swapPrev = null; swapSel = null; renderSwap(); } });
-  on('btnReady', doReady);
+  on('btnReady', readyButton);
+  function renderHelpBtn() {
+    var b = $('btnHelp');
+    b.textContent = 'Spielhilfe: ' + (help ? 'an' : 'aus');
+    b.setAttribute('aria-pressed', help ? 'true' : 'false');
+  }
+  on('btnHelp', function () {
+    help = !help;
+    sSet(LS, 'karma.help', help ? '1' : '0');
+    renderHelpBtn();
+    if (cur && cur.stage === 'game') renderAll();
+    toast(help ? 'Spielhilfe an: Du siehst, welche Karten passen' : 'Spielhilfe aus: keine Hinweise, keine grauen Karten');
+  });
+  renderHelpBtn();
   on('btnPickup', askPickup);
   on('btnPlay', playButton);
   on('pileTap', playSelection);

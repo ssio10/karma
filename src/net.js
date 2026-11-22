@@ -27,7 +27,10 @@
   var MAX_AGE = 12 * 3600 * 1000;
   var BOT_NAMES = ['Bot Ada', 'Bot Ben', 'Bot Cleo', 'Bot Dino', 'Bot Elli'];
   /* Zeiten in ms – in Tests überschreibbar */
-  var T = { tick: 400, ping: 3000, hostDead: 10000, playerDead: 10000, resend: 1200, hello: 1500, joinTimeout: 9000, bot: 900, sweep: 2000 };
+  var T = { tick: 400, ping: 3000, hostDead: 10000, playerDead: 10000, resend: 1200, hello: 1500, joinTimeout: 9000, bot: 900, sweep: 2000,
+    turn: 50000,    // Zeit pro Zug; danach zieht der Host automatisch (0 = kein Zeitlimit)
+    swap: 60000,    // Zeit für die Tauschphase; danach beginnt die Runde, auch wenn nicht alle bereit sind (0 = kein Limit)
+    start: 3000 };  // sind alle bereit: so lange kann man „Bereit“ noch zurücknehmen (0 = Runde beginnt sofort)
 
   function randId(len, alpha) {
     alpha = alpha || ID_ALPHA;
@@ -123,6 +126,7 @@
     var onUpdate = opts.onUpdate || function () {};
 
     var role = null, tr = null, online = false, tickTimer = null, botTimer = null, closeTimer = null;
+    var clock = null, clockTimer = null;   // Host: laufendes Zeitlimit {key, base, swapEnd, end, total, kind: 'turn'|'swap'|'start'}
     var H = null;   // Host:  {code, epoch, ver, players:[{pid,name,bot,local,auto,left,online,seen,ack}], kicked:[pid], game}
     var C = null;   // Gast:  {code, pid, name, epoch, ver, got, seat, lobby, view, error, pending, seq, started, hostSeen, nextPing, nextHello, nextResend, hostOnline}
     var session = { snap: idleSnap() };
@@ -200,6 +204,8 @@
     function teardown() {
       if (tickTimer) { clearInterval(tickTimer); tickTimer = null; }
       if (botTimer) { clearTimeout(botTimer); botTimer = null; }
+      if (clockTimer) { clearTimeout(clockTimer); clockTimer = null; }
+      clock = null;
       if (tr) { var old = tr; tr = null; old.onMessage = null; old.onStatus = null; try { old.close(); } catch (e) {} }
       online = false;
     }
@@ -221,12 +227,58 @@
       if (!p || p.bot || p.local || !tr) return;
       tr.publish('p/' + p.pid, {
         t: 'state', epoch: H.epoch, ver: H.ver, round: H.round || 0, ack: p.ack || 0, seat: i,
-        lobby: lobbyInfo(), view: H.game ? E.viewFor(H.game, i) : null
+        lobby: lobbyInfo(), view: H.game ? E.viewFor(H.game, i) : null, clock: clockMsg()
       });
+    }
+
+    /* ---------- Zeitlimit (führt der Host) ----------
+     * Zug: T.turn ab jedem neuen Spielstand; läuft die Zeit ab, macht der Host den Zug (E.autoAction).
+     * Tauschphase: T.swap ab Rundenbeginn; danach beginnt die Runde, auch wenn nicht alle bereit sind.
+     * Sind alle bereit, beginnt sie nach T.start – bis dahin kann jeder „Bereit“ noch zurücknehmen.
+     * Die Gäste bekommen mit jedem Stand die Restzeit und rechnen sie auf ihre eigene Uhr um. */
+    function clockMsg() {
+      if (!clock || !clock.end) return null;
+      return { left: Math.max(0, clock.end - Date.now()), total: clock.total, kind: clock.kind };
+    }
+    function armClock() {
+      if (role !== 'host' || !H) return;
+      var g = H.game, now = Date.now(), next = null;
+      if (g && g.phase === 'swap') {
+        var base = 'swap:' + (H.round || 0);
+        var swapEnd = clock && clock.base === base ? clock.swapEnd : (T.swap > 0 ? now + T.swap : 0);
+        var all = g.holdStart && g.players.every(function (q) { return q.ready; });
+        if (all) {
+          var goEnd = clock && clock.key === base + ':go' ? clock.end : now + T.start;
+          if (swapEnd && swapEnd < goEnd) goEnd = swapEnd;
+          next = { key: base + ':go', base: base, swapEnd: swapEnd, end: goEnd, total: T.start, kind: 'start' };
+        } else {
+          next = { key: base, base: base, swapEnd: swapEnd, end: swapEnd, total: T.swap, kind: 'swap' };
+        }
+      } else if (g && g.phase === 'play' && T.turn > 0) {
+        var key = 'play:' + (H.round || 0) + ':' + g.seq;
+        next = clock && clock.key === key ? clock : { key: key, end: now + T.turn, total: T.turn, kind: 'turn' };
+      }
+      clock = next;
+      if (clockTimer) { clearTimeout(clockTimer); clockTimer = null; }
+      if (clock && clock.end) clockTimer = setTimeout(onClock, Math.max(0, clock.end - now));
+    }
+    function onClock() {
+      clockTimer = null;
+      if (role !== 'host' || !H || !H.game || !clock || !clock.end) return;
+      if (Date.now() < clock.end) return armClock();
+      var g = H.game;
+      if (g.phase === 'swap') {
+        if (E.startPlay(g, clock.kind !== 'start').ok) return bump();
+      } else if (g.phase === 'play') {
+        var seat = g.turn, a = E.autoAction(g, seat);
+        if (a && E.applyAction(g, seat, a).ok) { g.ev.auto = true; return bump(); }
+      }
+      clock.end = 0;   // nichts zu tun: nicht in einer Schleife weiter feuern
     }
     function deny(pid, why) { if (tr) tr.publish('p/' + pid, { t: 'deny', why: why }); }
     function bump() {
       H.ver++;
+      armClock();
       save();
       for (var i = 0; i < H.players.length; i++) sendState(i);
       emit();
@@ -277,6 +329,7 @@
       for (var i = ps.length - 1; i >= 0; i--) if (H.loserPid && ps[i].pid === H.loserPid) { opts.startSeat = i; opts.startBy = 'loser'; }
       H.loserPid = null;
       H.round = (H.round || 0) + 1;   // Aktionen tragen die Rundennummer: Nachzügler aus einer alten Runde zählen nicht
+      if (T.start > 0) opts.holdStart = true;   // alle bereit → kurzer Countdown, erst dann beginnt die Runde (siehe armClock)
       return E.createGame(ps.map(function (q) { return { name: q.name, bot: !!q.bot }; }), opts);
     }
     function removePlayer(i) { H.players.splice(i, 1); }
@@ -341,6 +394,8 @@
         if (p.bot || p.local) return;
         if (p.online && now - (p.seen || 0) > T.playerDead) { p.online = false; changed = true; }
       });
+      // Falls der Zeitgeber des Zeitlimits verschluckt wurde (Seite war im Hintergrund): hier nachholen.
+      if (clock && clock.end && now >= clock.end) onClock();
       if (changed) bump();
     }
     function nextBotName() {
@@ -354,6 +409,7 @@
     function startHost() {
       role = 'host';
       openTransport(H.code, 'h', hostOnMsg);
+      armClock();
       save();
       emit();
       driveBots();
@@ -454,6 +510,8 @@
         C.epoch = m.epoch; C.ver = m.ver; C.got = true; C.error = null;
         C.seat = m.seat; C.lobby = m.lobby; C.view = m.view;
         C.round = typeof m.round === 'number' ? m.round : 0;
+        C.clock = m.clock && typeof m.clock.left === 'number'
+          ? { end: Date.now() + m.clock.left, total: m.clock.total, kind: m.clock.kind } : null;
         var ack = typeof m.ack === 'number' ? m.ack | 0 : 0;
         C.pending = C.pending.filter(function (x) { return x.n > ack; });
         if (C.seq < ack) C.seq = ack;
@@ -564,6 +622,13 @@
     session.wake = function () {
       if (tr) tr.kick();
       if (role === 'client' && C) { C.nextPing = 0; C.nextHello = 0; C.nextResend = 0; clientTick(); }
+    };
+
+    /* Laufendes Zeitlimit auf der eigenen Uhr: {end (ms), total (ms), kind: 'turn'|'swap'|'start'} oder null. */
+    session.clock = function () {
+      if (role === 'host') return clock && clock.end ? { end: clock.end, total: clock.total, kind: clock.kind } : null;
+      if (role === 'client' && C && C.got) return C.clock || null;
+      return null;
     };
 
     /* Diagnose: Zustand der Relay-Verbindungen (falls der Transport das anbietet). */

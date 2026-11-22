@@ -178,6 +178,7 @@ function refIsLegal(M, seat, a) {
   if (a.t === 'play') {
     if (!Array.isArray(a.cards) || a.cards.length === 0 || a.cards.length > 4) return false;
     if (z !== 'hand' && z !== 'up') return false;
+    if (z === 'up' && a.cards.length > 1) return false;      // offene Karten: nur eine pro Zug
     const src = zoneCards(p);
     for (let i = 0; i < a.cards.length; i++) {
       const c = a.cards[i];
@@ -275,7 +276,8 @@ function enumMoves(M) {
   const p = M.players[M.turn], z = zoneOfP(p), top = topOf(M), out = [];
   if (z === 'hand' || z === 'up') {
     const groups = new Map();
-    for (const c of zoneCards(p)) { const k = rk(c); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(c); }
+    // offene Karten gehen nur einzeln: jede ist ihre eigene "Gruppe"
+    for (const c of zoneCards(p)) { const k = z === 'up' ? c : rk(c); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(c); }
     for (const g of groups.values()) if (legal(g[0], top)) out.push({ t: 'play', group: g });
   } else if (z === 'down' && top !== 'JR') {
     p.down.forEach((c, i) => { if (c) out.push({ t: 'flip', slot: i }); });
@@ -1253,17 +1255,18 @@ test('Freiwillig aufnehmen (K2c): aus den offenen Karten – sie bleiben liegen 
 
 /* ================================================================== Offene Karten */
 
-test('Offene Karten: erst bei leerer Hand; wie normale Karten; mehrere gleiche gemeinsam; nie mit Handkarten gemischt', () => {
+test('Offene Karten: erst bei leerer Hand; nur EINE pro Zug, auch bei gleichen; nie mit Handkarten gemischt', () => {
   let s = mk({ players: [{ hand: [], up: ['H8', 'D8', 'C4'], down: ['S2', 'H2', 'D2'] }, { hand: ['H9', 'D9'] }, { hand: ['S9', 'C9'] }], pile: ['S6'], turn: 0 });
   assert.equal(E.options(s, 0).zone, 'up');
   reject(s, 0, play('C4'), '4 auf 6');
   reject(s, 0, play('H8', 'C4'), 'gemischte Werte');
   reject(s, 0, flip(0), 'verdeckte erst nach den offenen');
   notForced(s, 0, 'eine 8 passt');
-  const ev = accept(s, 0, play('H8', 'D8'));
+  rejectAs(s, 0, play('H8', 'D8'), 'one-up', 'zwei gleiche offene Karten auf einmal');
+  const ev = accept(s, 0, play('H8'));
   assert.equal(ev.from, 'up');
-  assert.deepEqual(s.players[0].up, [null, null, 'C4'], 'die Plätze bleiben leer');
-  assert.deepEqual(s.pile, ['S6', 'H8', 'D8']);
+  assert.deepEqual(s.players[0].up, [null, 'D8', 'C4'], 'der Platz bleibt leer, die zweite 8 bleibt liegen');
+  assert.deepEqual(s.pile, ['S6', 'H8']);
   assert.equal(s.turn, 1);
   // mit Handkarte: offene Karte tabu, auch gemischt
   s = mk({ players: [{ hand: ['S8'], up: ['H8', 'D8', 'C4'] }, { hand: ['C8', 'D9'] }], pile: ['S6'], turn: 0 });
@@ -1272,7 +1275,8 @@ test('Offene Karten: erst bei leerer Hand; wie normale Karten; mehrere gleiche g
   accept(s, 0, play('S8'));
   accept(s, 1, play('C8'));
   reject(s, 0, play('C4'));
-  accept(s, 0, play('H8', 'D8'), 'jetzt ist die Hand leer: die offenen 8er sind dran');
+  rejectAs(s, 0, play('H8', 'D8'), 'one-up', 'auch jetzt nur eine');
+  accept(s, 0, play('H8'), 'jetzt ist die Hand leer: eine offene 8 ist dran');
 });
 
 test('Offene Karten: passt keine, wird bei 3 oder 2 offenen Karten nur der Stapel aufgenommen – die offenen bleiben liegen; dann Pflichtzug aus der Hand', () => {
@@ -1509,7 +1513,10 @@ test('Blind: ungültige aufgedeckte Karte -> Karte UND Stapel auf die Hand, ders
   assert.deepEqual(s.pile, []);
   assert.equal(s.turn, 0); assert.equal(s.freePlay, true);
   assert.equal(E.viewFor(s, 1).turn, 0);
-  assert.equal(E.viewFor(s, 1).ev.card, 'D4', 'die aufgedeckte Karte war für alle sichtbar');
+  assert.equal(E.viewFor(s, 0).ev.card, 'D4', 'der Besitzer sieht seine aufgedeckte Karte');
+  assert.equal(E.viewFor(s, 1).ev.card, null, 'die anderen sehen sie nicht: sie passt nicht und geht auf die Hand');
+  assert.equal(E.viewFor(s, 2).ev.card, null);
+  assert.equal(E.viewFor(s, 1).ev.n, 3, 'die Anzahl bleibt öffentlich');
   reject(s, 0, flip(0), 'erst die Hand');
   rejectAs(s, 0, PICK, 'cannot-pickup', 'der Stapel ist schon leer');
   accept(s, 0, play('D4'));
@@ -2849,6 +2856,7 @@ function playGame(cfg, st) {
     const la = E.legalActions(S), expSig = [];
     for (const m of moves) { if (m.t === 'play') for (let k = 1; k <= m.group.length; k++) expSig.push(moveSig(m) + 'x' + k); else expSig.push(moveSig(m)); }
     const gotSig = la.map((a) => (a.t === 'play' ? moveSig(a) + 'x' + a.cards.length : moveSig(a)));
+    { const uniq = Array.from(new Set(expSig)); expSig.length = 0; expSig.push(...uniq); }   // gleiche offene Karten: ein Eintrag je Wert
     if (expSig.sort().join() !== gotSig.sort().join()) assert.fail('legalActions ' + gotSig + ' statt ' + expSig + ' in ' + brief(S) + ' ' + where());
     for (const a of la) if (!refIsLegal(M, seat, a)) assert.fail('legalActions enthält unzulässigen Zug ' + JSON.stringify(a) + ' ' + where());
     // Bot liefert in jedem erreichbaren Zustand eine legale Aktion – und nur für den Spieler am Zug
@@ -3204,13 +3212,17 @@ test('viewFor: verrät nie fremde Handkarten, nie verdeckte Karten, nie Karten d
       // aufgedeckte unpassende Karte, die mit aufgenommene letzte offene Karte
       const shown = new Set();
       if (ev.t === 'play') ev.cards.forEach((c) => shown.add(c));
-      if (ev.t === 'flipfail') { shown.add(ev.card); if (v === 0) seen.flipfail++; }
+      // eine blind aufgedeckte unpassende Karte sieht nur ihr Besitzer
+      if (ev.t === 'flipfail') {
+        if (v === ev.seat) { assert.equal(ev.card, s.ev.card); shown.add(ev.card); } else assert.equal(ev.card, null, 'fremde Blindkarte bleibt geheim');
+        if (v === 0) seen.flipfail++;
+      }
       if (ev.t === 'pickup' && ev.upCard) { shown.add(ev.upCard); if (v === 0) seen.upCard++; }
       if (ev.t === 'pickup' || ev.t === 'flipfail') {
         // verbrauchte Joker lagen offen auf dem Stapel und sind jetzt aus dem Spiel – sonst nennt das Ereignis keine Stapelkarte
         for (const c of ev.gone) { assert.ok(isJ(c) && s.burned.includes(c), 'gone nennt nur verbrauchte Joker'); shown.add(c); if (v === 0) seen.gone++; }
         const named = idsIn(JSON.stringify(ev)).map((q) => q.slice(1, -1));
-        assert.deepEqual(sorted(named), sorted(ev.gone.concat(ev.t === 'flipfail' ? [ev.card] : ev.upCard ? [ev.upCard] : [])), 'das Aufnahme-Ereignis verrät nicht, WELCHE Karten auf die Hand kamen');
+        assert.deepEqual(sorted(named), sorted(ev.gone.concat(ev.t === 'flipfail' ? [ev.card].filter(Boolean) : ev.upCard ? [ev.upCard] : [])), 'das Aufnahme-Ereignis verrät nicht, WELCHE Karten auf die Hand kamen');
       }
       if (ev.t === 'giveup') assert.deepEqual(idsIn(JSON.stringify(ev)), [], 'Aufgeben nennt keine Karte');
       if (ev.t === 'deal' || ev.t === 'ready' || ev.t === 'start') assert.deepEqual(idsIn(JSON.stringify(ev)), [], 'Tausch-/Start-Ereignis nennt keine Karte');
@@ -3271,7 +3283,7 @@ test('viewFor: eigene Hand sichtbar, Zählwerte, Plätze, freePlay, again; "my" 
       if (view.again) { agains++; assert.equal(view.turn, view.ev.seat); assert.ok(view.ev.fx.includes('again')); }
       assert.equal(view.seq, s.seq);
       assert.equal(view.ev.seq, s.seq);
-      assert.deepEqual(view.ev, s.ev);
+      assert.deepEqual(view.ev, s.ev.t === 'flipfail' && s.ev.seat !== v ? Object.assign({}, s.ev, { card: null }) : s.ev);
       assert.notEqual(view.ev, s.ev, 'ev ist eine Kopie');
       assert.equal(view.players.length, n);
       view.players.forEach((vp, i) => {
@@ -3314,7 +3326,7 @@ test('viewFor: eigene Hand sichtbar, Zählwerte, Plätze, freePlay, again; "my" 
     }
     const fresh = [];
     for (let v = 0; v < n; v++) fresh.push(E.viewFor(s, v));
-    const pub = (view) => JSON.stringify([view.phase, view.turn, view.dir, view.pile, view.stock, view.burned, view.finished, view.winner, view.loser, view.deadlock, view.freePlay, view.again, view.req, view.seq, view.ev, view.startSeat, view.startBy, view.gaveUp,
+    const pub = (view) => JSON.stringify([view.phase, view.turn, view.dir, view.pile, view.stock, view.burned, view.finished, view.winner, view.loser, view.deadlock, view.freePlay, view.again, view.req, view.seq, Object.assign({}, view.ev, view.ev.t === 'flipfail' ? { card: null } : null), view.startSeat, view.startBy, view.gaveUp,
       view.players.map((p) => [p.name, p.bot, p.n, p.up, p.down, p.ready, p.zone, p.place])]);
     for (let v = 1; v < n; v++) assert.equal(pub(fresh[v]), pub(fresh[0]));
   }
@@ -3364,10 +3376,10 @@ function reqAllows(req, card) {
 }
 const actSet = (list) => list.map((a) => (a.t === 'play' ? 'play:' + rkKey(a.cards[0]) + 'x' + a.cards.length : a.t === 'flip' ? 'flip:' + a.slot : 'pickup')).sort();
 /* alle Legezüge aus `cards` auf `top`: je Wert 1..k Karten */
-function expPlays(cards, top) {
+function expPlays(cards, top, single) {
   const by = new Map(), out = [];
   for (const c of cards) { if (!by.has(rk(c))) by.set(rk(c), []); by.get(rk(c)).push(c); }
-  for (const g of by.values()) if (tableSays(g[0], top)) for (let k = 1; k <= g.length; k++) out.push(play(...g.slice(0, k)));
+  for (const g of by.values()) if (tableSays(g[0], top)) for (let k = 1; k <= (single ? 1 : g.length); k++) out.push(play(...g.slice(0, k)));
   return out;
 }
 
@@ -3415,7 +3427,7 @@ test('options()/legalActions()/requirement()/canPlayOn stimmen mit applyAction �
       s = mk({ pile, players: [{ up: [cand, null, fill], down: ['D13'].filter((c) => c !== cand && c !== top) }, { hand: [other] }] });
       o = E.options(s, 0);
       assert.deepEqual(o, { zone: 'up', playable: [cand, fill].filter((c) => tableSays(c, top)), canPickup: pickExp, canFlip: false, forced }, 'offen: options ' + label);
-      assert.deepEqual(actSet(E.legalActions(s)), laExp(expPlays([cand, fill], top)), 'offen: legalActions ' + label);
+      assert.deepEqual(actSet(E.legalActions(s)), laExp(expPlays([cand, fill], top, true)), 'offen: legalActions ' + label);
       if (exp) { const c2 = clone(s); accept(c2, 0, play(cand), 'offen: ' + label); assert.deepEqual(c2.players[0].up, [null, null, fill]); }
       else reject(s, 0, play(cand), 'offen: ' + label);
       r = pickOn(s, forced, 'offen:');
@@ -3477,7 +3489,7 @@ test('options(): Mehrfach-Legen ist genau dann erlaubt, wenn die einzelne Karte 
       let s = mk({ pile: top ? [top] : [], players: [{ hand: group.concat(extra), down }, { hand: opp }, { hand: ['C12', 'D12'].filter((c) => !group.includes(c)) }] });
       if (exp) accept(s, 0, a, k + 'x ' + r + ' auf ' + top); else reject(s, 0, a, k + 'x ' + r + ' auf ' + top);
       s = mk({ pile: top ? [top] : [], players: [{ up: group, down }, { hand: opp }, { hand: ['C12', 'D12'].filter((c) => !group.includes(c)) }] });
-      if (exp) accept(s, 0, a, 'offen ' + k + 'x ' + r + ' auf ' + top); else reject(s, 0, a, 'offen ' + k + 'x ' + r + ' auf ' + top);
+      rejectAs(s, 0, a, 'one-up', 'offen ' + k + 'x ' + r + ' auf ' + top);   // offene Karten gehen nie zu mehreren
     }
   }
   const s = table(3, { turn: 1 });

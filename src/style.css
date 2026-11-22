@@ -211,10 +211,23 @@ body.is-host .guest-only { display: none !important; }
 .pchip i { width: 14px; text-align: center; font-style: normal; flex: none; }
 .pchip.ok { color: #0d2a1e; background: #7fdca4; }
 .sw-start { font-size: 13px; color: var(--mute); text-align: center; min-height: 18px; }
+.sw-clock { font-size: 15px; font-weight: 700; color: var(--ink); text-align: center; min-height: 20px; font-variant-numeric: tabular-nums; }
+.sw-clock.low { color: #ff8b7e; }
+.sw-clock.go { color: var(--gold); }
 
 /* ---------- Spieltisch ---------- */
 .g-top { height: 44px; }
 .tbar { flex: 1; min-width: 0; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 999px; padding: 0 14px; font-weight: 700; font-size: 16px; background: var(--panel); color: var(--ink); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; transition: background .2s, color .2s; }
+.tbar { position: relative; }
+.tbar #turnText { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.tsec { flex: none; margin-left: 8px; min-width: 2ch; text-align: right; font-variant-numeric: tabular-nums; opacity: .75; }
+.tfill { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: currentColor; opacity: .5; transform-origin: 0 50%; transition: transform .25s linear; }
+.tbar.low .tsec { opacity: 1; color: #ff8b7e; }
+.tbar.low .tfill { opacity: 1; background: #ff5a4d; }
+.tbar.me.low .tsec { color: #a3140a; }
+.tbar.me.low .tfill { background: #c8261a; }
+.tbar [hidden] { display: none; }
+.chip.off { visibility: hidden; }
 .tbar.me { background: linear-gradient(180deg, #f8d573, #e9b33b); color: #241a02; font-size: 17px; box-shadow: 0 0 0 3px rgba(243, 197, 82, .25), 0 4px 14px rgba(0, 0, 0, .3); }
 .table { flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; }
 .opp-top { flex: none; display: flex; justify-content: space-evenly; align-items: flex-start; padding: 2px 4px 0; min-height: 4px; }

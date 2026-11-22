@@ -1102,7 +1102,8 @@ function chooseAction(view, rnd) {
   }
   if (!my.playable.length) return my.canPickup ? { t: 'pickup' } : null;
   const zone = my.zone === 'hand' ? me.hand : me.up.filter(Boolean);
-  const sameRank = c => zone.filter(x => Engine.rank(x) === Engine.rank(c));
+  // mehrere gleiche gehen nur aus der Hand; von den offenen Karten immer nur eine pro Zug
+  const sameRank = c => (my.zone === 'up' ? [c] : zone.filter(x => Engine.rank(x) === Engine.rank(c)));
   if (view.ev && view.ev.repeat >= 2) {
     const moves = [], done = {};
     my.playable.forEach(c => {

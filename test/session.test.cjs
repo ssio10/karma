@@ -30,7 +30,7 @@ const E = require(path.join(__dirname, '..', 'src', 'engine.js'));
 const N = require(path.join(__dirname, '..', 'src', 'net.js'));
 
 const T_ORIG = Object.assign({}, N.T);
-const FAST = { tick: 5, ping: 40, hostDead: 250, playerDead: 250, resend: 20, hello: 20, joinTimeout: 200, bot: 4, sweep: 25 };
+const FAST = { tick: 5, ping: 40, hostDead: 250, playerDead: 250, resend: 20, hello: 20, joinTimeout: 200, bot: 4, sweep: 25, turn: 0, swap: 0, start: 0 };   // Zeitlimits aus; die Tests dazu schalten sie gezielt ein
 const ALL_IDS = E.fullDeck();
 const IDLE = { stage: 'idle', error: null, code: null, isHost: false, seat: -1, conn: 'offline', hostOnline: false, pending: 0, lobby: null, view: null };
 
@@ -270,7 +270,8 @@ function leakWatch(w, hostStore) {
     const seat = H.players.findIndex((p) => p.pid === pid);
     if (seat !== m.seat) st.misrouted.push('Sicht von Sitz ' + m.seat + ' ging an den Spieler auf Sitz ' + seat);
     H.players.forEach((p) => { if (p.pid !== pid && p.pid.length >= 8 && text0.includes(p.pid)) leak('Nachricht an Sitz ' + seat + ' enthält die Kennung eines anderen Spielers'); });
-    assert.deepEqual(Object.keys(m).sort(), ['ack', 'epoch', 'lobby', 'round', 'seat', 't', 'ver', 'view']);
+    assert.deepEqual(Object.keys(m).sort(), ['ack', 'clock', 'epoch', 'lobby', 'round', 'seat', 't', 'ver', 'view']);
+    assert.equal(m.clock, null, 'ohne Zeitlimit (T.turn/T.swap/T.start = 0) wird keine Uhr verschickt');
     assert.equal(m.round, H.round || 0, 'round ist die Rundennummer des Hosts');
     assert.ok(Number.isInteger(m.round) && m.round >= 0);
     if (m.view) assert.ok(m.round >= 1, 'eine Sicht gibt es erst ab Runde 1');
