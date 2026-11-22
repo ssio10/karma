@@ -32,7 +32,7 @@ const N = require(path.join(__dirname, '..', 'src', 'net.js'));
 const T_ORIG = Object.assign({}, N.T);
 const FAST = { tick: 5, ping: 40, hostDead: 250, playerDead: 250, resend: 20, hello: 20, joinTimeout: 200, bot: 4, sweep: 25, turn: 0, swap: 0, start: 0 };   // Zeitlimits aus; die Tests dazu schalten sie gezielt ein
 const ALL_IDS = E.fullDeck();
-const IDLE = { stage: 'idle', error: null, code: null, isHost: false, seat: -1, conn: 'offline', hostOnline: false, pending: 0, lobby: null, view: null };
+const IDLE = { stage: 'idle', error: null, code: null, isHost: false, seat: -1, conn: 'offline', hostOnline: false, pending: 0, lobby: null, view: null, room: null };
 
 function mulberry32(a) {
   return function () {
@@ -270,7 +270,7 @@ function leakWatch(w, hostStore) {
     const seat = H.players.findIndex((p) => p.pid === pid);
     if (seat !== m.seat) st.misrouted.push('Sicht von Sitz ' + m.seat + ' ging an den Spieler auf Sitz ' + seat);
     H.players.forEach((p) => { if (p.pid !== pid && p.pid.length >= 8 && text0.includes(p.pid)) leak('Nachricht an Sitz ' + seat + ' enthält die Kennung eines anderen Spielers'); });
-    assert.deepEqual(Object.keys(m).sort(), ['ack', 'clock', 'epoch', 'lobby', 'round', 'seat', 't', 'ver', 'view']);
+    assert.deepEqual(Object.keys(m).sort(), ['ack', 'clock', 'epoch', 'lobby', 'room', 'round', 'seat', 't', 'ver', 'view']);
     assert.equal(m.clock, null, 'ohne Zeitlimit (T.turn/T.swap/T.start = 0) wird keine Uhr verschickt');
     assert.equal(m.round, H.round || 0, 'round ist die Rundennummer des Hosts');
     assert.ok(Number.isInteger(m.round) && m.round >= 0);
@@ -2534,4 +2534,49 @@ test('Gäste überstehen fremde und kaputte Nachrichten auf ihrem Kanal ohne Abs
   assert.equal(anna.snap.seat, 1, 'alter Stand überschreibt nichts');
   assert.deepEqual(anna.snap.lobby, host.snap.lobby);
   raw.close();
+});
+
+/* ================================================================== Design und Strichliste (gehören zum Raum) */
+
+test('Design: nur der Host stellt es ein, es kommt bei allen an, unbekannte Werte werden abgelehnt, und es übersteht neue Runden', (t) => {
+  const w = world(t, { seed: 61 });
+  const { host, guests } = lobby(w, ['Anna']);
+  const anna = guests[0];
+  assert.deepEqual(host.snap.room, { table: 'normal', cards: 'normal', wins: [0, 0] });
+  w.until(() => anna.snap.room !== null, 300);
+  assert.deepEqual(anna.snap.room, host.snap.room);
+  assert.equal(host.lobby({ op: 'design', table: 'stahl' }), true);
+  assert.equal(host.lobby({ op: 'design', cards: 'filz' }), true);
+  w.until(() => anna.snap.room.cards === 'filz', 300, 'Design beim Gast');
+  assert.deepEqual(anna.snap.room, { table: 'stahl', cards: 'filz', wins: [0, 0] });
+  assert.equal(host.lobby({ op: 'design', table: 'quatsch' }), false);
+  assert.equal(host.lobby({ op: 'design', cards: {} }), false);
+  assert.equal(anna.lobby({ op: 'design', table: 'nacht' }), false, 'Gäste dürfen das nicht');
+  assert.equal(host.snap.room.table, 'stahl');
+  begin(w, host, guests, { startSeat: 0 });
+  assert.equal(host.lobby({ op: 'design', table: 'nacht', cards: 'druck' }), true, 'auch während der Partie');
+  w.until(() => anna.snap.room.table === 'nacht', 300);
+  assert.equal(host.lobby({ op: 'toLobby' }), true);
+  w.until(() => anna.snap.stage === 'lobby', 300);
+  assert.deepEqual(anna.snap.room, { table: 'nacht', cards: 'druck', wins: [0, 0] });
+});
+
+test('Strichliste: ein Strich für den Sieger, genau einmal pro Runde, über mehrere Runden und für alle sichtbar', (t) => {
+  const w = world(t, { seed: 62 });
+  const { host, guests } = lobby(w, ['Anna']);
+  const anna = guests[0];
+  begin(w, host, guests, { startSeat: 0, rig: rigQuick([0]) });
+  assert.equal(host.act({ t: 'play', cards: ['S2'] }), true);
+  w.until(() => w.game.winner === 0 && w.synced(guests), 300);
+  assert.deepEqual(host.snap.room.wins, [1, 0]);
+  assert.deepEqual(anna.snap.room.wins, [1, 0]);
+  host.lobby({ op: 'design', table: 'patio' });                    // weitere Stände derselben Runde zählen nicht noch einmal
+  w.until(() => anna.snap.room.table === 'patio', 300);
+  assert.deepEqual(anna.snap.room.wins, [1, 0]);
+  begin(w, host, guests, { op: 'rematch', startSeat: 1, rig: rigQuick([1]) });
+  assert.deepEqual(host.snap.room.wins, [1, 0], 'neue Runde: noch kein neuer Strich');
+  assert.equal(anna.act({ t: 'play', cards: ['S2'] }), true);
+  w.until(() => w.game.winner === 1 && w.synced(guests), 300);
+  assert.deepEqual(host.snap.room.wins, [1, 1]);
+  assert.deepEqual(anna.snap.room.wins, [1, 1]);
 });

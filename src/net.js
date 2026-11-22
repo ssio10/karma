@@ -100,8 +100,18 @@
     return t;
   };
 
+  var DESIGNS = { table: ['normal', 'stahl', 'patio', 'nacht'], cards: ['normal', 'stift', 'filz', 'druck'] };
+  /* Was vom Host kommt, wird nur in bekannter Form übernommen. */
+  function cleanRoom(r) {
+    if (!r || typeof r !== 'object') return null;
+    return {
+      table: DESIGNS.table.indexOf(r.table) >= 0 ? r.table : 'normal',
+      cards: DESIGNS.cards.indexOf(r.cards) >= 0 ? r.cards : 'normal',
+      wins: Array.isArray(r.wins) ? r.wins.slice(0, 6).map(function (n) { return typeof n === 'number' && n > 0 ? Math.min(999, n | 0) : 0; }) : []
+    };
+  }
   function idleSnap() {
-    return { stage: 'idle', error: null, code: null, isHost: false, seat: -1, conn: 'offline', hostOnline: false, pending: 0, lobby: null, view: null };
+    return { stage: 'idle', error: null, code: null, isHost: false, seat: -1, conn: 'offline', hostOnline: false, pending: 0, lobby: null, view: null, room: null };
   }
 
   /* opts: { engine, storage (localStorage-artig, optional), transport: 'mqtt'|'bc'|'mem', onUpdate(snap) }
@@ -116,6 +126,7 @@
    *   pending: Anzahl noch unbestätigter eigener Aktionen
    *   lobby: { starter, players: [{name, bot, auto, online, left}] }   Sitzreihenfolge = Uhrzeigersinn; starter = Sitz, der die nächste Runde beginnt (Verlierer), sonst -1
    *   view: KarmaEngine.viewFor(...) oder null (in der Lobby)
+   *   room: { table, cards, wins: [Siege je Sitz] }   Design (stellt der Host ein, gilt für alle) und Strichliste
    * }
    */
   function createSession(opts) {
@@ -140,6 +151,7 @@
         s.hostOnline = true;
         s.lobby = lobbyInfo();
         s.view = H.game ? E.viewFor(H.game, 0) : null;
+        s.room = roomInfo();
       } else if (role === 'client' && C) {
         s.code = C.code; s.seat = C.seat;
         s.conn = online ? 'online' : 'connecting';
@@ -150,7 +162,7 @@
         else {
           s.stage = C.view ? 'game' : 'lobby';
           s.hostOnline = C.hostOnline;
-          s.lobby = C.lobby; s.view = C.view;
+          s.lobby = C.lobby; s.view = C.view; s.room = C.room || null;
         }
       }
       return s;
@@ -222,12 +234,28 @@
         })
       };
     }
+    /* Design und Strichliste: gehören zum Raum, nicht zur Runde. */
+    function roomInfo() {
+      var d = H.design || {};
+      return {
+        table: DESIGNS.table.indexOf(d.table) >= 0 ? d.table : 'normal',
+        cards: DESIGNS.cards.indexOf(d.cards) >= 0 ? d.cards : 'normal',
+        wins: H.players.map(function (p) { return p.wins | 0; })
+      };
+    }
+    /* Ein Strich für den Sieger, sobald er feststeht – einmal pro Runde. Sitze und H.players decken sich während einer Partie. */
+    function countWin() {
+      var g = H.game;
+      if (!g || g.winner === null || g.winner === undefined || H.wonRound === (H.round || 0) || !H.players[g.winner]) return;
+      H.wonRound = H.round || 0;
+      H.players[g.winner].wins = (H.players[g.winner].wins | 0) + 1;
+    }
     function sendState(i) {
       var p = H.players[i];
       if (!p || p.bot || p.local || !tr) return;
       tr.publish('p/' + p.pid, {
         t: 'state', epoch: H.epoch, ver: H.ver, round: H.round || 0, ack: p.ack || 0, seat: i,
-        lobby: lobbyInfo(), view: H.game ? E.viewFor(H.game, i) : null, clock: clockMsg()
+        lobby: lobbyInfo(), view: H.game ? E.viewFor(H.game, i) : null, clock: clockMsg(), room: roomInfo()
       });
     }
 
@@ -278,6 +306,7 @@
     function deny(pid, why) { if (tr) tr.publish('p/' + pid, { t: 'deny', why: why }); }
     function bump() {
       H.ver++;
+      countWin();
       armClock();
       save();
       for (var i = 0; i < H.players.length; i++) sendState(i);
@@ -433,6 +462,7 @@
      *  {op:'rematch'}                              neue Runde, sobald es einen Sieger gibt oder die Partie vorbei ist
      *  {op:'toLobby'}                              Partie abbrechen / zurück in die Lobby
      *  {op:'auto', seat, on}                       Bot übernimmt für einen abwesenden Spieler
+     *  {op:'design', table, cards}                 Tisch- und Karten-Design für alle (jederzeit; fehlt ein Wert, bleibt er)
      */
     session.lobby = function (op) {
       if (role !== 'host' || !H || !op) return false;
@@ -477,6 +507,13 @@
           if (op.on && p.online) return false;   // nur für abwesende Spieler
           p.auto = !!op.on;
           break;
+        case 'design':
+          var cd = roomInfo();
+          var nt = op.table == null ? cd.table : op.table, nc = op.cards == null ? cd.cards : op.cards;
+          if (DESIGNS.table.indexOf(nt) < 0 || DESIGNS.cards.indexOf(nc) < 0) return false;
+          if (nt === cd.table && nc === cd.cards) return true;
+          H.design = { table: nt, cards: nc };
+          break;
         default:
           return false;
       }
@@ -509,6 +546,7 @@
         var before = C.pending.length;
         C.epoch = m.epoch; C.ver = m.ver; C.got = true; C.error = null;
         C.seat = m.seat; C.lobby = m.lobby; C.view = m.view;
+        C.room = cleanRoom(m.room);
         C.round = typeof m.round === 'number' ? m.round : 0;
         C.clock = m.clock && typeof m.clock.left === 'number'
           ? { end: Date.now() + m.clock.left, total: m.clock.total, kind: m.clock.kind } : null;
@@ -640,6 +678,6 @@
   return {
     createSession: createSession, transports: transports, memBus: memBus, T: T,
     normalizeCode: normalizeCode, cleanName: cleanName, randId: randId,
-    CODE_ALPHA: CODE_ALPHA, STORE_KEY: STORE_KEY
+    CODE_ALPHA: CODE_ALPHA, STORE_KEY: STORE_KEY, DESIGNS: DESIGNS
   };
 });

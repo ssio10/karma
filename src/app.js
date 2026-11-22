@@ -19,6 +19,9 @@
   function rectOf(n) { var r = n.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; }
   function svgUse(id) { return '<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#' + id + '"/></svg>'; }
 
+  /* Farbsymbol einer Karte: gedruckt (u-s) und mit Stift gezeichnet (u-p); welches zu sehen ist, entscheidet das Karten-Design per CSS. */
+  function suitSvg(k) { return '<svg viewBox="0 0 24 24" aria-hidden="true"><use class="u-s" href="#s-' + k + '"/><use class="u-p" href="#p-' + k + '"/></svg>'; }
+
   if (!E || !N) {
     var se = $('startErr');
     se.hidden = false;
@@ -43,12 +46,12 @@
     d.setAttribute('data-card', id);
     if (E.isJoker(id)) {
       d.className += ' jk' + (id === E.JR ? ' red' : '');
-      d.innerHTML = '<div class="ci">' + svgUse('s-J') + '<span class="jt">JOKER</span></div><div class="big">' + svgUse('s-J') + '</div>';
+      d.innerHTML = '<div class="ci">' + suitSvg('J') + '<span class="jt">JOKER</span></div><div class="big">' + suitSvg('J') + '</div>';
       d.setAttribute('aria-label', id === E.JR ? 'Roter Joker' : 'Schwarzer Joker');
     } else {
       var s = E.suit(id), r = E.rank(id);
       if (s === 'H' || s === 'D') d.className += ' red';
-      d.innerHTML = '<div class="ci"><span class="rk' + (r === 10 ? ' ten' : '') + '">' + (RANK_LABEL[r] || r) + '</span>' + svgUse('s-' + s) + '</div><div class="big">' + svgUse('s-' + s) + '</div>';
+      d.innerHTML = '<div class="ci"><span class="rk' + (r === 10 ? ' ten' : '') + '">' + (RANK_LABEL[r] || r) + '</span>' + suitSvg(s) + '</div><div class="big">' + suitSvg(s) + '</div>';
       d.setAttribute('aria-label', SUIT_NAME[s] + ' ' + rankName(r));
     }
     return d;
@@ -71,6 +74,138 @@
     removeItem: function (k) { sDel(SS, k); sDel(LS, k); }
   };
   var NAME_KEY = 'karma.name';
+
+  /* ---------- Töne: im Code erzeugt (Web Audio), keine Dateien ----------
+   * Lautstärke und Stumm-Schalter gelten pro Gerät (karma.vol, karma.mute). Safari gibt erst nach einer
+   * Berührung Ton aus – der Audio-Kontext entsteht deshalb beim ersten Antippen. */
+  var Snd = (function () {
+    var AC = window.AudioContext || window.webkitAudioContext, ctx = null, out = null, nbuf = null;
+    var vol = parseFloat(sGet(LS, 'karma.vol')), mute = sGet(LS, 'karma.mute') === '1';
+    if (!(vol >= 0 && vol <= 1)) vol = 0.7;
+    function level() { return mute ? 0 : vol * vol; }   // quadratisch: der Regler wirkt so gleichmäßiger
+    function unlock() {
+      if (!AC) return;
+      try {
+        if (!ctx) {
+          ctx = new AC();
+          out = ctx.createGain();
+          out.gain.value = level();
+          out.connect(ctx.destination);
+        }
+        if (ctx.state !== 'running' && ctx.resume) ctx.resume();
+      } catch (e) { ctx = null; }
+    }
+    ['pointerdown', 'touchend', 'keydown'].forEach(function (ev) { doc.addEventListener(ev, unlock, true); });
+    function noise() {
+      if (!nbuf) {
+        var n = Math.floor(ctx.sampleRate), d;
+        nbuf = ctx.createBuffer(1, n, ctx.sampleRate);
+        d = nbuf.getChannelData(0);
+        for (var i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+      }
+      return nbuf;
+    }
+    /* gefiltertes Rauschen: Papier, Wischen, Feuer */
+    function hiss(t, dur, type, f0, f1, q, peak, attack) {
+      var src = ctx.createBufferSource(), flt = ctx.createBiquadFilter(), g = ctx.createGain();
+      src.buffer = noise(); src.loop = true;
+      flt.type = type; flt.Q.value = q;
+      flt.frequency.setValueAtTime(f0, t);
+      if (f1 !== f0) flt.frequency.exponentialRampToValueAtTime(f1, t + dur);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(peak, t + (attack || 0.005));
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      src.connect(flt); flt.connect(g); g.connect(out);
+      src.start(t, Math.random() * 0.5);
+      src.stop(t + dur + 0.03);
+    }
+    function tone(t, dur, type, f0, f1, peak) {
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(f0, t);
+      if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(peak, t + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(out);
+      o.start(t);
+      o.stop(t + dur + 0.03);
+    }
+    function notes(t, list, gap, last) {
+      list.forEach(function (f, i) { tone(t + i * gap, i === list.length - 1 ? last : gap * 1.5, 'triangle', f, f, 0.28); });
+    }
+    var S = {
+      place: function (t) { hiss(t, 0.07, 'bandpass', 2600, 900, 0.8, 0.55); tone(t, 0.09, 'sine', 170, 70, 0.5); },            // Karte landet auf dem Stapel
+      draw: function (t) { hiss(t, 0.13, 'bandpass', 1400, 4200, 1.2, 0.3, 0.05); },                                          // Karte gleitet vom Nachziehstapel
+      deal: function (t) { hiss(t, 0.09, 'bandpass', 3000, 1500, 1, 0.28, 0.01); tone(t + 0.05, 0.05, 'sine', 140, 90, 0.2); },
+      flip: function (t) { hiss(t, 0.09, 'highpass', 2500, 5000, 0.7, 0.25, 0.03); },
+      pickup: function (t) { for (var i = 0; i < 4; i++) hiss(t + i * 0.06, 0.1, 'bandpass', 2400 - i * 350, 900, 1, 0.32, 0.015); tone(t + 0.26, 0.14, 'sine', 120, 55, 0.5); },
+      burn: function (t) {
+        hiss(t, 0.95, 'bandpass', 300, 2600, 0.6, 0.6, 0.12);
+        hiss(t + 0.1, 0.8, 'lowpass', 900, 200, 0.5, 0.5, 0.2);
+        for (var i = 0; i < 7; i++) hiss(t + 0.12 + Math.random() * 0.7, 0.03, 'highpass', 3500, 3500, 1, 0.35);
+      },
+      tick: function (t) { tone(t, 0.05, 'square', 990, 990, 0.12); },                                                         // die letzten Sekunden des eigenen Zugs
+      timeout: function (t) { tone(t, 0.16, 'sawtooth', 220, 200, 0.2); tone(t + 0.2, 0.3, 'sawtooth', 165, 140, 0.2); },     // Zeit abgelaufen
+      win: function (t) { notes(t, [523, 659, 784, 1047], 0.11, 0.5); },                                                       // der Erste ist fertig
+      over: function (t) { notes(t, [392, 523, 659], 0.14, 0.55); tone(t + 0.28, 0.6, 'sine', 196, 196, 0.18); },              // Runde vorbei
+      lose: function (t) { notes(t, [392, 330, 262], 0.17, 0.6); }                                                             // Runde vorbei, selbst verloren
+    };
+    return {
+      play: function (name, delayMs) {
+        if (!ctx || mute || ctx.state !== 'running' || doc.visibilityState === 'hidden' || !S[name]) return;
+        try { S[name](ctx.currentTime + (delayMs > 0 ? delayMs / 1000 : 0) + 0.01); } catch (e) {}
+      },
+      vol: function () { return vol; },
+      muted: function () { return mute; },
+      setVol: function (v) {
+        vol = Math.max(0, Math.min(1, +v || 0));
+        sSet(LS, 'karma.vol', String(vol));
+        if (out) out.gain.value = level();
+      },
+      setMute: function (m) {
+        mute = !!m;
+        sSet(LS, 'karma.mute', mute ? '1' : '0');
+        if (out) out.gain.value = level();
+      }
+    };
+  })();
+
+  /* ---------- Design: Tisch und Karten ----------
+   * Der Host stellt beides ein, es gilt für alle im Raum (kommt mit jedem Stand als snap.room).
+   * Das zuletzt gesehene Design merkt sich das Gerät, damit auch die Startseite so aussieht. */
+  var TABLE_NAME = { normal: 'Normal', stahl: 'Stahl', patio: 'Patio', nacht: 'Nacht' };
+  var CARDS_NAME = { normal: 'Normal', stift: 'Stift', filz: 'Filz', druck: 'Druck' };
+  var THEME_COLOR = { normal: '#0a2c20', stahl: '#2b3035', patio: '#4a3422', nacht: '#161b2a' };
+  var design = { table: '', cards: '' };
+  function applyDesign(table, cards) {
+    if (!TABLE_NAME[table]) table = 'normal';
+    if (!CARDS_NAME[cards]) cards = 'normal';
+    if (table === design.table && cards === design.cards) return;
+    design.table = table; design.cards = cards;
+    var root = doc.documentElement, meta = doc.querySelector('meta[name="theme-color"]');
+    root.setAttribute('data-table', table);
+    root.setAttribute('data-cards', cards);
+    root.classList.toggle('prison', table !== 'normal');
+    if (meta) meta.setAttribute('content', THEME_COLOR[table]);
+    sSet(LS, 'karma.design', table + '|' + cards);
+  }
+  function prison() { return design.table !== 'normal'; }
+  (function () { var d = (sGet(LS, 'karma.design') || '').split('|'); applyDesign(d[0], d[1]); })();
+  /* Strichliste: je fünf Siege ein Bündel (vier Striche und ein Querstrich). Zu sehen nur in den Gefängnis-Designs. */
+  var TALLY_SVG = ' fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="';
+  function tallyNode(n) {
+    n = Math.max(0, Math.min(60, n | 0));
+    var box = el('span', 'tally'), html = '', rest = n % 5, i, d = '';
+    for (i = 0; i < Math.floor(n / 5); i++) html += '<svg viewBox="0 0 26 20"' + TALLY_SVG + 'M4.5 3 4 17M9.3 2.5 9 17.5M13.8 3.2 14.2 17M19 2.8 18.6 17.3M1 14.5 24.5 5.5"/></svg>';
+    for (i = 0; i < rest; i++) d += 'M' + (3 + i * 5) + ' ' + (3 - (i % 2) * 0.5) + 'L' + (3.4 + i * 5 - (i % 2) * 0.7) + ' 17';
+    if (rest) html += '<svg viewBox="0 0 ' + (rest * 5 + 1) + ' 20"' + TALLY_SVG + d + '"/></svg>';
+    box.innerHTML = html;
+    box.setAttribute('role', 'img');
+    box.setAttribute('aria-label', n === 1 ? '1 Sieg' : n + ' Siege');
+    return box;
+  }
+  function winsOf(seat) { var w = cur && cur.room && cur.room.wins; return w && w[seat] > 0 ? w[seat] : 0; }
 
   /* ---------- Zustand ---------- */
 
@@ -104,6 +239,7 @@
   var lock = false, afterLock = null;
   var handNodes = {}, handOrder = [], pileNodes = {};
   var swapSel = null, swapPrev = null;
+  var dealAt = 0, DEAL_GAP = 80;  // Rundenstart: wann das Austeilen begonnen hat
   /* Spielhilfe (pro Gerät): Hinweis am Stapel, welche Karten passen, und unpassende Karten abgedunkelt. */
   var help = sGet(LS, 'karma.help') !== '0';
   var press = null, drag = null, dragDone = null;
@@ -291,6 +427,7 @@
   }
   function syncChrome(s) {
     body.classList.toggle('is-host', !!s.isHost);
+    if (s.room) applyDesign(s.room.table, s.room.cards);
     syncBanner(s);
     syncHash(s);
     syncWakeLock();
@@ -394,6 +531,7 @@
     if (o.place) nm.appendChild(el('span', 'badge gold', 'Platz ' + o.place));
     if (o.lost) nm.appendChild(el('span', 'badge red', 'Verlierer'));
     if (o.starts) nm.appendChild(el('span', 'badge gold', 'beginnt'));
+    if (winsOf(seat)) nm.appendChild(tallyNode(winsOf(seat)));
     mid.appendChild(nm);
     if (gone) mid.appendChild(el('span', 'psub grey', o.game ? 'hat verlassen – Bot spielt' : 'hat verlassen'));
     else if (off) mid.appendChild(el('span', 'psub grey', 'offline'));
@@ -405,6 +543,7 @@
     var s = cur, lob = s.lobby;
     if (!lob) return;
     $('lobbyCode').textContent = s.code || '';
+    $('codeLabel').textContent = prison() ? 'Häftlingsnummer (Raumcode)' : 'Raumcode';
     var list = $('lobbyList'), n = lob.players.length;
     clear(list);
     /* Der Verlierer der letzten Runde beginnt die nächste; sonst wird ausgelost. */
@@ -453,15 +592,21 @@
     return { hand: hand, up: up, moved: moved };
   }
   function renderSwap() {
-    var v = cur.view, p = myPlayer(), d = swapShown(), edit = swapEditable();
+    var v = cur.view, p = myPlayer(), d = swapShown(), edit = swapEditable(), dealing = Date.now() - dealAt;
     var rows = [[$('swUp'), d.up, 'up'], [$('swHand'), d.hand, 'hand']];
     rows.forEach(function (r) {
       clear(r[0]);
       r[0].className = 'sw-row' + (edit ? '' : ' locked');
-      r[1].forEach(function (id) {
+      r[1].forEach(function (id, k) {
         if (!id) return;
         var c = cardFace(id);
         c.setAttribute('data-zone', r[2]);
+        /* Austeilen: läuft die Animation noch, setzt ein neu aufgebauter Knoten sie an derselben Stelle fort */
+        if (dealing < DEAL_GAP * 5 + 440) {
+          c.classList.add('deal');
+          c.style.setProperty('--k', k);
+          c.style.animationDelay = ((r[2] === 'up' ? k : 3 + k) * DEAL_GAP - dealing) + 'ms';
+        }
         if (id === swapSel && edit) c.classList.add('sel');
         if (d.moved[id]) c.classList.add('swapped');
         r[0].appendChild(c);
@@ -589,7 +734,8 @@
   /* ---------- Spieltisch: Rendern ---------- */
 
   function renderGame() {
-    var d = display();
+    var d = display(), plate = prison() && cur.code ? cur.code : '';
+    if ($('gCode').textContent !== plate) $('gCode').textContent = plate;
     renderTop(d);
     renderOpps(d);
     renderCenter(d);
@@ -638,6 +784,7 @@
       bar.style.transform = 'scaleX(' + Math.max(0, Math.min(1, left / c.total)).toFixed(3) + ')';
     }
     t.classList.toggle('low', turn && secs <= 10);
+    if (turn && v.turn === v.you && secs >= 1 && secs <= 5 && tickSec !== v.seq + ':' + secs) { tickSec = v.seq + ':' + secs; Snd.play('tick'); }
     var txt = '', go = false;
     if (c && v.phase === 'swap') {
       go = c.kind === 'start';
@@ -648,6 +795,7 @@
     if (sw.textContent !== txt) sw.textContent = txt;
     sw.className = 'sw-clock' + (go ? ' go' : c && c.kind === 'swap' && secs <= 10 ? ' low' : '');
   }
+  var tickSec = '';
   setInterval(tickClock, 250);
   function oppPanel(d, seat) {
     var v = d.v, p = v.players[seat], info = cur.lobby && cur.lobby.players[seat] || {};
@@ -952,6 +1100,18 @@
       var sub = 'Verlierer' + (!stays ? '' : seat === me ? ' – du beginnst die nächste Runde' : ' – beginnt die nächste Runde');
       row((v.finished.length + 1) + '.', seat, seat === gave ? 'hat aufgegeben' : left, 'last', sub);
     });
+    /* Die Wand: ein Strich für jede gewonnene Runde in diesem Raum. */
+    if (prison()) {
+      var wall = el('div', 'wall');
+      wall.appendChild(el('div', 'wall-title', 'Strichliste: gewonnene Runden in diesem Raum'));
+      v.players.forEach(function (p, seat) {
+        var r = el('div', 'wall-row');
+        r.appendChild(el('span', null, seat === me ? 'Du' : p.name));
+        r.appendChild(winsOf(seat) ? tallyNode(winsOf(seat)) : el('span', 'none', 'noch kein Strich'));
+        wall.appendChild(r);
+      });
+      list.appendChild(wall);
+    }
     o.classList.add('open');
   }
 
@@ -984,6 +1144,21 @@
     $('btnMenuGiveUp').disabled = !!giving;
     $('btnMenuLobby').hidden = !(s.isHost && s.stage === 'game');
     $('btnLeave').textContent = s.isHost ? 'Raum schließen' : 'Spiel verlassen';
+    renderSettings();
+  }
+  /* Einstellungen im Menü: Design (nur der Host, für alle) und Töne (pro Gerät). */
+  function renderSettings() {
+    [['segTable', 'data-table', design.table], ['segCards', 'data-cards', design.cards]].forEach(function (x) {
+      var bs = $(x[0]).children;
+      for (var i = 0; i < bs.length; i++) bs[i].setAttribute('aria-pressed', bs[i].getAttribute(x[1]) === x[2] ? 'true' : 'false');
+    });
+    $('designNote').textContent = cur && cur.isHost ? 'Tisch und Karten gelten für alle im Raum.'
+      : 'Design: Tisch ' + TABLE_NAME[design.table] + ', Karten ' + CARDS_NAME[design.cards] + '. Das stellt der Host ein.';
+    var m = Snd.muted(), b = $('btnMute'), r = $('rngVol');
+    b.textContent = m ? 'Ton: aus' : 'Ton: an';
+    b.setAttribute('aria-pressed', m ? 'false' : 'true');
+    r.disabled = m;
+    if (doc.activeElement !== r) r.value = String(Math.round(Snd.vol() * 100));
   }
   /* Neue Runde: sofort, wenn die Runde vorbei ist – mit Rückfrage, solange noch gespielt wird. */
   function askRematch() {
@@ -1102,6 +1277,11 @@
       else if (answered) { opt = null; toast('Das hat nicht geklappt – bitte nochmal.'); }
     }
     if (!pv || v.seq < pv.seq || (v.phase === 'swap' && pv.phase !== 'swap')) resetGame();
+    /* Neue Runde: Die sechs eigenen Karten werden sichtbar ausgeteilt. */
+    if (v.phase === 'swap' && (!pv || pv.phase !== 'swap') && !skip && doc.visibilityState !== 'hidden') {
+      dealAt = Date.now();
+      for (var dk = 0; dk < 6; dk++) Snd.play('deal', 120 + dk * DEAL_GAP);
+    }
     if (v.phase === 'play' && v.turn === v.you && v.my) sel = sel.filter(function (c) { return v.my.playable.indexOf(c) >= 0; });
     else sel = [];
     /* Jemand hat die laufende Partie verlassen: kurz Bescheid sagen. */
@@ -1114,9 +1294,10 @@
 
     var ev = v.ev, p = null;
     if (pv && ev && ev.seq === v.seq && v.seq > pv.seq && !skip) {
-      if (ev.auto) toast(ev.seat === v.you ? 'Zeit abgelaufen – es wurde für dich gespielt' : 'Zeit abgelaufen: Für ' + nameOf(v, ev.seat) + ' wurde gespielt');
-      else if (ev.t === 'start' && ev.forced) toast('Zeit abgelaufen – die Runde beginnt');
+      if (ev.auto) { toast(ev.seat === v.you ? 'Zeit abgelaufen – es wurde für dich gespielt' : 'Zeit abgelaufen: Für ' + nameOf(v, ev.seat) + ' wurde gespielt'); Snd.play('timeout'); }
+      else if (ev.t === 'start' && ev.forced) { toast('Zeit abgelaufen – die Runde beginnt'); Snd.play('timeout'); }
     }
+    if (pv && pv.phase === 'play' && v.phase === 'over' && !skip) Snd.play(v.loser === v.you ? 'lose' : 'over', 650);
     var anim = !skip && pv && pv.phase === 'play' && ev && ev.seq === v.seq && v.seq === pv.seq + 1 && pv.turn === ev.seat &&
       doc.visibilityState !== 'hidden' && body.getAttribute('data-screen') === 'game';
     if (anim) {
@@ -1153,7 +1334,7 @@
 
   /* ---------- Animationen ---------- */
 
-  var FLY = 290;
+  var FLY = 300, FLIP = 540, BURN = 950;
   function sameCards(a, b) {
     if (a.length !== b.length) return false;
     for (var i = 0; i < a.length; i++) if (b.indexOf(a[i]) < 0) return false;
@@ -1183,30 +1364,73 @@
     return r;
   }
   /* Karten liegen im DOM schon auf dem Stapel (versteckt) und fliegen als Kopie von `rects` dorthin. */
-  function flyToPile(ids, rects) {
-    var pr = rectOf($('pile')), layer = $('fx'), items = [];
+  function flyToPile(ids, rects, flip) {
+    var pr = rectOf($('pile')), layer = $('fx'), items = [], dur = flip ? FLIP : FLY;
     ids.forEach(function (id, i) {
       var node = pileNodes[id], from = rects && rects[i];
       if (!node || !from || !pr.w) return;
       node.classList.add('inflight');
-      var g = cardFace(id, 'ghost');
+      var g, inner = null;
+      if (flip) {
+        /* Rückseite zeigt zuerst nach vorn; im Flug dreht sich die Karte um die Hochachse. */
+        g = el('div', 'flipper');
+        inner = el('div', 'flip-in');
+        inner.appendChild(cardFace(id));
+        inner.appendChild(cardBack());
+        g.appendChild(inner);
+      } else g = cardFace(id, 'ghost');
       g.style.setProperty('--w', pr.w + 'px');
       g.style.left = pr.x + 'px';
       g.style.top = pr.y + 'px';
       var dx = from.x + from.w / 2 - (pr.x + pr.w / 2), dy = from.y + from.h / 2 - (pr.y + pr.h / 2);
       g.style.transform = 'translate3d(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px,0) scale(' + Math.max(0.12, from.w / pr.w).toFixed(3) + ')';
       layer.appendChild(g);
-      items.push({ g: g, node: node });
+      items.push({ g: g, node: node, inner: inner });
     });
     if (!items.length) return Promise.resolve();
     void layer.offsetWidth;
+    if (flip) Snd.play('flip');
     items.forEach(function (o, i) {
-      o.g.style.transition = 'transform ' + FLY + 'ms cubic-bezier(.2,.75,.25,1) ' + (i * 50) + 'ms';
+      o.g.style.transition = 'transform ' + dur + 'ms cubic-bezier(.2,.75,.25,1) ' + (i * 50) + 'ms';
       o.g.style.transform = o.node.style.transform || 'none';
+      if (o.inner) {
+        o.inner.style.transition = 'transform ' + Math.round(dur * 0.78) + 'ms cubic-bezier(.35,.1,.3,1) ' + Math.round(dur * 0.08) + 'ms';
+        o.inner.style.transform = 'perspective(700px) rotateY(0deg)';
+      }
+      Snd.play('place', dur + i * 50 - 50);
     });
-    return wait(FLY + (items.length - 1) * 50 + 30).then(function () {
+    return wait(dur + (items.length - 1) * 50 + 30).then(function () {
       items.forEach(function (o) { o.node.classList.remove('inflight'); drop(o.g); });
     });
+  }
+  /* Der Stapel verbrennt (10) bzw. verbrauchte Joker verschwinden: Glut, Flammen und Funken über dem Stapel. */
+  function burnFx() {
+    var layer = $('fx'), r = rectOf($('pile')), bits = [], i, n, fh;
+    $('center').classList.add('burning');
+    Snd.play('burn');
+    if (!r.w) return;
+    for (i = 0; i < 5; i++) {
+      n = el('i', 'flame');
+      fh = r.h * (0.62 + Math.random() * 0.42);
+      n.style.setProperty('--fw', (r.w * (0.42 + Math.random() * 0.3)).toFixed(1) + 'px');
+      n.style.setProperty('--fh', fh.toFixed(1) + 'px');
+      n.style.setProperty('--d', (i * 0.05).toFixed(2) + 's');
+      n.style.left = (r.x + r.w * (0.12 + i * 0.19)).toFixed(1) + 'px';
+      n.style.top = (r.y + r.h * 1.02 - fh).toFixed(1) + 'px';
+      bits.push(n);
+    }
+    for (i = 0; i < 14; i++) {
+      n = el('i', 'ember');
+      n.style.left = (r.x + Math.random() * r.w).toFixed(1) + 'px';
+      n.style.top = (r.y + r.h * (0.2 + Math.random() * 0.7)).toFixed(1) + 'px';
+      n.style.setProperty('--dx', ((Math.random() - 0.5) * r.w * 1.6).toFixed(0) + 'px');
+      n.style.setProperty('--dy', (-r.h * (0.6 + Math.random() * 1.1)).toFixed(0) + 'px');
+      n.style.setProperty('--d', (0.1 + Math.random() * 0.45).toFixed(2) + 's');
+      n.style.setProperty('--t', (0.6 + Math.random() * 0.5).toFixed(2) + 's');
+      bits.push(n);
+    }
+    bits.forEach(function (b) { layer.appendChild(b); });
+    setTimeout(function () { bits.forEach(drop); }, 1800);
   }
   /* Kopie des sichtbaren Stapels ohne die Karten in `skip`; null, wenn dann nichts übrig ist. */
   function clonePile(skip) {
@@ -1226,11 +1450,18 @@
   function flyPileTo(gh, seat, me) {
     var node = seat === me ? $('handScroll') : (oppPanelNode(seat) || $('table'));
     var t = rectOf(node), dx = t.x + t.w / 2 - (gh.r.x + gh.r.w / 2), dy = t.y + t.h / 2 - (gh.r.y + gh.r.h / 2);
+    /* Karte für Karte, die oberste zuerst: ein Strom statt eines Blocks. Jede wird erst kurz vor dem Ziel durchsichtig. */
+    var kids = [].slice.call(gh.g.children), n = kids.length, sc = seat === me ? 0.85 : 0.35, D = 400, GAP = 55;
     void gh.g.offsetWidth;
-    gh.g.style.transition = 'transform 340ms cubic-bezier(.45,0,.7,.6), opacity 340ms ease-in';
-    gh.g.style.transform = 'translate3d(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px,0) scale(' + (seat === me ? 0.85 : 0.35) + ')';
-    gh.g.style.opacity = '0';
-    return wait(360).then(function () { drop(gh.g); });
+    kids.forEach(function (c, i) {
+      var k = n - 1 - i, rot = ((i * 37) % 21) - 10;
+      c.style.willChange = 'transform, opacity';
+      c.style.transition = 'transform ' + D + 'ms cubic-bezier(.5,0,.25,1) ' + (k * GAP) + 'ms, opacity 140ms ease-in ' + (k * GAP + D - 140) + 'ms';
+      c.style.transform = 'translate3d(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px,0) scale(' + sc + ') rotate(' + rot + 'deg)';
+      c.style.opacity = '0';
+    });
+    Snd.play('pickup');
+    return wait(D + (n - 1) * GAP + 30).then(function () { drop(gh.g); });
   }
   /* Eine einzelne offene Karte fliegt mit auf die Hand (letzte offene Karte beim Aufnehmen). */
   function flyCardTo(id, from, seat, me) {
@@ -1322,6 +1553,7 @@
       g.style.transition = 'transform ' + DRAW + 'ms cubic-bezier(.3,.7,.3,1) ' + (k * 90) + 'ms, opacity 120ms linear ' + (k * 90 + DRAW - 90) + 'ms';
       g.style.transform = 'translate3d(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px,0) scale(' + Math.max(0.2, t.w / from.w).toFixed(3) + ')';
       g.style.opacity = '0';
+      Snd.play('draw', k * 90);
     });
     return wait(DRAW + (targets.length - 1) * 90 + 60).then(function () { ghosts.forEach(drop); });
   }
@@ -1350,7 +1582,7 @@
     if (burn || dr) ov = holdDraw({ pile: burn ? pv.pile.concat(ev.cards) : v.pile, holdSeat: -1, req: burn ? pv.req : v.req, burned: burn ? pv.burned : null }, dr);
     if (burn) lock = true;
     renderGame();
-    var fly = mine ? (optFly || Promise.resolve()) : flyToPile(ev.cards, from);
+    var fly = mine ? (optFly || Promise.resolve()) : flyToPile(ev.cards, from, ev.from === 'down');
     return fly.then(function () {
       var lines = playLines(ev, v);
       if (ev.fx.indexOf('reverse') >= 0) {
@@ -1360,8 +1592,8 @@
       }
       if (lines.length) gToast(lines, false, ev.place ? 2400 : 1400);
       if (!burn) return null;
-      $('center').classList.add('burning');
-      return wait(500).then(function () {
+      burnFx();
+      return wait(BURN).then(function () {
         if (ov) { ov.pile = v.pile; ov.req = v.req; ov.burned = null; }
         renderGame();
         $('center').classList.remove('burning');
@@ -1370,7 +1602,7 @@
       return animDraw(dr);
     }).then(function () {
       if (!ev.place || v.phase !== 'play') return null;
-      if (ev.fx.indexOf('win') >= 0) { showWon(ev.seat); renderWon(display()); }
+      if (ev.fx.indexOf('win') >= 0) { showWon(ev.seat); renderWon(display()); Snd.play('win'); }
       return wait(500);            // kurz stehen lassen, bevor der Nächste zieht
     });
   }
@@ -1406,8 +1638,8 @@
     renderGame();
     return Promise.all([gh ? flyPileTo(gh, ev.seat, me) : null, ev.upCard ? flyCardTo(ev.upCard, upFrom, ev.seat, me) : null]).then(function () {
       if (!gone.length) return null;
-      $('center').classList.add('burning');
-      return wait(500).then(function () {
+      burnFx();
+      return wait(BURN).then(function () {
         if (ov) { ov.pile = v.pile; ov.req = v.req; ov.burned = null; }
         renderGame();
         $('center').classList.remove('burning');
@@ -1437,7 +1669,7 @@
     var shown = pv.pile.concat([ev.card]);
     ov = holdDraw({ pile: shown, holdSeat: ev.seat, holdN: ev.n, req: pv.req, burned: pv.burned }, dr);
     renderGame();
-    return flyToPile([ev.card], [from]).then(function () {
+    return flyToPile([ev.card], [from], true).then(function () {
       var lines = ['Passt nicht!', takesLine(ev, v)], gone = goneLine(ev);
       if (gone) lines.push(gone);
       gToast(lines, true, gone ? 2100 : 1700);
@@ -1727,6 +1959,20 @@
     toast(help ? 'Spielhilfe an: Du siehst, welche Karten passen' : 'Spielhilfe aus: keine Hinweise, keine grauen Karten');
   });
   renderHelpBtn();
+  function pickDesign(e) {
+    var b = e.target && e.target.closest ? e.target.closest('button') : null;
+    if (!b || !cur || !cur.isHost) return;
+    session.lobby({ op: 'design', table: b.getAttribute('data-table'), cards: b.getAttribute('data-cards') });
+  }
+  $('segTable').addEventListener('click', pickDesign);
+  $('segCards').addEventListener('click', pickDesign);
+  on('btnMute', function () {
+    Snd.setMute(!Snd.muted());
+    renderSettings();
+    Snd.play('place');
+  });
+  $('rngVol').addEventListener('input', function () { Snd.setVol(this.value / 100); });
+  $('rngVol').addEventListener('change', function () { Snd.setVol(this.value / 100); Snd.play('place'); });
   on('btnPickup', askPickup);
   on('btnPlay', playButton);
   on('pileTap', playSelection);
