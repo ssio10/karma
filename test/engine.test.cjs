@@ -618,10 +618,10 @@ test('Austeilen: gleiche Zufallsfolge = gleiche Verteilung, andere Folge = ander
 });
 
 test('Austeilen: ungültige Spielerzahlen werden abgelehnt', () => {
-  for (const n of [0, 1, 7, 8, 54]) assert.throws(() => newGame(n, { rng: mulberry32(1) }), 'n=' + n);
+  for (const n of [0, 1, 13, 14, 54]) assert.throws(() => newGame(n, { rng: mulberry32(1) }), 'n=' + n);
   assert.throws(() => E.createGame(undefined));
   assert.throws(() => E.createGame(null));
-  for (let n = 2; n <= 6; n++) assert.doesNotThrow(() => newGame(n, { rng: mulberry32(1) }));
+  for (let n = 2; n <= 12; n++) assert.doesNotThrow(() => newGame(n, { rng: mulberry32(1) }));
 });
 
 test('Austeilen: Startspieler wird ausgelost (jeder Sitz kommt vor, immer im gültigen Bereich); ein übergebener Sitz wird übernommen', () => {
@@ -3573,7 +3573,7 @@ test('Fehlercodes: jede Ablehnung nennt ihren Grund (err) und ändert nichts', (
   rejectAs(s, 0, READY, 'wrong-phase', 'bereit im laufenden Spiel');
   rejectAs(s, 1, play('S4'), 'not-your-turn'); rejectAs(s, 1, PICK, 'not-your-turn'); rejectAs(s, 2, flip(0), 'not-your-turn');
   rejectAs(s, 0, { t: 'x' }, 'bad-action'); rejectAs(s, 0, {}, 'bad-action'); rejectAs(s, 0, [], 'bad-action');
-  for (const a of [play(), { t: 'play' }, { t: 'play', cards: 'H9' }, play('H9', 'D9', 'H11', 'C4', 'S12')]) rejectAs(s, 0, a, 'no-cards');
+  for (const a of [play(), { t: 'play' }, { t: 'play', cards: 'H9' }, play('H9', 'D9', 'H11', 'C4', 'S12', 'S2', 'S3', 'S4', 'S5')]) rejectAs(s, 0, a, 'no-cards');
   for (const a of [play('S12'), play('S13'), play('S4'), play('S8'), play('XX'), play('H9', 'H9'), play(null)]) rejectAs(s, 0, a, 'not-in-zone');
   rejectAs(s, 0, play('H9', 'H11'), 'mixed-ranks');
   rejectAs(s, 0, play('C4'), 'not-playable');

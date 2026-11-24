@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="de" class="prison">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Karma">
-<meta name="theme-color" content="#0a2c20">
+<meta name="theme-color" content="#1d2226">
 <meta name="format-detection" content="telephone=no">
 <meta name="robots" content="noindex, nofollow">
 <title>Karma</title>
@@ -66,7 +66,10 @@
         <button id="btnJoin" class="btn sec">Beitreten</button>
       </div>
 
-      <button id="btnRules" class="btn ghost" data-act="rules">Regeln</button>
+      <div class="start-links">
+        <button id="btnRules" class="btn ghost" data-act="rules">Regeln</button>
+        <button class="btn ghost" data-act="settings">Einstellungen</button>
+      </div>
       <div class="build">Version __BUILD__</div>
     </div>
   </section>
@@ -95,6 +98,7 @@
         <button id="btnShare" class="btn sec small" data-act="share">Link teilen</button>
       </div>
       <p id="lobbyHint" class="hint"></p>
+      <div id="lobbyOpts" class="menu-set room-opts" hidden></div>
       <div id="lobbyList" class="plist"></div>
       <button id="btnAddBot" class="btn sec host-only">Bot hinzufügen</button>
     </div>
@@ -218,11 +222,16 @@
       <div class="sheet-head"><h2>Regeln</h2><button class="icon-btn" data-act="close" aria-label="Schließen"><svg viewBox="0 0 24 24"><use href="#i-x"/></svg></button></div>
       <div class="rules-text">
         <h3>Ziel</h3>
-        <p>Werde als Erster alle deine Karten los: Handkarten, offene und verdeckte Karten. Die anderen spielen weiter um die Plätze 2, 3, 4 … Wer zuletzt noch Karten hat, hat verloren. Für 2 bis 6 Spieler, mit 52 Karten und 2 Jokern.</p>
+        <p>Werde als Erster alle deine Karten los: Handkarten, offene und verdeckte Karten. Die anderen spielen weiter um die Plätze 2, 3, 4 … Wer zuletzt noch Karten hat, hat verloren. Für 2 bis 12 Spieler.</p>
+
+        <h3>Karten und Spielerzahl</h3>
+        <p>Bis 6 Spieler reicht <b>ein Deck</b>: 52 Karten und 2 Joker (1 schwarz, 1 rot). Bis 9 Spieler braucht es <b>1,5 Decks</b>: Von jedem Wert kommen eine schwarze und eine rote Karte dazu, außerdem ein schwarzer Joker – also 81 Karten mit 3 Jokern (2 schwarz, 1 rot). Bis 12 Spieler sind es <b>2 Decks</b>: 108 Karten mit 4 Jokern (2 schwarz, 2 rot).</p>
+        <p>Normalerweise wählt die App das Deck passend zur Spielerzahl („Auto“). Der Host kann auch von Hand ein größeres Deck nehmen, etwa 1,5 Decks schon zu sechst – dann gibt es mehr zum Nachziehen. Mit mehr als einem Deck gibt es Karten doppelt; gleiche Werte dürfen wie immer zusammen gelegt werden.</p>
 
         <h3>Vorbereitung</h3>
         <p>Jeder bekommt 9 Karten: <b>3 verdeckte</b>, darauf <b>3 offene</b> und <b>3 Handkarten</b>. Alle übrigen Karten bilden den Nachziehstapel.</p>
         <p>Vor dem Start darfst du <b>genau eine</b> Handkarte gegen eine deiner offenen Karten tauschen. Dafür ist <b>eine Minute</b> Zeit. Hast du „Bereit“ zu früh gedrückt, kommst du mit „Zurück“ noch einmal zum Tauschen – bis die Runde beginnt. Sind alle bereit, geht es nach drei Sekunden los; nach einer Minute beginnt die Runde auf jeden Fall. In der ersten Runde wird ausgelost, wer beginnt – danach beginnt immer der <b>Verlierer der letzten Runde</b>. Gespielt wird zunächst im Uhrzeigersinn.</p>
+        <p>Nach jeder Runde werden die <b>Plätze neu gemischt</b>, damit nicht immer dieselben nebeneinander sitzen. Zu zweit ändert das nichts, zu dritt dreht sich nur die Reihenfolge um. Der Host kann das Mischen abschalten.</p>
         <p class="rank-line"><span>Rangfolge</span>3 · 4 · 5 · 6 · 7 · 8 · 9 · 10 · Bube · Dame · König · Ass</p>
         <p><b>Sonderkarten</b> sind die 2, die 7, die 10 und die beiden Joker. Sie dürfen <b>immer</b> gelegt werden – auch auf Bube, Dame, König und Ass. Einzige Ausnahme: Auf einem Joker geht nichts (nur Rot auf Schwarz).</p>
 
@@ -230,7 +239,7 @@
         <p>Lege eine Karte, die <b>mindestens so hoch</b> ist wie die oberste Karte des Ablagestapels – oder eine Sonderkarte (2, 7, 10, Joker), die geht immer. Mehrere <b>Handkarten</b> desselben Werts darfst du zusammen legen oder einzeln, ganz wie du willst; zusammen gelegt ist das ein einziger Zug. Von den offenen Karten auf dem Tisch geht immer nur eine pro Zug.</p>
 
         <h3>Zeitlimit</h3>
-        <p>Für jeden Zug hast du <b>50 Sekunden</b>. Die Zeit läuft oben neben „Du bist dran“. Ist sie um, wird für dich gespielt: die <b>niedrigste passende Karte</b>, Sonderkarten erst, wenn nichts anderes geht. Passt nichts, nimmst du den Stapel auf – und hast danach wieder 50 Sekunden zum Ausspielen. Bei verdeckten Karten wird eine zufällige aufgedeckt.</p>
+        <p>Für jeden Zug hast du <b>50 Sekunden</b> – der Host kann auch 30 oder 20 Sekunden einstellen, damit es mit vielen Spielern schneller geht. Die Zeit läuft oben neben „Du bist dran“. Ist sie um, wird für dich gespielt: die <b>niedrigste passende Karte</b>, Sonderkarten erst, wenn nichts anderes geht. Passt nichts, nimmst du den Stapel auf – und hast danach wieder die volle Zeit zum Ausspielen. Bei verdeckten Karten wird eine zufällige aufgedeckt.</p>
 
         <h3>Nachziehen</h3>
         <p>Nach deinem Zug ziehst du nach, bis du wieder 3 Handkarten hast. Erst dann ist der Nächste dran. Ist der Nachziehstapel leer, wird nicht mehr gezogen: Spiele deine Hand herunter, danach kommen deine offenen und zuletzt deine verdeckten Karten an die Reihe.</p>
@@ -246,7 +255,7 @@
           <li><b>3</b><span><i>Richtungswechsel</i> – die Spielrichtung dreht sich sofort. Bei genau 2 Spielern ist stattdessen der Leger direkt nochmal dran. Die 3 ist <b>keine</b> Sonderkarte, die immer geht: Sie hat ihren normalen Wert und ist die niedrigste Karte. Sie passt also nur auf eine 2, eine 3, den leeren Stapel oder nach einer 7. Auf eine 3 passt danach jede Karte.</span></li>
           <li><b>7</b><span><i>Niedriger spielen</i> – darf immer gelegt werden. Der Nächste muss dann <b>unter 7</b> bleiben (3, 4, 5, 6) oder eine Sonderkarte legen: eine 2, noch eine 7, eine 10 oder einen Joker. Gilt nur für den direkt nächsten Spieler und endet auch, wenn er aufnimmt.</span></li>
           <li><b>10</b><span><i>Stapel entfernen</i> – darf immer gelegt werden. Der ganze Ablagestapel samt 10 ist dauerhaft aus dem Spiel. Mehrere 10er entfernen ihn nur einmal. Der Nächste beginnt einfach mit einer eigenen, beliebigen Karte.</span></li>
-          <li><b>Joker</b><span><i>Stapel aufzwingen</i> – darf immer gelegt werden. Der Nächste muss den ganzen Ablagestapel aufnehmen und spielt danach selbst aus. Der Joker wirkt <b>nur einmal</b>: Beim Aufnehmen ist er – wie die 10 – für diese Runde <b>aus dem Spiel</b>. Er kommt nicht mit auf die Hand und kann nicht noch einmal gelegt werden. Den <b>schwarzen</b> Joker kann man mit dem <b>roten</b> kontern: Dann nimmt der darauffolgende Spieler auf, und beide Joker sind weg. Umgekehrt geht das nicht, und auch eine 10 hebt einen Joker nicht auf. Die beiden Joker sind verschiedene Karten und werden nie zusammen gelegt.</span></li>
+          <li><b>Joker</b><span><i>Stapel aufzwingen</i> – darf immer gelegt werden. Der Nächste muss den ganzen Ablagestapel aufnehmen und spielt danach selbst aus. Der Joker wirkt <b>nur einmal</b>: Beim Aufnehmen ist er – wie die 10 – für diese Runde <b>aus dem Spiel</b>. Er kommt nicht mit auf die Hand und kann nicht noch einmal gelegt werden. Den <b>schwarzen</b> Joker kann man mit dem <b>roten</b> kontern: Dann nimmt der darauffolgende Spieler auf, und beide Joker sind weg. Umgekehrt geht das nicht, Schwarz auf Schwarz auch nicht, und auch eine 10 hebt einen Joker nicht auf. Ein schwarzer und ein roter Joker sind verschiedene Karten und werden nie zusammen gelegt.</span></li>
         </ul>
 
         <h3>Offene Karten</h3>
@@ -290,8 +299,11 @@
 
         <h3>Bedienung</h3>
         <p>Karte antippen und „Legen“ drücken, den Ablagestapel antippen – oder die Karte einfach in die Tischmitte ziehen. Mehrere gleiche Handkarten nacheinander antippen, um sie zusammen zu legen. Neu gezogene Karten leuchten kurz blau auf.</p>
-        <p>Im Menü gibt es den Schalter <b>Spielhilfe</b>. Ist er an, steht am Stapel, was gerade passt, und unpassende Karten sind abgedunkelt. Ist er aus, gibt es beides nicht – legen kannst du trotzdem nur, was erlaubt ist. Jeder stellt das für sich ein.</p>
-        <p>Ebenfalls im Menü: <b>Töne</b> mit Lautstärke und Stumm-Schalter, auch das stellt jeder für sein Gerät ein. Das <b>Design</b> von Tisch und Karten wählt der Host, es gilt dann für alle im Raum.</p>
+        <p>Bist du dran, hörst du einen Ton, das Handy vibriert (wo der Browser das kann) und der Bildschirmrand leuchtet kurz auf – nur bei dir, nicht bei den anderen.</p>
+        <p>Unter <b>Einstellungen</b> (im Menü und auf der Startseite) stellt jeder für sein Gerät ein: Töne mit eigener Lautstärke für „Du bist dran“ und für die Karten, den Klang, Vibration, Randleuchten und die <b>Spielhilfe</b>. Ist die Spielhilfe an, steht am Stapel, was gerade passt, und unpassende Karten sind abgedunkelt. Ist sie aus, gibt es beides nicht – legen kannst du trotzdem nur, was erlaubt ist.</p>
+        <p>Der <b>Host</b> stellt für alle ein: Decks, Zugzeit, Plätze mischen und das <b>Design</b> von Tisch und Karten.</p>
+        <p>Die Bildkarten: <b>König</b> = der Boss, <b>Dame</b> = die Queen, <b>Bube</b> = der Läufer. Der <b>schwarze Joker</b> ist der Dealer, der <b>rote Joker</b> der Wärter – der Wärter schlägt den Dealer.</p>
+        <p>Mit vielen Mitspielern lohnt es sich, das Handy zu <b>drehen</b>: Im Querformat sind alle größer zu sehen.</p>
       </div>
     </div>
   </div>
@@ -302,24 +314,56 @@
       <div class="sheet-head"><h2>Menü</h2><button class="icon-btn" data-act="close" aria-label="Schließen"><svg viewBox="0 0 24 24"><use href="#i-x"/></svg></button></div>
       <div class="menu-code"><span>Raum</span><b id="menuCode"></b><button class="btn sec small" data-act="share">Link teilen</button></div>
       <div id="menuList" class="plist compact"></div>
+      <div id="menuOpts" class="menu-set room-opts" hidden></div>
       <div class="menu-set">
         <div class="set-row host-only"><span>Tisch</span><div id="segTable" class="seg" role="group" aria-label="Tisch-Design für alle">
-          <button data-table="normal">Normal</button><button data-table="stahl">Stahl</button><button data-table="patio">Patio</button><button data-table="nacht">Nacht</button>
+          <button data-table="stahl">Stahl</button><button data-table="hof">Hof</button><button data-table="nacht">Nacht</button><button data-table="boss">Boss</button>
         </div></div>
         <div class="set-row host-only"><span>Karten</span><div id="segCards" class="seg" role="group" aria-label="Karten-Design für alle">
-          <button data-cards="normal">Normal</button><button data-cards="stift">Stift</button><button data-cards="filz">Filz</button><button data-cards="druck">Druck</button>
+          <button data-cards="stift">Stift</button><button data-cards="schwarz">Schwarz</button><button data-cards="tattoo">Tattoo</button><button data-cards="hood">Hood</button>
         </div></div>
         <p id="designNote" class="set-note"></p>
-        <div class="set-row"><span>Töne</span><button id="btnMute" class="btn sec small" aria-pressed="true">Ton: an</button><input id="rngVol" class="vol" type="range" min="0" max="100" step="5" value="70" aria-label="Lautstärke"></div>
       </div>
       <div class="menu-btns">
         <p id="menuNote" class="muted menu-note" hidden></p>
         <button id="btnMenuRematch" class="btn" hidden>Neue Runde</button>
+        <button class="btn sec" data-act="settings">Einstellungen: Ton, Vibration …</button>
         <button class="btn sec" data-act="rules">Regeln</button>
-        <button id="btnHelp" class="btn sec" aria-pressed="true">Spielhilfe: an</button>
         <button id="btnMenuGiveUp" class="btn sec" hidden>Aufgeben</button>
         <button id="btnMenuLobby" class="btn sec">Zurück zur Lobby</button>
         <button id="btnLeave" class="btn danger">Spiel verlassen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Einstellungen (pro Gerät) ===== -->
+  <div id="sheetSet" class="sheet-wrap" data-sheet>
+    <div class="sheet scrolly" role="dialog" aria-label="Einstellungen">
+      <div class="sheet-head"><h2>Einstellungen</h2><button class="icon-btn" data-act="close" aria-label="Schließen"><svg viewBox="0 0 24 24"><use href="#i-x"/></svg></button></div>
+      <p class="muted">Gilt nur für dein Gerät. Jeder stellt das für sich ein.</p>
+      <div class="menu-set">
+        <h3 class="set-head">Töne</h3>
+        <div class="set-row wide"><span>Alle Töne</span><button id="btnMute" class="btn sec small" aria-pressed="true">Ton: an</button></div>
+        <div class="set-row wide"><span>Gesamt</span><input id="rngVol" class="vol" type="range" min="0" max="100" step="5" value="70" aria-label="Gesamtlautstärke"></div>
+        <div class="set-row wide"><span>Du bist dran</span><input id="rngVolTurn" class="vol" type="range" min="0" max="100" step="5" value="80" aria-label="Lautstärke für „Du bist dran“"></div>
+        <div id="segChime" class="seg n5" role="group" aria-label="Klang für „Du bist dran“">
+          <button data-chime="glocke">Glocke</button><button data-chime="holz">Holz</button><button data-chime="klopfen">Klopfen</button><button data-chime="gong">Gong</button><button data-chime="aus">Aus</button>
+        </div>
+        <div class="set-row wide"><span>Karten</span><input id="rngVolCards" class="vol" type="range" min="0" max="100" step="5" value="70" aria-label="Lautstärke der Kartentöne"></div>
+        <div class="set-row wide"><span>Letzte 5 Sekunden</span><button id="btnTick" class="btn sec small" aria-pressed="true">Ticken: an</button></div>
+        <p class="set-note">Ist dein Handy stumm geschaltet oder der Bildschirm aus, hörst du nichts.</p>
+      </div>
+      <div class="menu-set">
+        <h3 class="set-head">Vibration</h3>
+        <div id="segHap" class="seg n3" role="group" aria-label="Vibration">
+          <button data-hap="0">Aus</button><button data-hap="1">Leicht</button><button data-hap="2">Stark</button>
+        </div>
+        <p id="hapNote" class="set-note"></p>
+      </div>
+      <div class="menu-set">
+        <h3 class="set-head">Anzeige</h3>
+        <div class="set-row wide"><span>Rand leuchtet, wenn du dran bist</span><button id="btnGlow" class="btn sec small" aria-pressed="true">Randleuchten: an</button></div>
+        <div class="set-row wide"><span>Zeigt, welche Karten passen</span><button id="btnHelp" class="btn sec small" aria-pressed="true">Spielhilfe: an</button></div>
       </div>
     </div>
   </div>
@@ -345,6 +389,7 @@
     </div>
   </div>
 
+  <div id="turnGlow" class="turn-glow" aria-hidden="true"></div>
   <div id="fx" class="fx" aria-hidden="true"></div>
   <div id="toast" class="toast" role="status"></div>
 </div>

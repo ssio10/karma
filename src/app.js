@@ -33,6 +33,8 @@
 
   var RANK_LABEL = { 11: 'B', 12: 'D', 13: 'K', 14: 'A' };
   var RANK_NAME = { 11: 'Bube', 12: 'Dame', 13: 'König', 14: 'Ass' };
+  /* Bildkarten: Bube = Läufer, Dame = Queen, König = Boss, Ass = Emblem; schwarzer Joker = Dealer, roter Joker = Wärter. */
+  var FIG_OF = { 11: 'j', 12: 'q', 13: 'k', 14: 'a' };
   var SUIT_NAME = { S: 'Pik', H: 'Herz', D: 'Karo', C: 'Kreuz' };
   var SUIT_ORDER = { S: 0, H: 1, C: 2, D: 3, J: 4 };
   function rankName(r) { return RANK_NAME[r] || String(r); }
@@ -45,13 +47,14 @@
     var d = el('div', 'card' + (extra ? ' ' + extra : ''));
     d.setAttribute('data-card', id);
     if (E.isJoker(id)) {
-      d.className += ' jk' + (id === E.JR ? ' red' : '');
-      d.innerHTML = '<div class="ci">' + suitSvg('J') + '<span class="jt">JOKER</span></div><div class="big">' + suitSvg('J') + '</div>';
-      d.setAttribute('aria-label', id === E.JR ? 'Roter Joker' : 'Schwarzer Joker');
+      d.className += ' jk fc ' + (E.isRedJoker(id) ? 'red f-jr' : 'f-jb');
+      d.innerHTML = '<div class="fig"></div><div class="ci">' + suitSvg('J') + '<span class="jt">JOKER</span></div>';
+      d.setAttribute('aria-label', E.isRedJoker(id) ? 'Roter Joker' : 'Schwarzer Joker');
     } else {
       var s = E.suit(id), r = E.rank(id);
       if (s === 'H' || s === 'D') d.className += ' red';
-      d.innerHTML = '<div class="ci"><span class="rk' + (r === 10 ? ' ten' : '') + '">' + (RANK_LABEL[r] || r) + '</span>' + suitSvg(s) + '</div><div class="big">' + suitSvg(s) + '</div>';
+      if (FIG_OF[r]) d.className += ' fc f-' + FIG_OF[r];
+      d.innerHTML = (FIG_OF[r] ? '<div class="fig"></div>' : '') + '<div class="ci"><span class="rk' + (r === 10 ? ' ten' : '') + '">' + (RANK_LABEL[r] || r) + '</span>' + suitSvg(s) + '</div>' + (FIG_OF[r] ? '' : '<div class="big">' + suitSvg(s) + '</div>');
       d.setAttribute('aria-label', SUIT_NAME[s] + ' ' + rankName(r));
     }
     return d;
@@ -76,12 +79,19 @@
   var NAME_KEY = 'karma.name';
 
   /* ---------- Töne: im Code erzeugt (Web Audio), keine Dateien ----------
-   * Lautstärke und Stumm-Schalter gelten pro Gerät (karma.vol, karma.mute). Safari gibt erst nach einer
-   * Berührung Ton aus – der Audio-Kontext entsteht deshalb beim ersten Antippen. */
+   * Alles gilt pro Gerät: Gesamtlautstärke und Stumm-Schalter (karma.vol, karma.mute), dazu eigene Regler für
+   * den „Du bist dran“-Ton (karma.vol.turn) und die Kartentöne (karma.vol.cards), die Wahl des Klangs
+   * (karma.chime) und das Ticken der letzten Sekunden (karma.tick). Safari gibt erst nach einer Berührung
+   * Ton aus – der Audio-Kontext entsteht deshalb beim ersten Antippen. */
+  var CHIME_NAME = { glocke: 'Glocke', holz: 'Holz', klopfen: 'Klopfen', gong: 'Gong', aus: 'Aus' };
   var Snd = (function () {
-    var AC = window.AudioContext || window.webkitAudioContext, ctx = null, out = null, nbuf = null;
-    var vol = parseFloat(sGet(LS, 'karma.vol')), mute = sGet(LS, 'karma.mute') === '1';
-    if (!(vol >= 0 && vol <= 1)) vol = 0.7;
+    var AC = window.AudioContext || window.webkitAudioContext, ctx = null, out = null, nbuf = null, bus = {}, dst = null;
+    function num(key, def) { var v = parseFloat(sGet(LS, key)); return v >= 0 && v <= 1 ? v : def; }
+    var vol = num('karma.vol', 0.7), mute = sGet(LS, 'karma.mute') === '1';
+    var gv = { turn: num('karma.vol.turn', 0.8), cards: num('karma.vol.cards', 0.7) };
+    var chime = sGet(LS, 'karma.chime'), tickOn = sGet(LS, 'karma.tick') !== '0';
+    if (!CHIME_NAME[chime]) chime = 'glocke';
+    var GROUP = { place: 'cards', draw: 'cards', deal: 'cards', flip: 'cards', pickup: 'cards', burn: 'cards', glocke: 'turn', holz: 'turn', klopfen: 'turn', gong: 'turn' };
     function level() { return mute ? 0 : vol * vol; }   // quadratisch: der Regler wirkt so gleichmäßiger
     function unlock() {
       if (!AC) return;
@@ -91,6 +101,11 @@
           out = ctx.createGain();
           out.gain.value = level();
           out.connect(ctx.destination);
+          ['turn', 'cards'].forEach(function (g) {
+            bus[g] = ctx.createGain();
+            bus[g].gain.value = gv[g] * gv[g];
+            bus[g].connect(out);
+          });
         }
         if (ctx.state !== 'running' && ctx.resume) ctx.resume();
       } catch (e) { ctx = null; }
@@ -115,7 +130,7 @@
       g.gain.setValueAtTime(0.0001, t);
       g.gain.linearRampToValueAtTime(peak, t + (attack || 0.005));
       g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      src.connect(flt); flt.connect(g); g.connect(out);
+      src.connect(flt); flt.connect(g); g.connect(dst);
       src.start(t, Math.random() * 0.5);
       src.stop(t + dur + 0.03);
     }
@@ -127,13 +142,20 @@
       g.gain.setValueAtTime(0.0001, t);
       g.gain.linearRampToValueAtTime(peak, t + 0.008);
       g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      o.connect(g); g.connect(out);
+      o.connect(g); g.connect(dst);
       o.start(t);
       o.stop(t + dur + 0.03);
     }
     function notes(t, list, gap, last) {
       list.forEach(function (f, i) { tone(t + i * gap, i === list.length - 1 ? last : gap * 1.5, 'triangle', f, f, 0.28); });
     }
+    /* weicher Glockenton: Grundton mit zwei leisen, schneller verklingenden Obertönen */
+    function bell(t, f, dur, peak) {
+      tone(t, dur, 'sine', f, f, peak);
+      tone(t, dur * 0.55, 'sine', f * 2.01, f * 2.01, peak * 0.22);
+      tone(t, dur * 0.3, 'sine', f * 3.02, f * 3.02, peak * 0.08);
+    }
+    function knock(t, peak) { tone(t, 0.11, 'sine', 210, 95, peak); hiss(t, 0.05, 'lowpass', 1400, 500, 0.7, peak * 0.5); }
     var S = {
       place: function (t) { hiss(t, 0.07, 'bandpass', 2600, 900, 0.8, 0.55); tone(t, 0.09, 'sine', 170, 70, 0.5); },            // Karte landet auf dem Stapel
       draw: function (t) { hiss(t, 0.13, 'bandpass', 1400, 4200, 1.2, 0.3, 0.05); },                                          // Karte gleitet vom Nachziehstapel
@@ -149,13 +171,23 @@
       timeout: function (t) { tone(t, 0.16, 'sawtooth', 220, 200, 0.2); tone(t + 0.2, 0.3, 'sawtooth', 165, 140, 0.2); },     // Zeit abgelaufen
       win: function (t) { notes(t, [523, 659, 784, 1047], 0.11, 0.5); },                                                       // der Erste ist fertig
       over: function (t) { notes(t, [392, 523, 659], 0.14, 0.55); tone(t + 0.28, 0.6, 'sine', 196, 196, 0.18); },              // Runde vorbei
-      lose: function (t) { notes(t, [392, 330, 262], 0.17, 0.6); }                                                             // Runde vorbei, selbst verloren
+      lose: function (t) { notes(t, [392, 330, 262], 0.17, 0.6); },                                                            // Runde vorbei, selbst verloren
+      /* „Du bist dran“ – vier Klänge zur Wahl */
+      glocke: function (t) { bell(t, 880, 0.9, 0.4); bell(t + 0.17, 1318.5, 1.2, 0.36); },
+      holz: function (t) { [523.25, 659.25, 783.99].forEach(function (f, i) { tone(t + i * 0.1, 0.28, 'triangle', f, f, 0.42); tone(t + i * 0.1, 0.07, 'sine', f * 4, f * 4, 0.1); }); },
+      klopfen: function (t) { knock(t, 0.85); knock(t + 0.16, 0.7); knock(t + 0.42, 0.9); },
+      gong: function (t) { bell(t, 196, 1.6, 0.5); bell(t + 0.02, 293.66, 1.3, 0.3); tone(t, 1.1, 'sine', 98, 98, 0.3); }
     };
+    function play(name, delayMs) {
+      if (!ctx || mute || ctx.state !== 'running' || doc.visibilityState === 'hidden' || !S[name]) return;
+      if (name === 'tick' && !tickOn) return;
+      dst = bus[GROUP[name]] || out;
+      try { S[name](ctx.currentTime + (delayMs > 0 ? delayMs / 1000 : 0) + 0.01); } catch (e) {}
+    }
     return {
-      play: function (name, delayMs) {
-        if (!ctx || mute || ctx.state !== 'running' || doc.visibilityState === 'hidden' || !S[name]) return;
-        try { S[name](ctx.currentTime + (delayMs > 0 ? delayMs / 1000 : 0) + 0.01); } catch (e) {}
-      },
+      play: play,
+      /* „Du bist dran“ mit dem gewählten Klang (oder gar nicht, wenn „Aus“ gewählt ist) */
+      turn: function () { if (chime !== 'aus') play(chime); },
       vol: function () { return vol; },
       muted: function () { return mute; },
       setVol: function (v) {
@@ -167,30 +199,92 @@
         mute = !!m;
         sSet(LS, 'karma.mute', mute ? '1' : '0');
         if (out) out.gain.value = level();
+      },
+      groupVol: function (g) { return gv[g]; },
+      setGroupVol: function (g, v) {
+        if (!(g in gv)) return;
+        gv[g] = Math.max(0, Math.min(1, +v || 0));
+        sSet(LS, 'karma.vol.' + g, String(gv[g]));
+        if (bus[g]) bus[g].gain.value = gv[g] * gv[g];
+      },
+      chime: function () { return chime; },
+      setChime: function (c) { if (CHIME_NAME[c]) { chime = c; sSet(LS, 'karma.chime', c); } },
+      tick: function () { return tickOn; },
+      setTick: function (on) { tickOn = !!on; sSet(LS, 'karma.tick', tickOn ? '1' : '0'); }
+    };
+  })();
+
+  /* ---------- Vibration (pro Gerät: karma.hap = 0 aus, 1 leicht, 2 stark) ----------
+   * Android: navigator.vibrate. Das iPhone kennt das im Browser nicht; dort gibt ein unsichtbarer Schalter
+   * (<input type="checkbox" switch>) beim Umlegen einen kurzen Tipp – das klappt ab iOS 18 und im Wesentlichen
+   * nur als direkte Folge einer Berührung. Wo beides fehlt, passiert einfach nichts. */
+  var Hap = (function () {
+    var lvl = parseInt(sGet(LS, 'karma.hap'), 10), last = 0;
+    if (!(lvl >= 0 && lvl <= 2)) lvl = 1;
+    var canVib = typeof navigator.vibrate === 'function';
+    var ios = /iP(hone|ad|od)/.test(navigator.userAgent || '') || (/Mac/.test(navigator.platform || '') && navigator.maxTouchPoints > 1);
+    var PAT = { tick: [8], tap: [14], turn: [45, 70, 45], bad: [18, 45, 18], win: [30, 60, 30, 60, 90] };
+    var IOS_N = { tick: 1, tap: 1, turn: 2, bad: 2, win: 3 };
+    function iosTick() {
+      try {
+        var lab = doc.createElement('label'), inp = doc.createElement('input');
+        lab.setAttribute('aria-hidden', 'true');
+        lab.style.display = 'none';
+        inp.type = 'checkbox';
+        inp.setAttribute('switch', '');
+        lab.appendChild(inp);
+        doc.head.appendChild(lab);
+        lab.click();
+        doc.head.removeChild(lab);
+      } catch (e) {}
+    }
+    function fire(kind, force) {
+      if ((!lvl && !force) || !PAT[kind]) return;
+      var now = Date.now();
+      if (kind === 'tick' && now - last < 45) return;
+      last = now;
+      if (canVib) {
+        var k = lvl === 2 ? 2.4 : 1;
+        try { navigator.vibrate(PAT[kind].map(function (ms, i) { return i % 2 ? ms : Math.round(ms * k); })); } catch (e) {}
+      } else if (ios) {
+        for (var i = 0; i < IOS_N[kind]; i++) { if (i) setTimeout(iosTick, i * 120); else iosTick(); }
       }
+    }
+    return {
+      fire: fire,
+      level: function () { return lvl; },
+      setLevel: function (n) { lvl = n === 2 ? 2 : n === 1 ? 1 : 0; sSet(LS, 'karma.hap', String(lvl)); },
+      supported: function () { return canVib || ios; },
+      ios: function () { return ios && !canVib; }
     };
   })();
 
   /* ---------- Design: Tisch und Karten ----------
    * Der Host stellt beides ein, es gilt für alle im Raum (kommt mit jedem Stand als snap.room).
    * Das zuletzt gesehene Design merkt sich das Gerät, damit auch die Startseite so aussieht. */
-  var TABLE_NAME = { normal: 'Normal', stahl: 'Stahl', patio: 'Patio', nacht: 'Nacht' };
-  var CARDS_NAME = { normal: 'Normal', stift: 'Stift', filz: 'Filz', druck: 'Druck' };
-  var THEME_COLOR = { normal: '#0a2c20', stahl: '#2b3035', patio: '#4a3422', nacht: '#161b2a' };
+  var TABLE_NAME = { stahl: 'Stahl', hof: 'Hof', nacht: 'Nacht', boss: 'Boss' };
+  var CARDS_NAME = { stift: 'Stift', schwarz: 'Schwarz', tattoo: 'Tattoo', hood: 'Hood' };
+  var THEME_COLOR = { stahl: '#1d2226', hof: '#5a4630', nacht: '#070a12', boss: '#2a110d' };
+  /* Bilder liegen als eigene Dateien im Ordner img/ neben der Seite: je Tisch eines, je Kartensatz sechs Figuren und die Rückseite. */
+  var FIGS = ['k', 'q', 'j', 'a', 'jb', 'jr', 'back'];
   var design = { table: '', cards: '' };
   function applyDesign(table, cards) {
-    if (!TABLE_NAME[table]) table = 'normal';
-    if (!CARDS_NAME[cards]) cards = 'normal';
+    if (!TABLE_NAME[table]) table = N.DESIGNS.table[0];
+    if (!CARDS_NAME[cards]) cards = N.DESIGNS.cards[0];
     if (table === design.table && cards === design.cards) return;
-    design.table = table; design.cards = cards;
     var root = doc.documentElement, meta = doc.querySelector('meta[name="theme-color"]');
+    if (table !== design.table) root.style.setProperty('--tbl', 'url("img/t-' + table + '.jpg")');
+    if (cards !== design.cards) FIGS.forEach(function (k) {
+      var src = 'img/c-' + cards + '-' + k + '.jpg';
+      root.style.setProperty('--fig-' + k, 'url("' + src + '")');
+      try { new Image().src = src; } catch (e) { /* nur Vorladen */ }
+    });
+    design.table = table; design.cards = cards;
     root.setAttribute('data-table', table);
     root.setAttribute('data-cards', cards);
-    root.classList.toggle('prison', table !== 'normal');
     if (meta) meta.setAttribute('content', THEME_COLOR[table]);
     sSet(LS, 'karma.design', table + '|' + cards);
   }
-  function prison() { return design.table !== 'normal'; }
   (function () { var d = (sGet(LS, 'karma.design') || '').split('|'); applyDesign(d[0], d[1]); })();
   /* Strichliste: je fünf Siege ein Bündel (vier Striche und ein Querstrich). Zu sehen nur in den Gefängnis-Designs. */
   var TALLY_SVG = ' fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="';
@@ -242,6 +336,10 @@
   var dealAt = 0, DEAL_GAP = 80;  // Rundenstart: wann das Austeilen begonnen hat
   /* Spielhilfe (pro Gerät): Hinweis am Stapel, welche Karten passen, und unpassende Karten abgedunkelt. */
   var help = sGet(LS, 'karma.help') !== '0';
+  /* Randleuchten, wenn man drankommt (pro Gerät abschaltbar). */
+  var glow = sGet(LS, 'karma.glow') !== '0';
+  var turnOpen = false;           // „Du bist dran“ wurde für den laufenden eigenen Zug schon gemeldet
+  var tipShown = false;           // Hinweis „Handy drehen“ kam in dieser Sitzung schon
   var press = null, drag = null, dragDone = null;
   var cwCache = 0;
   var hashOwned = false;
@@ -302,6 +400,7 @@
     openSheetId = id;
     $(id).classList.add('open');
     if (id === 'sheetMenu') renderMenu();
+    if (id === 'sheetSet') renderSettings();
   }
   function closeSheet() {
     if (openSheetId) $(openSheetId).classList.remove('open');
@@ -484,7 +583,7 @@
     syncJoinUi();
   }
   var ERR_TEXT = {
-    full: ['Raum ist voll', 'In diesem Raum sitzen schon 6 Spieler.'],
+    full: ['Raum ist voll', 'In diesem Raum sitzen schon 12 Spieler.'],
     running: ['Spiel läuft bereits', 'Du kannst dazukommen, sobald der Host wieder in der Lobby ist.'],
     kicked: ['Du wurdest entfernt', 'Der Host hat dich aus dem Raum genommen.'],
     closed: ['Raum geschlossen', 'Der Host hat den Raum beendet.'],
@@ -543,7 +642,7 @@
     var s = cur, lob = s.lobby;
     if (!lob) return;
     $('lobbyCode').textContent = s.code || '';
-    $('codeLabel').textContent = prison() ? 'Häftlingsnummer (Raumcode)' : 'Raumcode';
+    $('codeLabel').textContent = 'Häftlingsnummer (Raumcode)';
     var list = $('lobbyList'), n = lob.players.length;
     clear(list);
     /* Der Verlierer der letzten Runde beginnt die nächste; sonst wird ausgelost. */
@@ -569,9 +668,64 @@
     else hint = who;
     $('lobbyHint').textContent = hint;
     $('btnShare').hidden = soloOnly;
-    $('btnAddBot').disabled = n >= 6;
+    renderRoomOpts($('lobbyOpts'));
+    $('btnAddBot').disabled = n >= N.MAX_PLAYERS;
     $('btnStart').disabled = n < 2;
     $('btnStart').textContent = n < 2 ? 'Mindestens 2 Spieler' : 'Spiel starten (' + n + ' Spieler)';
+  }
+
+  /* ---------- Spiel-Einstellungen des Hosts: Deck, Zugzeit, Plätze mischen ----------
+   * Der Host sieht Schalter, alle anderen eine Zeile mit dem, was gilt. Steht in der Lobby und im Menü. */
+  var DECK_LABEL = { auto: 'Auto', 1: '1', 1.5: '1,5', 2: '2' };
+  var DECK_INFO = { 1: '54 Karten, 2 Joker', 1.5: '81 Karten, 3 Joker (2 schwarz, 1 rot)', 2: '108 Karten, 4 Joker (2 schwarz, 2 rot)' };
+  function deckWord(d) { return d === 1 ? '1 Deck' : DECK_LABEL[d] + ' Decks'; }
+  function segRow(label, attr, items, current) {
+    var row = el('div', 'set-row'), seg = el('div', 'seg n' + items.length);
+    row.appendChild(el('span', null, label));
+    seg.setAttribute('role', 'group');
+    seg.setAttribute('aria-label', label);
+    items.forEach(function (it) {
+      var b = el('button', null, it[1]);
+      b.setAttribute(attr, String(it[0]));
+      b.setAttribute('aria-pressed', it[0] === current ? 'true' : 'false');
+      seg.appendChild(b);
+    });
+    row.appendChild(seg);
+    return row;
+  }
+  function renderRoomOpts(box) {
+    var s = cur, r = s && s.room;
+    clear(box);
+    box.hidden = !r;
+    if (!r) return;
+    var n = s.lobby ? s.lobby.players.filter(function (p) { return !p.left; }).length : 0;
+    var running = s.stage === 'game';
+    var now = deckWord(r.decksNow) + ' · ' + DECK_INFO[r.decksNow];
+    if (!s.isHost) {
+      box.appendChild(el('p', 'set-note', (running ? 'Diese Runde: ' : 'Gespielt wird mit: ') + now + '.'));
+      box.appendChild(el('p', 'set-note', (r.turn > 0 ? r.turn + ' Sekunden pro Zug. ' : 'Kein Zeitlimit. ') +
+        (r.mix ? 'Die Plätze werden nach jeder Runde neu gemischt.' : 'Die Plätze bleiben, wie sie sind.') + ' Das stellt der Host ein.'));
+      return;
+    }
+    box.appendChild(segRow('Decks', 'data-decks', [['auto', 'Auto'], [1, '1'], [1.5, '1,5'], [2, '2']], r.decks));
+    var note = (running ? 'Diese Runde: ' : 'Jetzt: ') + now + '.';
+    if (!running && typeof r.decks === 'number' && r.decks < r.decksNow) note += ' Für ' + n + ' Spieler reicht ' + deckWord(r.decks) + ' nicht.';
+    else if (running && r.decks !== 'auto' && r.decks !== r.decksNow) note += ' Deine Wahl gilt ab der nächsten Runde.';
+    else if (r.decks === 'auto') note += ' Auto: bis 6 Spieler 1 Deck, bis 9 Spieler 1,5, darüber 2.';
+    box.appendChild(el('p', 'set-note', note));
+    if (r.turn > 0) box.appendChild(segRow('Zugzeit', 'data-turn', N.TURN_SECS.map(function (t) { return [t, t + ' s']; }), r.turn));
+    box.appendChild(segRow('Plätze', 'data-mix', [[1, 'Mischen'], [0, 'Fest']], r.mix ? 1 : 0));
+  }
+  function pickRoomOpt(e) {
+    var b = e.target && e.target.closest ? e.target.closest('button') : null;
+    if (!b || !cur || !cur.isHost) return;
+    var op = { op: 'opts' };
+    if (b.hasAttribute('data-decks')) { var d = b.getAttribute('data-decks'); op.decks = d === 'auto' ? 'auto' : parseFloat(d); }
+    else if (b.hasAttribute('data-turn')) op.turn = parseInt(b.getAttribute('data-turn'), 10);
+    else if (b.hasAttribute('data-mix')) op.mix = b.getAttribute('data-mix') === '1';
+    else return;
+    Hap.fire('tick');
+    session.lobby(op);
   }
 
   /* ---------- Tauschphase ---------- */
@@ -633,7 +787,7 @@
       c.appendChild(el('span', null, i === v.you ? 'Du' : q.name));
       chips.appendChild(c);
     });
-    $('swStart').textContent = startText(v);
+    $('swStart').textContent = (v.mixed ? 'Die Plätze wurden neu gemischt. ' : '') + startText(v);
   }
   /* Die erste Runde beginnt ein ausgeloster Spieler, danach der Verlierer der Runde davor. */
   function startText(v) {
@@ -662,7 +816,8 @@
     if (!swapSel || shownZone(swapSel) == null) swapSel = id;
     else if (swapSel === id) swapSel = null;
     else if (shownZone(swapSel) === shownZone(id)) swapSel = id;
-    else return setSwap(swapSel, id);
+    else { Hap.fire('tap'); return setSwap(swapSel, id); }
+    Hap.fire('tick');
     renderSwap();
   }
   function doReady() {
@@ -670,6 +825,7 @@
     var a = { t: 'ready' };
     if (swapPrev) a.swap = { hand: swapPrev.hand, up: swapPrev.up };
     opt = { kind: 'ready', seq: cur.view.seq, after: snapCount };
+    Hap.fire('tap');
     swapSel = null;
     renderSwap();
     if (!session.act(a)) { opt = null; renderSwap(); }
@@ -734,7 +890,7 @@
   /* ---------- Spieltisch: Rendern ---------- */
 
   function renderGame() {
-    var d = display(), plate = prison() && cur.code ? cur.code : '';
+    var d = display(), plate = cur.code || '';
     if ($('gCode').textContent !== plate) $('gCode').textContent = plate;
     renderTop(d);
     renderOpps(d);
@@ -784,7 +940,7 @@
       bar.style.transform = 'scaleX(' + Math.max(0, Math.min(1, left / c.total)).toFixed(3) + ')';
     }
     t.classList.toggle('low', turn && secs <= 10);
-    if (turn && v.turn === v.you && secs >= 1 && secs <= 5 && tickSec !== v.seq + ':' + secs) { tickSec = v.seq + ':' + secs; Snd.play('tick'); }
+    if (turn && v.turn === v.you && secs >= 1 && secs <= 5 && tickSec !== v.seq + ':' + secs) { tickSec = v.seq + ':' + secs; Snd.play('tick'); if (Snd.tick()) Hap.fire('tick'); }
     var txt = '', go = false;
     if (c && v.phase === 'swap') {
       go = c.kind === 'start';
@@ -838,14 +994,22 @@
     else if (off) box.appendChild(el('span', 'opp-tag', cur.isHost ? 'offline – tippen' : 'offline'));
     return box;
   }
+  /* Wie viele Gegner an jeder Seite sitzen (der Rest oben): bis 5 Gegner je einer, bis 7 je zwei, darüber je drei. */
+  function sideCount(k) { return k < 3 ? 0 : k <= 5 ? 1 : k <= 7 ? 2 : 3; }
   function renderOpps(d) {
-    var n = d.v.players.length, k = n - 1, top = $('oppTop'), L = $('oppL'), R = $('oppR');
+    var n = d.v.players.length, k = n - 1, top = $('oppTop'), L = $('oppL'), R = $('oppR'), side = sideCount(k);
     clear(top); clear(L); clear(R);
+    $('table').setAttribute('data-k', k);
     for (var i = 0; i < k; i++) {
       var seat = (d.me + 1 + i) % n, box = top;
-      /* im Uhrzeigersinn: der nächste Spieler sitzt links von dir, dann oben herum nach rechts */
-      if (k >= 3) { if (i === 0) box = L; else if (i === k - 1) box = R; }
+      /* im Uhrzeigersinn: der nächste Spieler sitzt links unten neben dir, dann links hinauf, oben herum und rechts wieder herunter */
+      if (i < side) box = L; else if (i >= k - side) box = R;
       box.appendChild(oppPanel(d, seat));
+    }
+    /* Viele Mitspieler: im Querformat sind alle deutlich größer – einmal darauf hinweisen. */
+    if (k >= 7 && !tipShown && window.innerHeight > window.innerWidth && window.innerWidth < 520) {
+      tipShown = true;
+      setTimeout(function () { toast(['Tipp: Dreh dein Handy', 'Im Querformat sind alle Mitspieler größer zu sehen']); }, 1200);
     }
   }
   function pileTf(id, idx) {
@@ -931,6 +1095,7 @@
     var avail = sc.clientWidth - 16, step = 0;
     if (n > 1) step = Math.max(14, Math.min(cw + 6, (avail - cw) / (Math.min(n, 12) - 1)));
     var total = n ? cw + step * (n - 1) : 0;
+    handStep = step;
     box.style.width = Math.ceil(total) + 'px';
     sc.classList.toggle('scrolls', total > avail + 1);
     for (var i = 0; i < n; i++) handNodes[handOrder[i]].style.transform = 'translate3d(' + (i * step).toFixed(1) + 'px,0,0)';
@@ -938,6 +1103,13 @@
     info.hidden = n <= 12;
     if (n > 12) info.textContent = n + ' Karten \u2190 wischen \u2192';
   }
+  /* Blättert man durch ein großes Blatt, tickt es bei jeder Karte, die vorbeizieht. */
+  var handStep = 0, handIdx = -1;
+  $('handScroll').addEventListener('scroll', function () {
+    if (!handStep || !this.classList.contains('scrolls')) return;
+    var i = Math.round(this.scrollLeft / handStep);
+    if (i !== handIdx) { if (handIdx >= 0) Hap.fire('tick'); handIdx = i; }
+  }, { passive: true });
   function renderHand(d) {
     var box = $('hand'), ids = d.hand, keep = {}, fresh = [], inHand = !!(d.my && d.my.zone === 'hand');
     var first = !box.firstChild && !handOrder.length;   // erster Aufbau: sofort sichtbar, ohne Einblenden
@@ -993,7 +1165,7 @@
       /* Aufnehmen geht immer, solange etwas liegt. Dringend ist es nur, wenn nichts anderes geht (forced).
        * Schwarzer Joker oben und der rote ist spielbar: Aufnehmen und Kontern stehen gleichwertig nebeneinander.
        * Sonst ist es ein freiwilliger, taktischer Zug – klein und mit Rückfrage. */
-      counter = showL && showP && top === E.JB;
+      counter = showL && showP && E.isBlackJoker(top);
       quiet = showL && showP && !counter;
       pulse = d.my.forced;
       if (d.my.forced) {
@@ -1101,7 +1273,7 @@
       row((v.finished.length + 1) + '.', seat, seat === gave ? 'hat aufgegeben' : left, 'last', sub);
     });
     /* Die Wand: ein Strich für jede gewonnene Runde in diesem Raum. */
-    if (prison()) {
+    {
       var wall = el('div', 'wall');
       wall.appendChild(el('div', 'wall-title', 'Strichliste: gewonnene Runden in diesem Raum'));
       v.players.forEach(function (p, seat) {
@@ -1144,21 +1316,38 @@
     $('btnMenuGiveUp').disabled = !!giving;
     $('btnMenuLobby').hidden = !(s.isHost && s.stage === 'game');
     $('btnLeave').textContent = s.isHost ? 'Raum schließen' : 'Spiel verlassen';
-    renderSettings();
-  }
-  /* Einstellungen im Menü: Design (nur der Host, für alle) und Töne (pro Gerät). */
-  function renderSettings() {
-    [['segTable', 'data-table', design.table], ['segCards', 'data-cards', design.cards]].forEach(function (x) {
-      var bs = $(x[0]).children;
-      for (var i = 0; i < bs.length; i++) bs[i].setAttribute('aria-pressed', bs[i].getAttribute(x[1]) === x[2] ? 'true' : 'false');
-    });
+    renderRoomOpts($('menuOpts'));
+    pressSeg('segTable', 'data-table', design.table);
+    pressSeg('segCards', 'data-cards', design.cards);
     $('designNote').textContent = cur && cur.isHost ? 'Tisch und Karten gelten für alle im Raum.'
       : 'Design: Tisch ' + TABLE_NAME[design.table] + ', Karten ' + CARDS_NAME[design.cards] + '. Das stellt der Host ein.';
-    var m = Snd.muted(), b = $('btnMute'), r = $('rngVol');
-    b.textContent = m ? 'Ton: aus' : 'Ton: an';
-    b.setAttribute('aria-pressed', m ? 'false' : 'true');
-    r.disabled = m;
-    if (doc.activeElement !== r) r.value = String(Math.round(Snd.vol() * 100));
+  }
+  function pressSeg(id, attr, val) {
+    var bs = $(id).children;
+    for (var i = 0; i < bs.length; i++) bs[i].setAttribute('aria-pressed', bs[i].getAttribute(attr) === String(val) ? 'true' : 'false');
+  }
+  function onOff(id, label, on) {
+    var b = $(id);
+    b.textContent = label + ': ' + (on ? 'an' : 'aus');
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+  /* Einstellungen (pro Gerät): Töne, Vibration, Randleuchten, Spielhilfe. */
+  function renderSettings() {
+    var m = Snd.muted();
+    onOff('btnMute', 'Ton', !m);
+    [['rngVol', Snd.vol()], ['rngVolTurn', Snd.groupVol('turn')], ['rngVolCards', Snd.groupVol('cards')]].forEach(function (x) {
+      var r = $(x[0]);
+      r.disabled = m;
+      if (doc.activeElement !== r) r.value = String(Math.round(x[1] * 100));
+    });
+    pressSeg('segChime', 'data-chime', Snd.chime());
+    onOff('btnTick', 'Ticken', Snd.tick());
+    pressSeg('segHap', 'data-hap', Hap.level());
+    $('hapNote').textContent = !Hap.supported() ? 'Dieses Gerät kann im Browser nicht vibrieren.'
+      : Hap.ios() ? 'Am iPhone gibt es im Browser nur einen kurzen Tipp beim Antippen (ab iOS 18). Ob es bei „Du bist dran“ klappt, hängt vom Gerät ab.'
+        : 'Vibriert, wenn du dran bist, beim Wählen, Legen und Aufnehmen.';
+    onOff('btnGlow', 'Randleuchten', glow);
+    onOff('btnHelp', 'Spielhilfe', help);
   }
   /* Neue Runde: sofort, wenn die Runde vorbei ist – mit Rückfrage, solange noch gespielt wird. */
   function askRematch() {
@@ -1267,8 +1456,13 @@
       if (!v || v.phase !== 'play' || !v.canGiveUp) giving = null;
       else if (snap._n > giving.after && (snap.isHost || snap.pending === 0)) { giving = null; toast('Aufgeben hat nicht geklappt – bitte nochmal.'); }
     }
-    if (!v) { opt = null; resetGame(); renderAll(); return null; }
+    if (!v) { opt = null; turnOpen = false; resetGame(); renderAll(); return null; }
     var had = null, me = v.players[v.you];
+    /* „Du bist dran“: einmal je eigenem Zug – nicht nach dem eigenen Aufnehmen oder der eigenen 3, und erst,
+     * wenn der Zug davor zu Ende gezeigt ist. Übersprungene Zwischenstände melden nichts. */
+    var signal = false;
+    if (v.phase === 'play' && v.turn === v.you) { if (!turnOpen && !skip) { turnOpen = true; signal = true; } }
+    else turnOpen = false;
     if (opt) {
       var answered = !snap.isHost && snap.pending === 0 && snap._n > opt.after;
       if (opt.kind === 'ready') { if (v.phase !== 'swap' || (me && me.ready) || answered) opt = null; }
@@ -1294,7 +1488,7 @@
 
     var ev = v.ev, p = null;
     if (pv && ev && ev.seq === v.seq && v.seq > pv.seq && !skip) {
-      if (ev.auto) { toast(ev.seat === v.you ? 'Zeit abgelaufen – es wurde für dich gespielt' : 'Zeit abgelaufen: Für ' + nameOf(v, ev.seat) + ' wurde gespielt'); Snd.play('timeout'); }
+      if (ev.auto) { toast(ev.seat === v.you ? 'Zeit abgelaufen – es wurde für dich gespielt' : 'Zeit abgelaufen: Für ' + nameOf(v, ev.seat) + ' wurde gespielt'); Snd.play('timeout'); if (ev.seat === v.you) Hap.fire('bad'); }
       else if (ev.t === 'start' && ev.forced) { toast('Zeit abgelaufen – die Runde beginnt'); Snd.play('timeout'); }
     }
     if (pv && pv.phase === 'play' && v.phase === 'over' && !skip) Snd.play(v.loser === v.you ? 'lose' : 'over', 650);
@@ -1317,9 +1511,24 @@
         gToast(ev.seat === v.you ? 'Du hast aufgegeben' : nameOf(v, ev.seat) + ' hat aufgegeben', false, 2400);
       }
       if (myTurnNow) revealPlayable();
+      if (signal) turnSignal();
       return null;
     }
-    return p.then(function () { settle(); if (myTurnNow) revealPlayable(); }, function (e) { console.error(e); settle(); });
+    return p.then(function () { settle(); if (myTurnNow) revealPlayable(); if (signal) turnSignal(); }, function (e) { console.error(e); settle(); });
+  }
+  /* Ton, Vibration und ein kurzes Leuchten am Bildschirmrand – nur beim Spieler, der dran ist. */
+  function turnSignal() {
+    var v = cur && cur.stage === 'game' ? cur.view : null;
+    if (!v || v.phase !== 'play' || v.turn !== v.you) return;
+    Snd.turn();
+    Hap.fire('turn');
+    if (glow && doc.visibilityState !== 'hidden') flashEdge();
+  }
+  function flashEdge() {
+    var g = $('turnGlow');
+    g.classList.remove('go');
+    void g.offsetWidth;
+    g.classList.add('go');
   }
   function revealPlayable() {
     var sc = $('handScroll'), v = cur && cur.view;
@@ -1602,7 +1811,7 @@
       return animDraw(dr);
     }).then(function () {
       if (!ev.place || v.phase !== 'play') return null;
-      if (ev.fx.indexOf('win') >= 0) { showWon(ev.seat); renderWon(display()); Snd.play('win'); }
+      if (ev.fx.indexOf('win') >= 0) { showWon(ev.seat); renderWon(display()); Snd.play('win'); if (ev.seat === me) Hap.fire('win'); }
       return wait(500);            // kurz stehen lassen, bevor der Nächste zieht
     });
   }
@@ -1610,7 +1819,7 @@
   function goneOf(ev) { return Array.isArray(ev.gone) ? ev.gone : []; }
   function goneLine(ev) {
     var k = goneOf(ev).length;
-    return !k ? '' : k > 1 ? 'Beide Joker sind aus dem Spiel' : 'Joker ist aus dem Spiel';
+    return !k ? '' : k > 2 ? 'Alle ' + k + ' Joker sind aus dem Spiel' : k > 1 ? 'Beide Joker sind aus dem Spiel' : 'Joker ist aus dem Spiel';
   }
   function takesLine(ev, v) {
     return ev.seat === v.you ? 'Du nimmst ' + countText(ev.n) + ' auf' : nameOf(v, ev.seat) + ' nimmt ' + countText(ev.n) + ' auf';
@@ -1684,7 +1893,8 @@
   function tapCard(id, zone) {
     var d = display();
     if (!d.my || d.my.zone !== zone) return;
-    if (d.my.playable.indexOf(id) < 0) { shake(myCardNode(id)); if (help) flashReq(); else toast('Diese Karte passt nicht'); return; }
+    if (d.my.playable.indexOf(id) < 0) { Hap.fire('bad'); shake(myCardNode(id)); if (help) flashReq(); else toast('Diese Karte passt nicht'); return; }
+    Hap.fire('tick');
     var i = sel.indexOf(id);
     if (i >= 0) sel.splice(i, 1);
     else if (zone === 'hand' && sel.length && E.rank(sel[0]) === E.rank(id)) sel.push(id);   // offene Karten: nur eine pro Zug
@@ -1705,6 +1915,7 @@
     if (lock) { afterLock = function () { tryPlay(ids, null); }; return true; }
     if (!rects) rects = ids.map(function (id) { var n = myCardNode(id); return n ? rectOf(n) : null; });
     opt = { kind: 'play', cards: ids.slice(), seq: d.v.seq, after: snapCount };
+    Hap.fire('tap');
     sel = [];
     renderGame();
     var fly = flyToPile(ids, rects);
@@ -1728,6 +1939,7 @@
     if (!d.my || !d.my.canPickup) return;
     if (lock) { afterLock = doPickup; return; }
     opt = { kind: 'pickup', seq: d.v.seq, after: snapCount };
+    Hap.fire('tap');
     sel = [];
     renderMine();
     if (!session.act({ t: 'pickup' })) { opt = null; renderMine(); }
@@ -1738,6 +1950,7 @@
     if (!d.my.canFlip) { flashReq(); return; }
     if (lock) { afterLock = function () { doFlip(slot); }; return; }
     opt = { kind: 'flip', slot: slot, seq: d.v.seq, after: snapCount };
+    Hap.fire('tap');
     renderMine();
     if (!session.act({ t: 'flip', slot: slot })) { opt = null; renderMine(); }
   }
@@ -1749,7 +1962,7 @@
   function playButton() {
     var d = display();
     var top = d.v.pile.length ? d.v.pile[d.v.pile.length - 1] : null;
-    if (!sel.length && d.my && d.my.zone !== 'down' && top === E.JB && d.my.playable.length === 1) tryPlay(d.my.playable.slice(), null);
+    if (!sel.length && d.my && d.my.zone !== 'down' && E.isBlackJoker(top) && d.my.playable.length) tryPlay(d.my.playable.slice(0, 1), null);
     else playSelection();
   }
 
@@ -1804,6 +2017,7 @@
       });
     }
     drag = { group: group, items: items, ids: items.map(function (it) { return it.id; }), info: info, over: null };
+    Hap.fire('tick');
     body.classList.add('dragging');
     return true;
   }
@@ -1946,19 +2160,36 @@
   on('btnStart', function () { session.lobby({ op: 'start' }); });
   on('btnUndo', function () { if (swapEditable()) { swapPrev = null; swapSel = null; renderSwap(); } });
   on('btnReady', readyButton);
-  function renderHelpBtn() {
-    var b = $('btnHelp');
-    b.textContent = 'Spielhilfe: ' + (help ? 'an' : 'aus');
-    b.setAttribute('aria-pressed', help ? 'true' : 'false');
-  }
   on('btnHelp', function () {
     help = !help;
     sSet(LS, 'karma.help', help ? '1' : '0');
-    renderHelpBtn();
+    renderSettings();
     if (cur && cur.stage === 'game') renderAll();
     toast(help ? 'Spielhilfe an: Du siehst, welche Karten passen' : 'Spielhilfe aus: keine Hinweise, keine grauen Karten');
   });
-  renderHelpBtn();
+  on('btnGlow', function () {
+    glow = !glow;
+    sSet(LS, 'karma.glow', glow ? '1' : '0');
+    renderSettings();
+    if (glow) flashEdge();
+  });
+  on('btnTick', function () { Snd.setTick(!Snd.tick()); renderSettings(); Snd.play('tick'); });
+  on('segChime', function (e) {
+    var b = e.target.closest ? e.target.closest('button') : null;
+    if (!b) return;
+    Snd.setChime(b.getAttribute('data-chime'));
+    renderSettings();
+    Snd.turn();   // gleich vorspielen
+  });
+  on('segHap', function (e) {
+    var b = e.target.closest ? e.target.closest('button') : null;
+    if (!b) return;
+    Hap.setLevel(parseInt(b.getAttribute('data-hap'), 10));
+    renderSettings();
+    Hap.fire('turn');
+  });
+  $('lobbyOpts').addEventListener('click', pickRoomOpt);
+  $('menuOpts').addEventListener('click', pickRoomOpt);
   function pickDesign(e) {
     var b = e.target && e.target.closest ? e.target.closest('button') : null;
     if (!b || !cur || !cur.isHost) return;
@@ -1973,6 +2204,10 @@
   });
   $('rngVol').addEventListener('input', function () { Snd.setVol(this.value / 100); });
   $('rngVol').addEventListener('change', function () { Snd.setVol(this.value / 100); Snd.play('place'); });
+  $('rngVolTurn').addEventListener('input', function () { Snd.setGroupVol('turn', this.value / 100); });
+  $('rngVolTurn').addEventListener('change', function () { Snd.setGroupVol('turn', this.value / 100); Snd.play(Snd.chime() === 'aus' ? 'glocke' : Snd.chime()); });
+  $('rngVolCards').addEventListener('input', function () { Snd.setGroupVol('cards', this.value / 100); });
+  $('rngVolCards').addEventListener('change', function () { Snd.setGroupVol('cards', this.value / 100); Snd.play('place'); });
   on('btnPickup', askPickup);
   on('btnPlay', playButton);
   on('pileTap', playSelection);
@@ -2017,6 +2252,7 @@
       var a = t.getAttribute('data-act');
       if (a === 'menu') openSheet('sheetMenu');
       else if (a === 'rules') openSheet('sheetRules');
+      else if (a === 'settings') openSheet('sheetSet');
       else if (a === 'share') shareLink();
       else if (a === 'close') closeSheet();
       return;
@@ -2076,7 +2312,7 @@
 
   (function init() {
     var fan = $('logoFan');
-    ['H10', 'JR', 'S2'].forEach(function (id) { fan.appendChild(cardFace(id)); });
+    ['S13', 'JR', 'H12'].forEach(function (id) { fan.appendChild(cardFace(id)); });
     $('inName').value = sGet(LS, NAME_KEY) || '';
     var hc = hashCode();
     if (hc) $('inCode').value = hc;

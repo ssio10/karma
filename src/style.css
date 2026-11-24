@@ -23,7 +23,8 @@
   --cw: clamp(46px, min(19vw, calc(var(--vh) * 10.5)), 84px);
   --tw: clamp(40px, min(16vw, calc(var(--vh) * 8.4)), 68px);
   --pw: clamp(46px, min(20vw, calc(var(--vh) * 10)), 80px);
-  --mw: clamp(23px, min(8.2vw, calc(var(--vh) * 4.9)), 36px);
+  --mwb: clamp(23px, min(8.2vw, calc(var(--vh) * 4.9)), 36px);
+  --mw: var(--mwb);
   --sw: clamp(60px, min(24vw, calc(var(--vh) * 13.5)), 112px);
   --dw: calc(var(--pw) * .56);
 }
@@ -102,12 +103,11 @@ body[data-screen="game"] #game { display: flex; }
 .card .big { position: absolute; right: calc(var(--w) * .09); bottom: calc(var(--w) * .09); width: calc(var(--w) * .52); height: calc(var(--w) * .52); }
 .card .big svg { width: 100%; height: 100%; display: block; }
 .card.jk { --face-in: inset 0 0 0 calc(var(--w) * .045) currentColor; }
-.card.jk .ci { left: calc(var(--w) * .1); top: calc(var(--w) * .1); min-width: 0; }
-.card.jk .ci svg { width: calc(var(--w) * .26); height: calc(var(--w) * .26); margin: 0; }
-.card.jk .jt { font-size: calc(var(--w) * .135); letter-spacing: .02em; margin-top: calc(var(--w) * .04); writing-mode: vertical-rl; text-orientation: upright; }
-.card.jk .big { right: calc(var(--w) * .1); bottom: calc(var(--w) * .12); width: calc(var(--w) * .5); height: calc(var(--w) * .5); }
+.card.jk .ci { left: calc(var(--w) * .085); top: calc(var(--w) * .08); min-width: 0; flex-direction: row; gap: calc(var(--w) * .035); }
+.card.jk .ci svg { width: calc(var(--w) * .2); height: calc(var(--w) * .2); margin: 0; }
+.card.jk .jt { font-size: calc(var(--w) * .15); letter-spacing: .05em; }
 
-.card.mini .big { display: none; }
+.card.mini .big, .card.mini .fig { display: none; }
 .card.mini .ci { left: 0; top: 0; width: 100%; height: 100%; justify-content: center; }
 .card.mini .rk { font-size: calc(var(--w) * .54); }
 .card.mini .ci svg { width: calc(var(--w) * .46); height: calc(var(--w) * .46); margin-top: calc(var(--w) * .04); }
@@ -238,8 +238,22 @@ body.is-host .guest-only { display: none !important; }
 .table { flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; }
 .opp-top { flex: none; display: flex; justify-content: space-evenly; align-items: flex-start; padding: 2px 4px 0; min-height: 4px; }
 .mid { flex: 0 0 auto; margin-top: auto; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; }
-.opp-side.l { justify-self: start; padding-left: 6px; }
+.opp-side { display: flex; flex-direction: column; gap: 5px; }
+.opp-side.l { justify-self: start; padding-left: 6px; flex-direction: column-reverse; }
 .opp-side.r { justify-self: end; padding-right: 6px; }
+/* Viele Mitspieler: Die Gegner rücken zusammen und werden kleiner (data-k = Zahl der Gegner). */
+.table { --mw: calc(var(--mwb) * var(--os, 1)); }
+.table[data-k="6"], .table[data-k="7"] { --os: .86; }
+.table[data-k="8"], .table[data-k="9"] { --os: .74; }
+.table[data-k="10"] { --os: .66; }
+.table[data-k="11"] { --os: .58; }
+.table[data-k="8"] .opp, .table[data-k="9"] .opp, .table[data-k="10"] .opp, .table[data-k="11"] .opp { padding: 3px 3px 4px; border-radius: 8px; }
+.table[data-k="8"] .opp-head, .table[data-k="9"] .opp-head, .table[data-k="10"] .opp-head, .table[data-k="11"] .opp-head { height: 14px; margin-bottom: 2px; font-size: 10px; gap: 2px; }
+.table[data-k="8"] .opp-hand .card, .table[data-k="9"] .opp-hand .card, .table[data-k="10"] .opp-hand .card, .table[data-k="11"] .opp-hand .card { --w: 8px; }
+.table[data-k="8"] .opp-side, .table[data-k="9"] .opp-side, .table[data-k="10"] .opp-side, .table[data-k="11"] .opp-side { gap: 4px; padding-left: 3px; padding-right: 3px; }
+.table[data-k="8"] .opp-done small, .table[data-k="9"] .opp-done small, .table[data-k="10"] .opp-done small, .table[data-k="11"] .opp-done small { display: none; }
+.table[data-k="8"] .opp-done b, .table[data-k="9"] .opp-done b, .table[data-k="10"] .opp-done b, .table[data-k="11"] .opp-done b { font-size: 11px; }
+.table[data-k="8"] .opp-tag, .table[data-k="9"] .opp-tag, .table[data-k="10"] .opp-tag, .table[data-k="11"] .opp-tag { font-size: 8px; padding: 0 4px; }
 
 .opp { position: relative; padding: 4px 5px 5px; border-radius: var(--box-r, 11px); background: var(--panel); transition: background .2s, box-shadow .2s, opacity .2s; }
 .opp-head { display: flex; align-items: center; justify-content: space-between; gap: 4px; height: 17px; margin-bottom: 3px; width: calc(var(--mw) * 3 + 6px); font-size: clamp(11px, 3.1vw, 13px); }
@@ -507,7 +521,7 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
     --cw: clamp(40px, calc(var(--vh) * 17), 70px);
     --tw: clamp(34px, calc(var(--vh) * 13), 56px);
     --pw: clamp(40px, calc(var(--vh) * 15), 70px);
-    --mw: clamp(22px, calc(var(--vh) * 7), 32px);
+    --mwb: clamp(22px, calc(var(--vh) * 7), 32px);
     --sw: clamp(46px, min(12vw, calc(var(--vh) * 26)), 100px);
   }
   body[data-screen="game"] #game { display: grid; grid-template-columns: minmax(0, 1fr) minmax(250px, 42%); grid-template-rows: auto minmax(0, 1fr); }
@@ -516,6 +530,11 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
   #game .mine { grid-column: 2; grid-row: 2; display: flex; flex-direction: column; justify-content: flex-end; min-width: 0; padding-bottom: max(6px, var(--sab)); }
   .tbar { height: 30px; }
   .over { top: calc(var(--sat) + 40px); }
+  /* Im Querformat ist der Tisch breiter: Auch mit vielen Mitspielern bleiben die Gegner groß. */
+  .table[data-k="6"], .table[data-k="7"] { --os: 1; }
+  .table[data-k="8"], .table[data-k="9"], .table[data-k="10"], .table[data-k="11"] { --os: .84; }
+  .table[data-k="8"] .opp-head, .table[data-k="9"] .opp-head, .table[data-k="10"] .opp-head, .table[data-k="11"] .opp-head { font-size: 11px; height: 15px; }
+  body[data-screen="game"] #game:has(.table[data-k="8"], .table[data-k="9"], .table[data-k="10"], .table[data-k="11"]) { grid-template-columns: minmax(0, 1fr) minmax(230px, 38%); }
   .over-star, .won-star, .logo-fan { display: none; }
   .over-box { padding: 14px 18px; gap: 8px; max-width: 420px; }
   .over-btns { flex-direction: row; }
@@ -555,6 +574,32 @@ html.prison .tagline { margin-bottom: 0; }
 .seg { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
 .seg button { min-height: 40px; padding: 0 2px; border-radius: 10px; font-size: 13px; font-weight: 700; color: var(--ink); background: rgba(255, 255, 255, .09); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .seg button[aria-pressed="true"] { color: var(--on-acc); background: var(--gold); box-shadow: none; }
+.seg.n2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.seg.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.seg.n5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.seg.n5 button { font-size: 12px; }
+.set-head { font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: var(--gold); margin: 0; }
+.set-row.wide > span { flex: 1 1 0; width: auto; min-width: 0; line-height: 1.25; }
+.set-row.wide .vol { flex: 1.6 1 0; }
+.set-row.wide .btn.small { min-width: 150px; }
+.room-opts { margin-top: 0; }
+.sheet .room-opts { margin-top: 14px; }
+.sheet .room-opts + .menu-set { margin-top: 8px; }
+#sheetSet .muted { margin-bottom: -4px; }
+.start-links { display: flex; justify-content: center; gap: 4px; }
+.start-links .btn { flex: 1; padding: 0 8px; }
+
+/* Hohe Bildschirme im Hochformat: Seitlich ist mehr Platz als oben – die Gegner links und rechts dürfen größer sein. */
+@media (orientation: portrait) and (min-height: 740px) {
+  .table[data-k="8"] .opp-side, .table[data-k="9"] .opp-side, .table[data-k="10"] .opp-side, .table[data-k="11"] .opp-side { --mw: calc(var(--mwb) * .8); }
+  .table[data-k="8"] .opp-side .opp-head, .table[data-k="9"] .opp-side .opp-head, .table[data-k="10"] .opp-side .opp-head, .table[data-k="11"] .opp-side .opp-head { font-size: 11px; height: 15px; }
+}
+
+/* „Du bist dran“: Der Bildschirmrand leuchtet zweimal kurz auf – nur der Rand, die Mitte bleibt frei. */
+.turn-glow { position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 50; pointer-events: none; opacity: 0; box-shadow: inset 0 0 0 3px rgba(var(--acc), .85), inset 0 0 34px 6px rgba(var(--acc), .42); }
+.turn-glow.go { animation: turnglow 1.5s ease-out; }
+@keyframes turnglow { 0% { opacity: 0; } 12% { opacity: .9; } 38% { opacity: .2; } 55% { opacity: .75; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .turn-glow.go { animation-duration: .9s; } }
 .set-note { font-size: 13px; line-height: 1.3; color: var(--mute); }
 .set-row .btn.small { flex: none; min-width: 104px; min-height: 40px; }
 .vol { flex: 1; min-width: 0; height: 36px; margin: 0; accent-color: var(--gold); }
@@ -600,21 +645,13 @@ html.prison .over-star, html.prison .won-star { display: none; }
 }
 
 /* ====================================================================
-   Gefängnis-Designs. Der Host wählt Tisch und Karten getrennt; beides gilt für alle im Raum.
-   Tisch:  html[data-table="stahl" | "patio" | "nacht"]     Karten: html[data-cards="stift" | "filz" | "druck"]
-   Alle Strukturen sind eingebettetes SVG-Rauschen oder Verläufe, keine Bilddateien.
+   Designs mit Bildern. Der Host wählt Tisch und Karten getrennt; beides gilt für alle im Raum.
+   Tisch:  html[data-table="stahl" | "hof" | "nacht" | "boss"]     Karten: html[data-cards="stift" | "schwarz" | "tattoo" | "hood"]
+   Die Bilder liegen im Ordner img/. Welche gerade gelten, setzt app.js am Wurzelelement: --tbl (Tisch) und --fig-… (Figuren, Rückseite).
    ==================================================================== */
 :root {
   --n-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.3 0 0 0 -0.42'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   --n-paper: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.3 0 0 0 0 0.2 0 0 0 0 0.05 0.7 0 0 0 -0.26'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  --n-blotch: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012' numOctaves='3' seed='8' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.5 0 0 0 -0.62'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  --n-brushw: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='512' height='256'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.003 .95' numOctaves='2' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0.55 0 0 0 -0.2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  --n-brushk: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='512' height='256'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.004 .7' numOctaves='2' seed='5' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.7 0 0 0 -0.25'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  --n-wood: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='512'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55 .007' numOctaves='3' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2.2 0 0 0 -0.8'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  --n-paint: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='512' height='512'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.045 .011' numOctaves='4' seed='12' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 40 0 0 0 -22.6'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  --n-wear: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.05 .4' numOctaves='2' seed='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 6 0 0 0 -1.2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  --n-stain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.028' numOctaves='2' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.36 0 0 0 0 0.2 0 0 0 0 0.06 3.2 0 0 0 -1.7'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  --n-scuff: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.32' numOctaves='2' seed='15' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.93 0 0 0 0 0.88 0 0 0 0 0.76 5 0 0 0 -2.95'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 .card .u-p { display: none; }
 
@@ -623,136 +660,184 @@ html.prison .con-box h2, html.prison .over-box h2, html.prison .won-box h2, html
 html.prison .chip, html.prison .code-big, html.prison .stock-count, html.prison .pile-count, html.prison #gCode,
 html.prison .seg button, html.prison .g-toast span, html.prison .act-hint.strong { font-family: var(--f-head); }
 
-/* ---------- Tisch „Stahl“: gebürsteter Stahltisch, Schablonenschrift, Orange ---------- */
+/* ---------- Tischbild: hochkant gemalt; im Querformat liegt es gedreht, damit nichts abgeschnitten wird ---------- */
+html[data-table] #app { background: var(--bg0); }
+#app::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; background: var(--veil, linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0))), var(--tbl) center / cover no-repeat; }
+@media (orientation: landscape) {
+  #app::before { top: 50%; left: 50%; width: calc(var(--vh) * 100); height: 100vw; transform: translate(-50%, -50%) rotate(90deg); }
+}
+/* Abseits des Spieltischs (Start, Lobby, Verbinden) liegt der Text frei auf dem Bild: dort etwas abdunkeln */
+body:not([data-screen="game"]):not([data-screen="swap"]) #app::before { filter: brightness(.62); }
+
+/* ---------- Tisch „Stahl“: Stahltisch im Zellenblock, Gitterschatten, Häftlings-Orange ---------- */
 html[data-table="stahl"] {
   --f-head: "Avenir Next Condensed", "DIN Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
-  --ink: #eef1f3; --mute: #a3adb4; --gold: #ff6f17; --gold-d: #c4520a; --acc: 255, 111, 23; --on-acc: #1b1106;
-  --dk: 8, 10, 12; --dim: rgba(18, 21, 24, .55); --panel: rgba(6, 8, 10, .52); --panel-2: #2b3035; --line: rgba(255, 255, 255, .17); --bg0: #23272b;
-  --btn-r: 3px; --pill-r: 3px; --box-r: 3px; --btn-ink: #1b1106;
+  --ink: #eef1f3; --mute: #aeb8bf; --gold: #ff7a1a; --gold-d: #c4520a; --acc: 255, 122, 26; --on-acc: #1b1106;
+  --dk: 8, 10, 12; --dim: rgba(14, 17, 20, .58); --panel: rgba(8, 10, 12, .6); --panel-2: #262b30; --line: rgba(255, 255, 255, .17); --bg0: #1d2226;
+  --btn-r: 4px; --pill-r: 4px; --box-r: 4px; --btn-ink: #1b1106;
   --btn-bg: linear-gradient(180deg, #ff8d30 0%, #ec6710 100%);
-  --btn-sh: inset 0 0 0 2px rgba(0, 0, 0, .3), inset 0 0 0 3px rgba(255, 255, 255, .18), 0 2px 0 #733004, 0 7px 14px rgba(0, 0, 0, .4);
-  --sec-bg: rgba(0, 0, 0, .3); --sec-sh: inset 0 0 0 1.5px rgba(255, 255, 255, .42);
-  --stencil: repeating-linear-gradient(90deg, #000 0 .52em, rgba(0, 0, 0, 0) .52em .565em);
+  --btn-sh: inset 0 0 0 2px rgba(0, 0, 0, .28), inset 0 0 0 3px rgba(255, 255, 255, .18), 0 2px 0 #733004, 0 7px 14px rgba(0, 0, 0, .45);
+  --sec-bg: rgba(0, 0, 0, .45); --sec-sh: inset 0 0 0 1.5px rgba(255, 255, 255, .4);
 }
-html[data-table="stahl"] #app { background: var(--n-brushw), var(--n-brushk), linear-gradient(104deg, rgba(255, 255, 255, 0) 22%, rgba(255, 255, 255, .13) 40%, rgba(255, 255, 255, .03) 52%, rgba(255, 255, 255, 0) 70%), linear-gradient(180deg, #5b646c 0%, #3d444b 52%, #262b30 100%); }
-html[data-table="stahl"] .table::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; background: radial-gradient(circle at 13px 13px, #aab3ba 0 2.5px, #15181b 3px 5px, rgba(0, 0, 0, 0) 5.5px), radial-gradient(circle at calc(100% - 13px) 13px, #aab3ba 0 2.5px, #15181b 3px 5px, rgba(0, 0, 0, 0) 5.5px), radial-gradient(circle at 13px calc(100% - 13px), #aab3ba 0 2.5px, #15181b 3px 5px, rgba(0, 0, 0, 0) 5.5px), radial-gradient(circle at calc(100% - 13px) calc(100% - 13px), #aab3ba 0 2.5px, #15181b 3px 5px, rgba(0, 0, 0, 0) 5.5px); }
-html[data-table="stahl"] .mine::before { content: ""; position: absolute; left: 0; right: 0; top: -5px; height: 5px; background: #ff7a1a; -webkit-mask-image: var(--n-wear); mask-image: var(--n-wear); opacity: .9; pointer-events: none; }
 html[data-table="stahl"] .btn, html[data-table="stahl"] .tbar, html[data-table="stahl"] .tb-title, html[data-table="stahl"] .opp-name,
 html[data-table="stahl"] .chip, html[data-table="stahl"] .sheet-head h2, html[data-table="stahl"] .dialog h2, html[data-table="stahl"] .con-box h2,
 html[data-table="stahl"] .over-box h2, html[data-table="stahl"] .won-box h2, html[data-table="stahl"] .done-title, html[data-table="stahl"] .seg button,
-html[data-table="stahl"] .act-hint.strong { text-transform: uppercase; letter-spacing: .08em; }
-html[data-table="stahl"] .btn { position: relative; font-size: 19px; font-weight: 700; }
+html[data-table="stahl"] .act-hint.strong { text-transform: uppercase; letter-spacing: .07em; }
+html[data-table="stahl"] .btn { font-size: 19px; }
 html[data-table="stahl"] .btn.small { font-size: 15px; }
-html[data-table="stahl"] .actions .btn { font-size: 18px; }
 html[data-table="stahl"] .actions .btn.quiet { font-size: 14px; letter-spacing: .05em; }
-html[data-table="stahl"] .seg button { font-size: 14px; letter-spacing: .05em; border-radius: 3px; }
+html[data-table="stahl"] .seg button { font-size: 14px; letter-spacing: .04em; }
 html[data-table="stahl"] .tbar { font-size: 17px; }
-html[data-table="stahl"] .tbar.me { font-size: 18px; box-shadow: inset 0 0 0 2px rgba(0, 0, 0, .3), 0 0 0 3px rgba(255, 122, 26, .22), 0 4px 14px rgba(0, 0, 0, .35); }
 html[data-table="stahl"] .opp-name { font-size: 14px; }
-/* Schablone: schmale Stege durch die Schrift */
-html[data-table="stahl"] #turnText, html[data-table="stahl"] .chip, html[data-table="stahl"] .tb-title, html[data-table="stahl"] .logo,
-html[data-table="stahl"] .sheet-head h2, html[data-table="stahl"] .dialog h2, html[data-table="stahl"] .con-box h2, html[data-table="stahl"] .over-box h2,
-html[data-table="stahl"] .won-box h2, html[data-table="stahl"] .done-title { -webkit-mask-image: var(--stencil); mask-image: var(--stencil); }
-html[data-table="stahl"] .btn:not(.sec):not(.ghost):not(.danger):not(:disabled)::after { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: inherit; background: inherit; -webkit-clip-path: inset(5px); clip-path: inset(5px); -webkit-mask-image: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0) 0 .52em, #000 .52em .565em); mask-image: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0) 0 .52em, #000 .52em .565em); pointer-events: none; }
-html[data-table="stahl"] .logo { font-family: var(--f-head); font-weight: 700; letter-spacing: .16em; margin-right: -.16em; font-size: 54px; }
-html[data-table="stahl"] .chip { border-radius: 2px; font-size: 17px; letter-spacing: .12em; background: none; box-shadow: none; color: #fbfaf5; text-shadow: 0 1px 2px rgba(0, 0, 0, .5); padding: 2px 10px; }
-html[data-table="stahl"] .chip.warn { color: #ff9a8e; }
-html[data-table="stahl"] .opp:not(.turn) { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1), inset 0 1px 0 rgba(255, 255, 255, .14); }
-html[data-table="stahl"] .ring { color: rgba(255, 138, 48, .7); }
-html[data-table="stahl"] .stock-count, html[data-table="stahl"] .pile-count { border-radius: 2px; background: #131313; font-size: 15px; }
-html[data-table="stahl"] .over-box, html[data-table="stahl"] .won-box { border-radius: 4px; background: linear-gradient(180deg, #3a4047, #2a2f34); }
-html[data-table="stahl"] .over-box h2 { font-size: 27px; }
-html[data-table="stahl"] .rank, html[data-table="stahl"] .wall, html[data-table="stahl"] .code-card, html[data-table="stahl"] .prow, html[data-table="stahl"] .menu-set, html[data-table="stahl"] input[type="text"] { border-radius: 3px; }
-html[data-table="stahl"] .sheet { border-radius: 6px 6px 0 0; }
-html[data-table="stahl"] .dialog { border-radius: 6px; }
-html[data-table="stahl"] .code-big { letter-spacing: .14em; margin-right: -.14em; }
+html[data-table="stahl"] .logo { font-weight: 700; letter-spacing: .16em; margin-right: -.16em; font-size: 56px; }
+html[data-table="stahl"] .chip { font-size: 16px; letter-spacing: .1em; }
 
-/* ---------- Tisch „Patio“: Holztisch mit abgeblätterter Farbe, handgemalte Schilder ---------- */
-html[data-table="patio"] {
+/* ---------- Tisch „Hof“: Betonboden im Gefängnishof, Kreide, Abendsonne ---------- */
+html[data-table="hof"] {
   --f-head: "Marker Felt", "Chalkboard SE", "Segoe Print", "Comic Sans MS", cursive;
-  --ink: #fbf2dc; --mute: #dccaa3; --gold: #f2b62b; --gold-d: #b97f0f; --acc: 242, 182, 43; --on-acc: #3a1c08;
-  --dk: 30, 15, 6; --dim: rgba(45, 26, 12, .55); --panel: rgba(38, 20, 8, .56); --panel-2: #4b3321; --line: rgba(255, 240, 210, .2); --bg0: #4a3422;
-  --btn-r: 9px 13px 8px 12px / 12px 8px 13px 9px; --pill-r: 8px 12px 9px 11px / 11px 9px 12px 8px; --box-r: 7px 10px 6px 9px / 9px 6px 10px 7px; --btn-ink: #3a1c08;
-  --btn-bg: linear-gradient(180deg, #f7c441 0%, #e2a117 100%);
-  --btn-sh: inset 0 0 0 2.5px #a3311c, inset 0 0 0 4px rgba(255, 240, 200, .35), 0 2px 0 #6e3d07, 0 7px 14px rgba(0, 0, 0, .4);
-  --sec-bg: rgba(38, 20, 8, .5); --sec-sh: inset 0 0 0 2px rgba(251, 242, 220, .5);
+  --ink: #fff8e8; --mute: #ead9b6; --gold: #ffd24a; --gold-d: #b98a10; --acc: 255, 210, 74; --on-acc: #33210a;
+  --dk: 34, 22, 10; --dim: rgba(50, 34, 16, .55); --panel: rgba(40, 26, 12, .66); --panel-2: #4a3723; --line: rgba(255, 244, 214, .24); --bg0: #5a4630;
+  --btn-r: 9px 13px 8px 12px / 12px 8px 13px 9px; --pill-r: 8px 12px 9px 11px / 11px 9px 12px 8px; --box-r: 7px 10px 6px 9px / 9px 6px 10px 7px; --btn-ink: #33210a;
+  --btn-bg: linear-gradient(180deg, #ffe07a 0%, #f4bd2c 100%);
+  --btn-sh: inset 0 0 0 2px rgba(255, 255, 255, .55), 0 2px 0 #7a5608, 0 7px 14px rgba(0, 0, 0, .4);
+  --sec-bg: rgba(40, 26, 12, .62); --sec-sh: inset 0 0 0 2px rgba(255, 248, 232, .6);
+  --veil: linear-gradient(rgba(46, 30, 12, .3), rgba(46, 30, 12, .3));
 }
-html[data-table="patio"] #app { background: var(--n-grain), radial-gradient(130% 90% at 50% 40%, rgba(0, 0, 0, 0) 45%, rgba(20, 8, 0, .55) 100%), var(--n-wood), repeating-linear-gradient(90deg, rgba(0, 0, 0, .5) 0 2px, rgba(255, 255, 255, .05) 2px 3px, rgba(0, 0, 0, 0) 3px 25%), linear-gradient(180deg, #8d6c49 0%, #6f5236 58%, #543b26 100%); }
-html[data-table="patio"] #app::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; background: linear-gradient(180deg, #37a79d, #23857f); -webkit-mask-image: var(--n-paint); mask-image: var(--n-paint); opacity: .7; }
-html[data-table="patio"] .btn { font-size: 19px; letter-spacing: .02em; }
-html[data-table="patio"] .btn.small { font-size: 15px; }
-html[data-table="patio"] .actions .btn.quiet { font-size: 14px; }
-html[data-table="patio"] .tbar { font-size: 17px; }
-html[data-table="patio"] .tbar.me { font-size: 18px; box-shadow: inset 0 0 0 2.5px #a3311c, 0 4px 14px rgba(0, 0, 0, .4); }
-html[data-table="patio"] .opp-name { font-size: 14px; font-weight: 400; }
-html[data-table="patio"] .logo { font-family: var(--f-head); letter-spacing: .1em; margin-right: -.1em; font-size: 52px; }
-html[data-table="patio"] .chip:not(.warn):not(.dark) { background: none; box-shadow: none; }
-html[data-table="patio"] .chip { font-size: 17px; text-shadow: 0 1px 3px rgba(0, 0, 0, .7); padding: 3px 12px; }
-html[data-table="patio"] .ring { color: rgba(251, 242, 220, .55); }
-html[data-table="patio"] #gCode { font-size: 14px; letter-spacing: .04em; border-radius: 4px 7px 5px 6px; box-shadow: none; transform: rotate(-1.5deg); background: #a3311c; color: #fbf2dc; }
-html[data-table="patio"] .over-box, html[data-table="patio"] .won-box { border-radius: 10px 14px 9px 13px / 13px 9px 14px 10px; background: var(--n-grain), linear-gradient(180deg, #2c8d86, #1f6f6a); box-shadow: inset 0 0 0 3px #f2b62b, 0 20px 50px rgba(0, 0, 0, .6); }
-html[data-table="patio"] .over-box h2, html[data-table="patio"] .won-box h2 { color: #fbf2dc; font-size: 25px; font-weight: 400; }
-html[data-table="patio"] .over-box .muted, html[data-table="patio"] .won-box p, html[data-table="patio"] .over-box .wait { color: #d5ebe6; }
-html[data-table="patio"] .rank, html[data-table="patio"] .wall { background: rgba(10, 40, 38, .45); }
-html[data-table="patio"] .rank-tag, html[data-table="patio"] .rank b, html[data-table="patio"] .wall-title { color: #c4e0da; }
-html[data-table="patio"] .rank, html[data-table="patio"] .wall, html[data-table="patio"] .code-card, html[data-table="patio"] .prow, html[data-table="patio"] .menu-set, html[data-table="patio"] input[type="text"], html[data-table="patio"] .seg button { border-radius: var(--box-r); }
-html[data-table="patio"] .sheet-head h2, html[data-table="patio"] .dialog h2, html[data-table="patio"] .con-box h2, html[data-table="patio"] .tb-title, html[data-table="patio"] .done-title { font-weight: 400; }
+html[data-table="hof"] .btn { font-size: 19px; }
+html[data-table="hof"] .btn.small { font-size: 15px; }
+html[data-table="hof"] .logo { letter-spacing: .1em; margin-right: -.1em; font-size: 54px; color: #fff8e8; }
+html[data-table="hof"] .opp-name, html[data-table="hof"] .sheet-head h2, html[data-table="hof"] .dialog h2, html[data-table="hof"] .tb-title, html[data-table="hof"] .done-title { font-weight: 400; }
+html[data-table="hof"] #turnText, html[data-table="hof"] .act-hint, html[data-table="hof"] .tagline, html[data-table="hof"] .origin { text-shadow: 0 1px 3px rgba(30, 18, 6, .8); }
 
-/* ---------- Tisch „Nacht“: Steinboden bei Nacht, Mondlicht durchs Gitter, Emailleschilder ---------- */
+/* ---------- Tisch „Nacht“: Zellenboden bei Nacht, Mondlicht durchs Gitter, Feuerzeug ---------- */
 html[data-table="nacht"] {
   --f-head: "American Typewriter", "Courier New", Courier, monospace;
-  --ink: #e7ecf6; --mute: #94a1bd; --gold: #f2bd6a; --gold-d: #a87628; --acc: 242, 189, 106; --on-acc: #101a36;
-  --dk: 6, 9, 18; --dim: rgba(10, 14, 28, .58); --panel: rgba(6, 9, 18, .55); --panel-2: #1b2338; --line: rgba(220, 230, 255, .18); --bg0: #0c101b;
-  --btn-r: 5px; --pill-r: 5px; --box-r: 4px; --btn-ink: #101a36;
-  --btn-bg: linear-gradient(180deg, #f7cd85 0%, #e5a94a 100%);
-  --btn-sh: inset 0 0 0 2px #f7cd85, inset 0 0 0 3.5px #101a36, 0 2px 0 #6b4a16, 0 7px 14px rgba(0, 0, 0, .5);
-  --sec-bg: linear-gradient(180deg, #25345f, #18244a); --sec-sh: inset 0 0 0 2px #1d2a52, inset 0 0 0 3.5px rgba(243, 245, 250, .9), 0 2px 0 #0a0f20, 0 6px 12px rgba(0, 0, 0, .45);
+  --ink: #e7ecf6; --mute: #9aa7c4; --gold: #f2b55f; --gold-d: #a87628; --acc: 242, 181, 95; --on-acc: #14100a;
+  --dk: 4, 7, 14; --dim: rgba(6, 9, 18, .6); --panel: rgba(8, 12, 24, .64); --panel-2: #131a2c; --line: rgba(200, 215, 255, .2); --bg0: #070a12;
+  --btn-r: 6px; --pill-r: 6px; --box-r: 5px; --btn-ink: #1a1206;
+  --btn-bg: linear-gradient(180deg, #f8cf8c 0%, #e3a443 100%);
+  --btn-sh: inset 0 1px 0 rgba(255, 255, 255, .5), 0 2px 0 #6b4a16, 0 0 22px rgba(242, 181, 95, .28), 0 7px 14px rgba(0, 0, 0, .5);
+  --sec-bg: rgba(20, 28, 52, .72); --sec-sh: inset 0 0 0 1.5px rgba(200, 215, 255, .45);
 }
-html[data-table="nacht"] #app { background: var(--n-grain), var(--n-blotch), linear-gradient(90deg, rgba(0, 0, 0, .55) 0 2px, rgba(0, 0, 0, 0) 2px) 0 0 / 120px 180px, linear-gradient(90deg, rgba(0, 0, 0, .55) 0 2px, rgba(0, 0, 0, 0) 2px) 60px 90px / 120px 180px, linear-gradient(180deg, rgba(0, 0, 0, .55) 0 2px, rgba(170, 190, 240, .07) 2px 3px, rgba(0, 0, 0, 0) 3px) 0 0 / 100% 90px, radial-gradient(140% 100% at 50% 36%, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, .7) 100%), linear-gradient(180deg, #333c55 0%, #262d42 55%, #181d2c 100%); }
-html[data-table="nacht"] #app::before { content: ""; position: absolute; left: -22%; top: 9%; width: 144%; height: 47%; pointer-events: none; transform: skewX(-17deg); background: repeating-linear-gradient(90deg, rgba(186, 208, 255, .22) 0 11.5%, rgba(186, 208, 255, 0) 11.5% 16.66%); -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, #000 14%, #000 62%, rgba(0, 0, 0, 0) 100%); mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, #000 14%, #000 62%, rgba(0, 0, 0, 0) 100%); }
-html[data-table="nacht"] .btn { font-size: 17px; font-weight: 700; letter-spacing: .03em; }
+html[data-table="nacht"] .btn { font-size: 16px; letter-spacing: .02em; }
 html[data-table="nacht"] .btn.small { font-size: 14px; }
-html[data-table="nacht"] .btn.sec { color: #f3f5fa; }
-html[data-table="nacht"] .actions .btn.quiet { font-size: 13px; color: var(--mute); }
-html[data-table="nacht"] .tbar { font-size: 16px; }
-html[data-table="nacht"] .tbar.me { font-size: 16px; box-shadow: inset 0 0 0 2px #f7cd85, inset 0 0 0 3.5px #101a36, 0 0 20px rgba(242, 189, 106, .3), 0 4px 12px rgba(0, 0, 0, .45); }
+html[data-table="nacht"] .tbar { font-size: 15px; }
 html[data-table="nacht"] .opp-name { font-size: 12.5px; }
-html[data-table="nacht"] .logo { font-family: var(--f-head); letter-spacing: .14em; margin-right: -.14em; font-size: 44px; }
-html[data-table="nacht"] .opp:not(.turn) { box-shadow: inset 0 0 0 1px rgba(220, 230, 255, .14); }
-html[data-table="nacht"] .chip { font-size: 15px; padding: 6px 14px; }
-html[data-table="nacht"] .chip:not(.warn):not(.dark) { background: linear-gradient(180deg, #25345f, #18244a); color: #f3f5fa; box-shadow: inset 0 0 0 1.5px #1d2a52, inset 0 0 0 2.5px rgba(243, 245, 250, .8); }
-html[data-table="nacht"] .ring { color: rgba(186, 208, 255, .45); }
-html[data-table="nacht"] #gCode { background: linear-gradient(180deg, #25345f, #18244a); border-radius: 4px; box-shadow: inset 0 0 0 1px #1d2a52, inset 0 0 0 2px rgba(243, 245, 250, .85); }
-html[data-table="nacht"] .stock-count, html[data-table="nacht"] .pile-count { border-radius: 3px; }
-html[data-table="nacht"] .over-box, html[data-table="nacht"] .won-box { border-radius: 4px; background: var(--n-grain), linear-gradient(180deg, #232c46, #171d30); }
-html[data-table="nacht"] .over-box h2 { font-size: 22px; }
-html[data-table="nacht"] .won-box h2 { font-size: 19px; }
-html[data-table="nacht"] .rank, html[data-table="nacht"] .wall, html[data-table="nacht"] .code-card, html[data-table="nacht"] .prow, html[data-table="nacht"] .menu-set, html[data-table="nacht"] input[type="text"], html[data-table="nacht"] .seg button { border-radius: 4px; }
-html[data-table="nacht"] .sheet { border-radius: 8px 8px 0 0; }
-html[data-table="nacht"] .dialog { border-radius: 8px; }
 html[data-table="nacht"] .seg button { font-size: 12.5px; }
+html[data-table="nacht"] .logo { letter-spacing: .14em; margin-right: -.14em; font-size: 46px; }
+html[data-table="nacht"] .chip { font-size: 14px; }
+html[data-table="nacht"] body:not([data-screen="game"]):not([data-screen="swap"]) #app::before { filter: brightness(.85); }
 
-/* ---------- Karten „Stift“: schwarzer und roter Kugelschreiber auf Packpapier-Karton ---------- */
+/* ---------- Tisch „Boss“: grüner Filz mit Mahagoni-Rand, Goldkette, Zigarre ---------- */
+html[data-table="boss"] {
+  --f-head: "Didot", "Bodoni 72", "Bodoni MT", "Playfair Display", Georgia, serif;
+  --ink: #f6efdf; --mute: #d2c5a6; --gold: #e9c46a; --gold-d: #9c7a22; --acc: 233, 196, 106; --on-acc: #2a1a06;
+  --dk: 6, 18, 12; --dim: rgba(6, 24, 16, .55); --panel: rgba(4, 20, 13, .6); --panel-2: #3a1712; --line: rgba(246, 232, 200, .22); --bg0: #2a110d;
+  --btn-r: 10px; --pill-r: 999px; --box-r: 9px; --btn-ink: #2a1a06;
+  --btn-bg: linear-gradient(180deg, #f3d98f 0%, #d5a63a 100%);
+  --btn-sh: inset 0 0 0 1.5px #7a5a14, inset 0 0 0 3px rgba(255, 255, 255, .35), 0 2px 0 #5d430c, 0 8px 16px rgba(0, 0, 0, .45);
+  --sec-bg: rgba(40, 14, 10, .68); --sec-sh: inset 0 0 0 1.5px rgba(233, 196, 106, .6);
+}
+html[data-table="boss"] .btn { font-size: 18px; letter-spacing: .03em; }
+html[data-table="boss"] .btn.small { font-size: 15px; }
+html[data-table="boss"] .logo { letter-spacing: .18em; margin-right: -.18em; font-size: 50px; }
+html[data-table="boss"] .seg button { font-size: 13.5px; }
+
+/* ====================================================================
+   Karten. Zahlenkarten sind gezeichnet (Schrift und Symbole), Bildkarten zeigen eine Figur:
+   König = Boss, Dame = Queen, Bube = Läufer, Ass = Emblem, schwarzer Joker = Dealer, roter Joker = Wärter.
+   ==================================================================== */
+.card .fig { position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--w) * 1.13); background: center bottom / cover no-repeat; }
+.card.f-k .fig { background-image: var(--fig-k); }
+.card.f-q .fig { background-image: var(--fig-q); }
+.card.f-j .fig { background-image: var(--fig-j); }
+.card.f-a .fig { background-image: var(--fig-a); }
+.card.f-jb .fig { background-image: var(--fig-jb); }
+.card.f-jr .fig { background-image: var(--fig-jr); }
+html[data-cards] .card.back { background: var(--fig-back) center / 100% 100% no-repeat; --face-in: 0 0 0 0 rgba(0, 0, 0, 0); }
+/* Bildkarten: Wert und Farbe stehen nebeneinander in der Leiste über der Figur */
+.card.fc:not(.mini) .ci { flex-direction: row; align-items: center; min-width: 0; gap: calc(var(--w) * .03); left: calc(var(--w) * .08); top: calc(var(--w) * .055); }
+.card.fc:not(.mini):not(.jk) .rk { font-size: calc(var(--w) * .3); }
+.card.fc:not(.mini):not(.jk) .ci svg { width: calc(var(--w) * .21); height: calc(var(--w) * .21); margin-top: 0; }
+
+/* ---------- Karten „Stift“: Kugelschreiber auf Heftpapier ---------- */
 html[data-cards="stift"] .card .u-s { display: none; }
 html[data-cards="stift"] .card .u-p { display: inline; }
-html[data-cards="stift"] .card { border-radius: calc(var(--w) * .055); background: var(--n-paper), linear-gradient(165deg, #e2cba0 0%, #cfb382 100%); color: #15151a; --card-out: 0 0 0 1px rgba(50, 35, 10, .6), 0 1.5px 0 #96794a, 0 3px 5px rgba(0, 0, 0, .45); }
-html[data-cards="stift"] .card.red { color: #a9101c; }
+html[data-cards="stift"] .card { border-radius: calc(var(--w) * .06); color: #20298f; --card-out: 0 0 0 1px rgba(60, 45, 15, .6), 0 1.5px 0 #a48b55, 0 3px 5px rgba(0, 0, 0, .45);
+  background: var(--n-paper), repeating-linear-gradient(180deg, rgba(70, 150, 190, 0) 0 calc(var(--w) * .118), rgba(70, 150, 190, .42) calc(var(--w) * .118) calc(var(--w) * .13)), linear-gradient(165deg, #fef6d3 0%, #f6e3b0 100%); }
+html[data-cards="stift"] .card.red { color: #c21f2b; }
 html[data-cards="stift"] .card .rk { font-family: "Bradley Hand", "Noteworthy", "Segoe Print", "Comic Sans MS", cursive; font-weight: 700; font-size: calc(var(--w) * .46); letter-spacing: -.03em; -webkit-text-stroke: calc(var(--w) * .012) currentColor; }
 html[data-cards="stift"] .card.mini .rk { font-size: calc(var(--w) * .62); }
 html[data-cards="stift"] .card .ci svg { margin-top: calc(var(--w) * -.01); }
-html[data-cards="stift"] .card.back { background: repeating-linear-gradient(63deg, rgba(21, 21, 26, .85) 0 1px, rgba(21, 21, 26, 0) 1px 3.6px), #d6bb8b; --face-in: inset 0 0 0 calc(var(--w) * .06) #d9bf90, inset 0 0 0 calc(var(--w) * .078) #15151a, inset 0 0 0 calc(var(--w) * .12) #d9bf90, inset 0 0 0 calc(var(--w) * .135) #15151a; }
+html[data-cards="stift"] .card:not(.mini) .ci { left: calc(var(--w) * .13); }
+html[data-cards="stift"] .card.fc:not(.mini):not(.jk) .rk { font-size: calc(var(--w) * .38); }
+html[data-cards="stift"] .card.fc:not(.mini) .ci { top: calc(var(--w) * .02); text-shadow: 0 0 calc(var(--w) * .05) #fdf3cf, 0 0 calc(var(--w) * .05) #fdf3cf; }
+html[data-cards="stift"] .card.jk:not(.mini) .ci { top: calc(var(--w) * .09); left: calc(var(--w) * .1); gap: calc(var(--w) * .045); }
+html[data-cards="stift"] .card.jk .jt { font-family: "Bradley Hand", "Noteworthy", "Segoe Print", "Comic Sans MS", cursive; font-size: calc(var(--w) * .15); }
+/* Die Figuren haben weißen Grund und liegen wie gezeichnet auf dem Kartenpapier */
+html[data-cards="stift"] .card.fc, html[data-cards="tattoo"] .card.fc { isolation: isolate; }
+html[data-cards="stift"] .card .fig, html[data-cards="tattoo"] .card .fig { mix-blend-mode: multiply; }
+html[data-cards="stift"] .card .fig { height: calc(var(--w) * 1.082); }
+html[data-cards="stift"] .card.jk .fig { left: calc(var(--w) * .045); right: calc(var(--w) * .045); bottom: calc(var(--w) * .045); height: calc(var(--w) * .985); }
 
-/* ---------- Karten „Filz“: dicker Filzstift, speckig, ausgefranste Ecken ---------- */
-html[data-cards="filz"] .card { border-radius: calc(var(--w) * .13) calc(var(--w) * .09) calc(var(--w) * .14) calc(var(--w) * .08) / calc(var(--w) * .1) calc(var(--w) * .13) calc(var(--w) * .09) calc(var(--w) * .12); background: var(--n-stain), var(--n-paper), linear-gradient(170deg, #eddfb4 0%, #d6c18d 100%); color: #2a1f14; --card-out: 0 0 0 1px rgba(60, 35, 10, .55), 0 3px 5px rgba(0, 0, 0, .45); }
-html[data-cards="filz"] .card.red { color: #b02d18; }
-html[data-cards="filz"] .card .rk { font-family: "Marker Felt", "Chalkboard SE", "Comic Sans MS", cursive; font-weight: 700; font-size: calc(var(--w) * .43); letter-spacing: -.02em; }
-html[data-cards="filz"] .card.mini .rk { font-size: calc(var(--w) * .6); }
-html[data-cards="filz"] .card svg { stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; }
-html[data-cards="filz"] .card.back { background: var(--n-scuff), var(--n-stain), repeating-linear-gradient(45deg, rgba(240, 225, 185, .5) 0 2px, rgba(240, 225, 185, 0) 2px 9px), repeating-linear-gradient(-45deg, rgba(240, 225, 185, .5) 0 2px, rgba(240, 225, 185, 0) 2px 9px), linear-gradient(160deg, #a4412a, #7c2a18); --face-in: inset 0 0 0 calc(var(--w) * .065) #dccb9c; }
+/* ---------- Karten „Schwarz“: schwarze Karten, weißer und roter Druck ---------- */
+html[data-cards="schwarz"] .card { border-radius: calc(var(--w) * .09); background: #000; color: #f4f2ea;
+  --face-in: inset 0 0 0 calc(var(--w) * .035) #000, inset 0 0 0 calc(var(--w) * .05) rgba(244, 242, 234, .9); --card-out: 0 0 0 1px rgba(255, 255, 255, .34), 0 3px 7px rgba(0, 0, 0, .65); }
+html[data-cards="schwarz"] .card.red { color: #e3212f; }
+html[data-cards="schwarz"] .card.mini { --face-in: inset 0 0 0 1px rgba(244, 242, 234, .75); }
+html[data-cards="schwarz"] .card .ci { left: calc(var(--w) * .1); top: calc(var(--w) * .11); }
+html[data-cards="schwarz"] .card.mini .ci { left: 0; top: 0; }
+html[data-cards="schwarz"] .card .rk { font-family: "Avenir Next Condensed", "DIN Condensed", "Arial Narrow", "Roboto Condensed", sans-serif; font-weight: 800; font-size: calc(var(--w) * .42); letter-spacing: -.01em; }
+html[data-cards="schwarz"] .card.mini .rk { font-size: calc(var(--w) * .6); }
+html[data-cards="schwarz"] .card .big { right: calc(var(--w) * .12); bottom: calc(var(--w) * .12); }
+html[data-cards="schwarz"] .card.fc:not(.mini) .ci { left: calc(var(--w) * .11); top: calc(var(--w) * .085); }
+html[data-cards="schwarz"] .card.fc:not(.mini):not(.jk) .rk { font-size: calc(var(--w) * .33); }
+html[data-cards="schwarz"] .card .fig { left: calc(var(--w) * .06); right: calc(var(--w) * .06); bottom: calc(var(--w) * .06); height: calc(var(--w) * .99); }
+html[data-cards="schwarz"] .card.jk { --face-in: inset 0 0 0 calc(var(--w) * .05) currentColor; }
+html[data-cards="schwarz"] .card.jk .jt { font-family: "Avenir Next Condensed", "DIN Condensed", "Arial Narrow", "Roboto Condensed", sans-serif; font-weight: 800; font-size: calc(var(--w) * .17); letter-spacing: .08em; }
+html[data-cards="schwarz"] .card.back { --card-out: 0 0 0 1px rgba(255, 255, 255, .34), 0 3px 7px rgba(0, 0, 0, .65); }
 
-/* ---------- Karten „Druck“: alter Druck mit feiner Antiqua ---------- */
-html[data-cards="druck"] .card { border-radius: calc(var(--w) * .09); background: var(--n-paper), linear-gradient(165deg, #eef0ea 0%, #d9dccf 100%); color: #14161c; --face-in: inset 0 0 0 calc(var(--w) * .03) #e6e8df, inset 0 0 0 calc(var(--w) * .042) rgba(20, 22, 28, .4); --card-out: 0 0 0 1px rgba(5, 8, 15, .6), 0 3px 6px rgba(0, 0, 0, .55); }
-html[data-cards="druck"] .card.red { color: #b0201c; }
-html[data-cards="druck"] .card .rk { font-family: "Bodoni 72", "Didot", "Bodoni MT", "Playfair Display", Georgia, serif; font-weight: 700; font-size: calc(var(--w) * .42); letter-spacing: -.03em; }
-html[data-cards="druck"] .card.mini .rk { font-size: calc(var(--w) * .6); }
-html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60deg, rgba(226, 232, 245, .3) 0 1px, rgba(226, 232, 245, 0) 1px 7px), repeating-linear-gradient(-60deg, rgba(226, 232, 245, .3) 0 1px, rgba(226, 232, 245, 0) 1px 7px), repeating-linear-gradient(0deg, rgba(226, 232, 245, .16) 0 1px, rgba(226, 232, 245, 0) 1px 6px), linear-gradient(160deg, #24345f, #131d3c); --face-in: inset 0 0 0 calc(var(--w) * .06) #e3e6dc, inset 0 0 0 calc(var(--w) * .075) #131d3c, inset 0 0 0 calc(var(--w) * .095) #e3e6dc; }
+/* ---------- Karten „Tattoo“: Old-School-Tattoo-Vorlagen auf Pergament ---------- */
+html[data-cards="tattoo"] .card { border-radius: calc(var(--w) * .08); background: linear-gradient(170deg, #fdebcb 0%, #f7deb8 100%); color: #1a1512;
+  --face-in: inset 0 0 0 calc(var(--w) * .03) #f8e3bf, inset 0 0 0 calc(var(--w) * .042) #1a1512; --card-out: 0 0 0 1px rgba(40, 25, 10, .6), 0 3px 6px rgba(0, 0, 0, .5); }
+html[data-cards="tattoo"] .card.red { color: #b1151f; }
+html[data-cards="tattoo"] .card.mini { --face-in: inset 0 0 0 1px rgba(26, 21, 18, .7); }
+html[data-cards="tattoo"] .card .ci { left: calc(var(--w) * .09); top: calc(var(--w) * .1); }
+html[data-cards="tattoo"] .card.mini .ci { left: 0; top: 0; }
+html[data-cards="tattoo"] .card .rk { font-family: "Rockwell", "American Typewriter", "Roboto Slab", Georgia, serif; font-weight: 700; font-size: calc(var(--w) * .38); letter-spacing: -.04em; }
+html[data-cards="tattoo"] .card.mini .rk { font-size: calc(var(--w) * .56); }
+html[data-cards="tattoo"] .card svg { stroke: #1a1512; stroke-width: 1.5; stroke-linejoin: round; paint-order: stroke; }
+html[data-cards="tattoo"] .card .big { right: calc(var(--w) * .12); bottom: calc(var(--w) * .12); }
+html[data-cards="tattoo"] .card.fc:not(.mini):not(.jk) { --face-in: 0 0 0 0 rgba(0, 0, 0, 0); }
+html[data-cards="tattoo"] .card.fc:not(.mini) .ci { left: calc(var(--w) * .085); top: calc(var(--w) * .045); }
+html[data-cards="tattoo"] .card.fc:not(.mini):not(.jk) .rk { font-size: calc(var(--w) * .29); }
+html[data-cards="tattoo"] .card .fig { left: calc(var(--w) * .025); right: calc(var(--w) * .025); bottom: calc(var(--w) * .03); height: calc(var(--w) * 1.048); }
+html[data-cards="tattoo"] .card.jk { --face-in: inset 0 0 0 calc(var(--w) * .05) currentColor; }
+html[data-cards="tattoo"] .card.jk:not(.mini) .ci { left: calc(var(--w) * .1); top: calc(var(--w) * .085); }
+html[data-cards="tattoo"] .card.jk .fig { left: calc(var(--w) * .06); right: calc(var(--w) * .06); bottom: calc(var(--w) * .06); height: calc(var(--w) * .97); }
+html[data-cards="tattoo"] .card.jk .jt { font-family: "Rockwell", "American Typewriter", "Roboto Slab", Georgia, serif; }
+
+/* ---------- Karten „Hood“: bunt, dicke Konturen, Sonnenuntergang ---------- */
+html[data-cards="hood"] .card { border-radius: calc(var(--w) * .09); color: #15131a;
+  background: linear-gradient(180deg, #fc8c34 0%, #fc8c34 22%, #f2714e 40%, #c53f87 62%, #4a8da1 84%, #24a8a8 100%);
+  --face-in: inset 0 0 0 calc(var(--w) * .035) #15131a; --card-out: 0 0 0 1px rgba(0, 0, 0, .5), 0 3px 6px rgba(0, 0, 0, .5); }
+html[data-cards="hood"] .card.red { color: #e0132b; }
+html[data-cards="hood"] .card.mini { --face-in: inset 0 0 0 1.5px #15131a; }
+html[data-cards="hood"] .card .ci { left: calc(var(--w) * .09); top: calc(var(--w) * .09); }
+html[data-cards="hood"] .card.mini .ci { left: 0; top: 0; }
+html[data-cards="hood"] .card .rk, html[data-cards="hood"] .card .jt { font-family: "Avenir Next Condensed", "DIN Condensed", "Arial Narrow", "Roboto Condensed", sans-serif; font-weight: 800; color: #fff; -webkit-text-stroke: calc(var(--w) * .05) #15131a; paint-order: stroke fill; }
+html[data-cards="hood"] .card .rk { font-size: calc(var(--w) * .46); letter-spacing: 0; }
+html[data-cards="hood"] .card.red .rk { color: #ffe45c; }
+html[data-cards="hood"] .card.red .jt { color: #ff5d6c; }
+html[data-cards="hood"] .card.mini .rk { font-size: calc(var(--w) * .62); -webkit-text-stroke-width: calc(var(--w) * .075); }
+html[data-cards="hood"] .card svg { stroke: #fff; stroke-width: 2.2; stroke-linejoin: round; paint-order: stroke; overflow: visible; }
+html[data-cards="hood"] .card .big { right: calc(var(--w) * .12); bottom: calc(var(--w) * .12); }
+html[data-cards="hood"] .card.fc:not(.mini) .ci { left: calc(var(--w) * .1); top: calc(var(--w) * .05); }
+html[data-cards="hood"] .card.fc:not(.mini):not(.jk) .rk { font-size: calc(var(--w) * .33); }
+html[data-cards="hood"] .card .fig { left: calc(var(--w) * .035); right: calc(var(--w) * .035); bottom: calc(var(--w) * .035); height: calc(var(--w) * 1.051); }
+html[data-cards="hood"] .card.jk { --face-in: inset 0 0 0 calc(var(--w) * .05) currentColor; }
+html[data-cards="hood"] .card.jk .fig { left: calc(var(--w) * .05); right: calc(var(--w) * .05); bottom: calc(var(--w) * .05); height: calc(var(--w) * 1.017); }
+html[data-cards="hood"] .card.jk .jt { font-size: calc(var(--w) * .17); -webkit-text-stroke-width: calc(var(--w) * .035); }
+
+/* Hinweise liegen frei auf dem Tischbild */
+.act-hint, #turnText, .dir-note { text-shadow: 0 1px 3px rgba(0, 0, 0, .75); }

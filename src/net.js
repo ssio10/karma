@@ -25,12 +25,16 @@
   var ID_ALPHA = 'abcdefghijklmnopqrstuvwxyz0123456789';
   var STORE_KEY = 'karma.session.v1';
   var MAX_AGE = 12 * 3600 * 1000;
-  var BOT_NAMES = ['Bot Ada', 'Bot Ben', 'Bot Cleo', 'Bot Dino', 'Bot Elli'];
+  var BOT_NAMES = ['Bot Ada', 'Bot Ben', 'Bot Cleo', 'Bot Dino', 'Bot Elli', 'Bot Finn', 'Bot Gina', 'Bot Hugo', 'Bot Ida', 'Bot Jo', 'Bot Kim'];
+  var MAX_PLAYERS = 12;
+  var TURN_SECS = [20, 30, 50];       // Zugzeit, die der Host wählen kann
+  var DECK_OPTS = ['auto', 1, 1.5, 2];
   /* Zeiten in ms – in Tests überschreibbar */
   var T = { tick: 400, ping: 3000, hostDead: 10000, playerDead: 10000, resend: 1200, hello: 1500, joinTimeout: 9000, bot: 900, sweep: 2000,
     turn: 50000,    // Zeit pro Zug; danach zieht der Host automatisch (0 = kein Zeitlimit)
     swap: 60000,    // Zeit für die Tauschphase; danach beginnt die Runde, auch wenn nicht alle bereit sind (0 = kein Limit)
-    start: 3000 };  // sind alle bereit: so lange kann man „Bereit“ noch zurücknehmen (0 = Runde beginnt sofort)
+    start: 3000,    // sind alle bereit: so lange kann man „Bereit“ noch zurücknehmen (0 = Runde beginnt sofort)
+    mix: true };    // Plätze nach jeder Runde mischen, solange der Host nichts anderes einstellt
 
   function randId(len, alpha) {
     alpha = alpha || ID_ALPHA;
@@ -100,15 +104,51 @@
     return t;
   };
 
-  var DESIGNS = { table: ['normal', 'stahl', 'patio', 'nacht'], cards: ['normal', 'stift', 'filz', 'druck'] };
+  /* Der jeweils erste Eintrag ist die Vorgabe. */
+  var DESIGNS = { table: ['stahl', 'hof', 'nacht', 'boss'], cards: ['stift', 'schwarz', 'tattoo', 'hood'] };
   /* Was vom Host kommt, wird nur in bekannter Form übernommen. */
   function cleanRoom(r) {
     if (!r || typeof r !== 'object') return null;
     return {
-      table: DESIGNS.table.indexOf(r.table) >= 0 ? r.table : 'normal',
-      cards: DESIGNS.cards.indexOf(r.cards) >= 0 ? r.cards : 'normal',
-      wins: Array.isArray(r.wins) ? r.wins.slice(0, 6).map(function (n) { return typeof n === 'number' && n > 0 ? Math.min(999, n | 0) : 0; }) : []
+      table: DESIGNS.table.indexOf(r.table) >= 0 ? r.table : DESIGNS.table[0],
+      cards: DESIGNS.cards.indexOf(r.cards) >= 0 ? r.cards : DESIGNS.cards[0],
+      wins: Array.isArray(r.wins) ? r.wins.slice(0, MAX_PLAYERS).map(function (n) { return typeof n === 'number' && n > 0 ? Math.min(999, n | 0) : 0; }) : [],
+      decks: DECK_OPTS.indexOf(r.decks) >= 0 ? r.decks : 'auto',
+      decksNow: r.decksNow === 1.5 || r.decksNow === 2 ? r.decksNow : 1,
+      mix: r.mix !== false,
+      turn: typeof r.turn === 'number' && r.turn >= 0 && r.turn <= 600 ? r.turn : 50
     };
+  }
+  /* Neue Sitzordnung für die nächste Runde. ids = bisherige Reihenfolge im Kreis. Gesucht ist eine
+   * Reihenfolge, in der möglichst niemand denselben Nachbarn behält: derselbe Hintermann zählt doppelt,
+   * derselbe Nachbar auf der anderen Seite einfach. Zu zweit gibt es nichts zu mischen, zu dritt nur die
+   * umgekehrte Richtung, ab fünf geht es meist ganz ohne alte Nachbarn. Sitz 0 bleibt, wo er ist (der Kreis
+   * wird nur gedreht) – am Tisch zählt allein, wer neben wem sitzt. */
+  function mixOrder(ids, rand) {
+    var n = ids.length, i, k;
+    if (n < 3) return ids.slice();
+    rand = rand || Math.random;
+    var next = {}, prev = {};
+    for (i = 0; i < n; i++) { next[ids[i]] = ids[(i + 1) % n]; prev[ids[i]] = ids[(i + n - 1) % n]; }
+    function score(a) {
+      var sc = 0;
+      for (var j = 0; j < n; j++) {
+        var nx = a[(j + 1) % n];
+        if (next[a[j]] === nx) sc += 2; else if (prev[a[j]] === nx) sc += 1;
+      }
+      return sc;
+    }
+    var best = null, bestSc = Infinity;
+    for (k = 0; k < 400 && bestSc > 0; k++) {
+      var a = ids.slice(1);
+      for (i = a.length - 1; i > 0; i--) {
+        var r = rand(), j = r >= 0 && r < 1 ? Math.floor(r * (i + 1)) : 0, t = a[i]; a[i] = a[j]; a[j] = t;
+      }
+      a.unshift(ids[0]);
+      var sc = score(a);
+      if (sc < bestSc) { best = a; bestSc = sc; }
+    }
+    return best;
   }
   function idleSnap() {
     return { stage: 'idle', error: null, code: null, isHost: false, seat: -1, conn: 'offline', hostOnline: false, pending: 0, lobby: null, view: null, room: null };
@@ -126,7 +166,9 @@
    *   pending: Anzahl noch unbestätigter eigener Aktionen
    *   lobby: { starter, players: [{name, bot, auto, online, left}] }   Sitzreihenfolge = Uhrzeigersinn; starter = Sitz, der die nächste Runde beginnt (Verlierer), sonst -1
    *   view: KarmaEngine.viewFor(...) oder null (in der Lobby)
-   *   room: { table, cards, wins: [Siege je Sitz] }   Design (stellt der Host ein, gilt für alle) und Strichliste
+   *   room: { table, cards, wins: [Siege je Sitz],    Design (stellt der Host ein, gilt für alle) und Strichliste
+   *           decks: 'auto'|1|1.5|2 (Wahl des Hosts), decksNow: 1|1.5|2 (was gerade gilt bzw. bei dieser Spielerzahl gelten würde),
+   *           mix: bool (Plätze nach jeder Runde mischen), turn: Sekunden pro Zug (0 = kein Limit) }
    * }
    */
   function createSession(opts) {
@@ -237,11 +279,27 @@
     /* Design und Strichliste: gehören zum Raum, nicht zur Runde. */
     function roomInfo() {
       var d = H.design || {};
+      var o = H.opts || {};
       return {
-        table: DESIGNS.table.indexOf(d.table) >= 0 ? d.table : 'normal',
-        cards: DESIGNS.cards.indexOf(d.cards) >= 0 ? d.cards : 'normal',
-        wins: H.players.map(function (p) { return p.wins | 0; })
+        table: DESIGNS.table.indexOf(d.table) >= 0 ? d.table : DESIGNS.table[0],
+        cards: DESIGNS.cards.indexOf(d.cards) >= 0 ? d.cards : DESIGNS.cards[0],
+        wins: H.players.map(function (p) { return p.wins | 0; }),
+        decks: DECK_OPTS.indexOf(o.decks) >= 0 ? o.decks : 'auto',
+        decksNow: H.game ? (H.game.decks || 1) : decksNow(H.players.length),
+        mix: mixOn(),
+        turn: Math.round(turnMs() / 1000)
       };
+    }
+    function mixOn() { var m = H.opts && H.opts.mix; return m == null ? !!T.mix : !!m; }
+    /* Das Deck für n Spieler: die Wahl des Hosts, wenn sie reicht – sonst das kleinste, das reicht. */
+    function decksNow(n) {
+      var need = E.decksFor(Math.max(2, n)), want = H.opts && H.opts.decks;
+      return typeof want === 'number' && want >= need ? want : need;
+    }
+    /* Zeit pro Zug: stellt der Host ein (20/30/50 s); ohne Wahl gilt T.turn. T.turn = 0 schaltet das Limit ganz ab. */
+    function turnMs() {
+      var sec = H && H.opts && H.opts.turn;
+      return T.turn > 0 && TURN_SECS.indexOf(sec) >= 0 ? sec * 1000 : T.turn;
     }
     /* Ein Strich für den Sieger, sobald er feststeht – einmal pro Runde. Sitze und H.players decken sich während einer Partie. */
     function countWin() {
@@ -282,9 +340,9 @@
         } else {
           next = { key: base, base: base, swapEnd: swapEnd, end: swapEnd, total: T.swap, kind: 'swap' };
         }
-      } else if (g && g.phase === 'play' && T.turn > 0) {
+      } else if (g && g.phase === 'play' && turnMs() > 0) {
         var key = 'play:' + (H.round || 0) + ':' + g.seq;
-        next = clock && clock.key === key ? clock : { key: key, end: now + T.turn, total: T.turn, kind: 'turn' };
+        next = clock && clock.key === key ? clock : { key: key, end: now + turnMs(), total: turnMs(), kind: 'turn' };
       }
       clock = next;
       if (clockTimer) { clearTimeout(clockTimer); clockTimer = null; }
@@ -353,12 +411,25 @@
       H.loserPid = null;
       if (g && g.phase === 'over' && typeof g.loser === 'number' && H.players[g.loser]) H.loserPid = H.players[g.loser].pid;
     }
+    /* Nach jeder gespielten Runde werden die Plätze neu gemischt (abschaltbar). Die Strichliste hängt am
+     * Spieler, nicht am Platz. true, wenn sich die Reihenfolge geändert hat. */
+    function mixSeats() {
+      if (!(H.round > 0) || !mixOn() || H.players.length < 3) return false;
+      var by = {}, ids = H.players.map(function (p, i) { by[i] = p; return i; });
+      var order = mixOrder(ids, api.random);
+      var same = order.every(function (x, i) { return x === i; });
+      if (!same) H.players = order.map(function (i) { return by[i]; });
+      return !same;
+    }
     function newGame() {
-      var ps = H.players.filter(function (q) { return !q.left; }), opts = {};
+      dropLeft();
+      var mixed = mixSeats();
+      var ps = H.players, opts = { decks: decksNow(H.players.length) };
       for (var i = ps.length - 1; i >= 0; i--) if (H.loserPid && ps[i].pid === H.loserPid) { opts.startSeat = i; opts.startBy = 'loser'; }
       H.loserPid = null;
       H.round = (H.round || 0) + 1;   // Aktionen tragen die Rundennummer: Nachzügler aus einer alten Runde zählen nicht
       if (T.start > 0) opts.holdStart = true;   // alle bereit → kurzer Countdown, erst dann beginnt die Runde (siehe armClock)
+      if (mixed) opts.mixed = true;
       return E.createGame(ps.map(function (q) { return { name: q.name, bot: !!q.bot }; }), opts);
     }
     function removePlayer(i) { H.players.splice(i, 1); }
@@ -376,7 +447,7 @@
         if (H.kicked && H.kicked.indexOf(m.pid) >= 0) return deny(m.pid, 'kicked');
         if (m.t !== 'hello' || m.pid === 'local' || m.pid.indexOf('bot-') === 0) return deny(m.pid, 'unknown');
         if (H.game) return deny(m.pid, 'running');
-        if (H.players.length >= 6) return deny(m.pid, 'full');
+        if (H.players.length >= MAX_PLAYERS) return deny(m.pid, 'full');
         H.players.push({ pid: m.pid, name: cleanName(m.name), online: true, seen: now, ack: 0 });
         return bump();
       }
@@ -458,18 +529,20 @@
 
     /* Host-Befehle:
      *  {op:'addBot'}  {op:'kick', seat}            nur in der Lobby
-     *  {op:'start'}                                Partie starten (2–6 Spieler; es beginnt der Verlierer der letzten Runde, sonst wird ausgelost)
+     *  {op:'start'}                                Partie starten (2–12 Spieler; es beginnt der Verlierer der letzten Runde, sonst wird ausgelost)
      *  {op:'rematch'}                              neue Runde, sobald es einen Sieger gibt oder die Partie vorbei ist
      *  {op:'toLobby'}                              Partie abbrechen / zurück in die Lobby
      *  {op:'auto', seat, on}                       Bot übernimmt für einen abwesenden Spieler
      *  {op:'design', table, cards}                 Tisch- und Karten-Design für alle (jederzeit; fehlt ein Wert, bleibt er)
+     *  {op:'opts', decks, mix, turn}               Spiel-Einstellungen (jederzeit; fehlt ein Wert, bleibt er): decks 'auto'|1|1.5|2 und
+     *                                              mix (Plätze mischen) gelten ab der nächsten Runde, turn (20|30|50 s) ab dem nächsten Zug
      */
     session.lobby = function (op) {
       if (role !== 'host' || !H || !op) return false;
       var seat = op.seat | 0, p = H.players[seat];
       switch (op.op) {
         case 'addBot':
-          if (H.game || H.players.length >= 6) return false;
+          if (H.game || H.players.length >= MAX_PLAYERS) return false;
           H.players.push({ pid: 'bot-' + randId(6), name: nextBotName(), bot: true });
           break;
         case 'kick':
@@ -513,6 +586,13 @@
           if (DESIGNS.table.indexOf(nt) < 0 || DESIGNS.cards.indexOf(nc) < 0) return false;
           if (nt === cd.table && nc === cd.cards) return true;
           H.design = { table: nt, cards: nc };
+          break;
+        case 'opts':
+          var o = H.opts || {}, no = { decks: DECK_OPTS.indexOf(o.decks) >= 0 ? o.decks : 'auto', mix: o.mix, turn: o.turn };
+          if (op.decks != null) { if (DECK_OPTS.indexOf(op.decks) < 0) return false; no.decks = op.decks; }
+          if (op.mix != null) no.mix = !!op.mix;
+          if (op.turn != null) { if (TURN_SECS.indexOf(op.turn) < 0) return false; no.turn = op.turn; }
+          H.opts = no;
           break;
         default:
           return false;
@@ -675,9 +755,12 @@
     return session;
   }
 
-  return {
+  var api = {
     createSession: createSession, transports: transports, memBus: memBus, T: T,
     normalizeCode: normalizeCode, cleanName: cleanName, randId: randId,
-    CODE_ALPHA: CODE_ALPHA, STORE_KEY: STORE_KEY, DESIGNS: DESIGNS
+    CODE_ALPHA: CODE_ALPHA, STORE_KEY: STORE_KEY, DESIGNS: DESIGNS,
+    MAX_PLAYERS: MAX_PLAYERS, TURN_SECS: TURN_SECS, DECK_OPTS: DECK_OPTS,
+    mixOrder: mixOrder, random: Math.random   // random: in Tests überschreibbar
   };
+  return api;
 });

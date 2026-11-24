@@ -28,6 +28,7 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const E = require(path.join(__dirname, '..', 'src', 'engine.js'));
 const N = require(path.join(__dirname, '..', 'src', 'net.js'));
+N.T.mix = false;   // feste Sitze für diese Tests; das Mischen der Plätze prüft test/rooms.test.cjs
 
 const T_ORIG = Object.assign({}, N.T);
 const FAST = { tick: 5, ping: 40, hostDead: 250, playerDead: 250, resend: 20, hello: 20, joinTimeout: 200, bot: 4, sweep: 25, turn: 0, swap: 0, start: 0 };   // Zeitlimits aus; die Tests dazu schalten sie gezielt ein
@@ -425,13 +426,12 @@ test('Beitreten: Host eröffnet, Gäste treten per Code bei (Groß-/Kleinschreib
   assert.equal(host.act({ t: 'giveup' }), false, 'Host: ohne Partie keine Spielaktion');
 });
 
-test('Beitreten: der 7. Spieler wird mit "full" abgelehnt (Bots zählen mit)', (t) => {
+test('Beitreten: der 13. Spieler wird mit "full" abgelehnt (Bots zählen mit)', (t) => {
   const w = world(t);
   const { host, code } = lobby(w, ['A', 'B', 'C']);
-  assert.equal(host.lobby({ op: 'addBot' }), true);
-  assert.equal(host.lobby({ op: 'addBot' }), true);
-  assert.equal(host.snap.lobby.players.length, 6);
-  assert.equal(host.lobby({ op: 'addBot' }), false, 'kein 7. Platz für einen Bot');
+  for (let i = 0; i < 8; i++) assert.equal(host.lobby({ op: 'addBot' }), true);
+  assert.equal(host.snap.lobby.players.length, 12);
+  assert.equal(host.lobby({ op: 'addBot' }), false, 'kein 13. Platz für einen Bot');
   const late = w.session('late');
   late.join(code, 'Zu spät');
   w.until(() => late.snap.stage === 'error', 1000);
@@ -439,7 +439,7 @@ test('Beitreten: der 7. Spieler wird mit "full" abgelehnt (Bots zählen mit)', (
   assert.equal(late.snap.view, null);
   assert.equal(late.act({ t: 'ready' }), false);
   w.run(200);
-  assert.equal(host.snap.lobby.players.length, 6);
+  assert.equal(host.snap.lobby.players.length, 12);
   assert.equal(late.snap.error, 'full', 'bleibt abgelehnt');
 });
 
@@ -1212,6 +1212,7 @@ test('Reservierte Kennungen: ein hello mit pid "local" oder "bot-…" wird mit "
   w.run(30);
   assert.deepEqual(host.snap.lobby.players.map((p) => p.name), ['Hanna', 'Anna', 'Bot Ada', 'localx', 'Local', 'LOCAL']);
   // --- voller Raum: reservierte Kennungen hören "unknown", nicht "full"
+  for (let i = 0; i < 6; i++) assert.equal(host.lobby({ op: 'addBot' }), true);
   raw.publish('h', { pid: 'local', t: 'hello' });
   raw.publish('h', { pid: 'bot-zzzzzz', t: 'hello' });
   raw.publish('h', { pid: 'robot-1', t: 'hello' });
@@ -1219,7 +1220,7 @@ test('Reservierte Kennungen: ein hello mit pid "local" oder "bot-…" wird mit "
   assert.deepEqual(denies('local').slice(3), ['unknown']);
   assert.deepEqual(denies('bot-zzzzzz'), ['unknown']);
   assert.deepEqual(denies('robot-1'), ['full']);
-  for (const seat of [5, 4, 3]) assert.equal(host.lobby({ op: 'kick', seat }), true);
+  for (const seat of [11, 10, 9, 8, 7, 6, 5, 4, 3]) assert.equal(host.lobby({ op: 'kick', seat }), true);
   for (const pid of fine.slice(3)) raw.publish('h', { pid, t: 'hello', name: pid });
   w.run(30);
   assert.deepEqual(host.snap.lobby.players.map((p) => p.name), ['Hanna', 'Anna', 'Bot Ada', 'robot-1', 'Bot-abc', 'bot_abc']);
@@ -2423,11 +2424,12 @@ test('Feindliche/kaputte Nachrichten auf "h" bringen den Host nie zum Absturz un
   w.run(30);
   assert.equal(host.snap.lobby.players.length, 6);
   for (const p of host.snap.lobby.players) { assert.equal(typeof p.name, 'string'); assert.ok(p.name.length >= 1 && p.name.length <= 14); assert.ok(!/\s{2,}|\n/.test(p.name)); }
+  for (let i = 0; i < 6; i++) assert.equal(host.lobby({ op: 'addBot' }), true);
   raw.publish('h', { pid: 'gast-7', t: 'hello', name: 'zu viel' });
   w.run(30);
-  assert.equal(host.snap.lobby.players.length, 6, 'nie mehr als 6');
+  assert.equal(host.snap.lobby.players.length, 12, 'nie mehr als 12');
   assert.ok(w.published.some((p) => p.ch === 'p/gast-7' && p.t === 'deny' && p.why === 'full'));
-  for (const seat of [5, 4, 3]) assert.equal(host.lobby({ op: 'kick', seat }), true);
+  for (const seat of [11, 10, 9, 8, 7, 6, 5, 4, 3]) assert.equal(host.lobby({ op: 'kick', seat }), true);
   assert.deepEqual(host.snap.lobby.players.map((p) => p.name), ['Hanna', 'Anna', 'Ben']);
 
   // --- im Spiel
@@ -2542,23 +2544,24 @@ test('Design: nur der Host stellt es ein, es kommt bei allen an, unbekannte Wert
   const w = world(t, { seed: 61 });
   const { host, guests } = lobby(w, ['Anna']);
   const anna = guests[0];
-  assert.deepEqual(host.snap.room, { table: 'normal', cards: 'normal', wins: [0, 0] });
+  const look = (r) => ({ table: r.table, cards: r.cards, wins: r.wins });
+  assert.deepEqual(look(host.snap.room), { table: 'stahl', cards: 'stift', wins: [0, 0] });
   w.until(() => anna.snap.room !== null, 300);
   assert.deepEqual(anna.snap.room, host.snap.room);
-  assert.equal(host.lobby({ op: 'design', table: 'stahl' }), true);
-  assert.equal(host.lobby({ op: 'design', cards: 'filz' }), true);
-  w.until(() => anna.snap.room.cards === 'filz', 300, 'Design beim Gast');
-  assert.deepEqual(anna.snap.room, { table: 'stahl', cards: 'filz', wins: [0, 0] });
+  assert.equal(host.lobby({ op: 'design', table: 'hof' }), true);
+  assert.equal(host.lobby({ op: 'design', cards: 'tattoo' }), true);
+  w.until(() => anna.snap.room.cards === 'tattoo', 300, 'Design beim Gast');
+  assert.deepEqual(look(anna.snap.room), { table: 'hof', cards: 'tattoo', wins: [0, 0] });
   assert.equal(host.lobby({ op: 'design', table: 'quatsch' }), false);
   assert.equal(host.lobby({ op: 'design', cards: {} }), false);
   assert.equal(anna.lobby({ op: 'design', table: 'nacht' }), false, 'Gäste dürfen das nicht');
-  assert.equal(host.snap.room.table, 'stahl');
+  assert.equal(host.snap.room.table, 'hof');
   begin(w, host, guests, { startSeat: 0 });
-  assert.equal(host.lobby({ op: 'design', table: 'nacht', cards: 'druck' }), true, 'auch während der Partie');
+  assert.equal(host.lobby({ op: 'design', table: 'nacht', cards: 'hood' }), true, 'auch während der Partie');
   w.until(() => anna.snap.room.table === 'nacht', 300);
   assert.equal(host.lobby({ op: 'toLobby' }), true);
   w.until(() => anna.snap.stage === 'lobby', 300);
-  assert.deepEqual(anna.snap.room, { table: 'nacht', cards: 'druck', wins: [0, 0] });
+  assert.deepEqual(look(anna.snap.room), { table: 'nacht', cards: 'hood', wins: [0, 0] });
 });
 
 test('Strichliste: ein Strich für den Sieger, genau einmal pro Runde, über mehrere Runden und für alle sichtbar', (t) => {
@@ -2570,8 +2573,8 @@ test('Strichliste: ein Strich für den Sieger, genau einmal pro Runde, über meh
   w.until(() => w.game.winner === 0 && w.synced(guests), 300);
   assert.deepEqual(host.snap.room.wins, [1, 0]);
   assert.deepEqual(anna.snap.room.wins, [1, 0]);
-  host.lobby({ op: 'design', table: 'patio' });                    // weitere Stände derselben Runde zählen nicht noch einmal
-  w.until(() => anna.snap.room.table === 'patio', 300);
+  host.lobby({ op: 'design', table: 'boss' });                    // weitere Stände derselben Runde zählen nicht noch einmal
+  w.until(() => anna.snap.room.table === 'boss', 300);
   assert.deepEqual(anna.snap.room.wins, [1, 0]);
   begin(w, host, guests, { op: 'rematch', startSeat: 1, rig: rigQuick([1]) });
   assert.deepEqual(host.snap.room.wins, [1, 0], 'neue Runde: noch kein neuer Strich');

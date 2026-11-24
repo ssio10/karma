@@ -3,9 +3,15 @@
  *
  * Karten-IDs: Farbe + Rang, z. B. "H7", "S14" (Ass). Farben: S ♠, H ♥, D ♦, C ♣.
  * Ränge: 2..10, 11 Bube, 12 Dame, 13 König, 14 Ass. Joker: "JB" (schwarz), "JR" (rot).
+ * Bei mehr als einem Deck gibt es Karten doppelt: Das zweite Exemplar trägt dieselbe ID in
+ * Kleinbuchstaben ("h7", "jb", "jr"). Für die Regeln sind beide Exemplare gleich.
+ *
+ * Decks (opts.decks): 1 = 54 Karten (bis 6 Spieler), 1.5 = 81 Karten (bis 9 Spieler; dazu kommen von
+ * jedem Wert eine zufällige schwarze und eine zufällige rote Karte sowie ein schwarzer Joker, also
+ * 2 schwarze + 1 roter Joker), 2 = 108 Karten (bis 12 Spieler; 2 schwarze + 2 rote Joker).
  *
  * Kurzfassung der Regeln, wie sie hier umgesetzt sind:
- *  - 54 Karten. Jeder bekommt 3 verdeckte, 3 offene, 3 Handkarten; der Rest ist der Nachziehstapel.
+ *  - 54 Karten (bei mehr als 6 Spielern 81 oder 108, siehe oben). Jeder bekommt 3 verdeckte, 3 offene, 3 Handkarten; der Rest ist der Nachziehstapel.
  *  - Vor dem Start darf jeder genau eine Handkarte gegen eine offene Karte tauschen.
  *  - Startspieler zufällig, zunächst im Uhrzeigersinn (aufsteigende Sitze).
  *  - Legen: gleich hoch oder höher als die oberste Karte (3 < 4 < … < 10 < B < D < K < A);
@@ -54,15 +60,37 @@
   var JB = 'JB', JR = 'JR';
   var HAND_SIZE = 3;
 
+  var DECKS = [1, 1.5, 2];
+  var MAX_PLAYERS = 12;
   function fullDeck() {
     var d = [];
     for (var s = 0; s < 4; s++) for (var r = 2; r <= 14; r++) d.push(SUITS[s] + r);
     d.push(JB, JR);
     return d;
   }
-  function isJoker(id) { return id === JB || id === JR; }
-  function rank(id) { return id === JB ? 15 : id === JR ? 16 : +id.slice(1); }
-  function suit(id) { return isJoker(id) ? 'J' : id.charAt(0); }
+  function isBlackJoker(id) { return id === JB || id === 'jb'; }
+  function isRedJoker(id) { return id === JR || id === 'jr'; }
+  function isJoker(id) { return isBlackJoker(id) || isRedJoker(id); }
+  function rank(id) { return isBlackJoker(id) ? 15 : isRedJoker(id) ? 16 : +id.slice(1); }
+  function suit(id) { return isJoker(id) ? 'J' : id.charAt(0).toUpperCase(); }
+  /* Wie viele Spieler ein Deck trägt (9 Karten pro Spieler) und welches Deck eine Runde mindestens braucht. */
+  function maxPlayers(decks) { return decks === 2 ? 12 : decks === 1.5 ? 9 : 6; }
+  function decksFor(n) { return n <= 6 ? 1 : n <= 9 ? 1.5 : 2; }
+  function buildDeck(decks, rng) {
+    var d = fullDeck(), r;
+    if (decks === 1.5) {
+      // Halbes Deck: von jedem Wert eine schwarze und eine rote Karte – so bleibt jeder Wert gleich häufig.
+      for (r = 2; r <= 14; r++) {
+        d.push((rng() < 0.5 ? 's' : 'c') + r);
+        d.push((rng() < 0.5 ? 'h' : 'd') + r);
+      }
+      d.push('jb');
+    } else if (decks === 2) {
+      for (var s = 0; s < 4; s++) for (r = 2; r <= 14; r++) d.push(SUITS[s].toLowerCase() + r);
+      d.push('jb', 'jr');
+    }
+    return d;
+  }
 
   function defaultRng() {
     var c = typeof crypto !== 'undefined' && crypto.getRandomValues ? crypto : null;
@@ -79,14 +107,17 @@
     return a;
   }
 
-  /* players: [{name, bot}] (2–6). opts: {rng, startSeat (sonst zufällig), startBy ('loser', wenn der
-   * Verlierer der Vorrunde beginnt), holdStart (Runde beginnt erst mit startPlay())} */
+  /* players: [{name, bot}] (2–12). opts: {rng, decks (1 | 1.5 | 2; reicht das Deck nicht für alle, wird
+   * das kleinste passende genommen), startSeat (sonst zufällig), startBy ('loser', wenn der Verlierer
+   * der Vorrunde beginnt), holdStart (Runde beginnt erst mit startPlay()),
+   * mixed (nur für die Anzeige: die Plätze wurden neu gemischt)} */
   function createGame(players, opts) {
     opts = opts || {};
     var n = players.length;
-    if (!(n >= 2 && n <= 6)) throw new Error('Karma braucht 2 bis 6 Spieler');
+    if (!(n >= 2 && n <= MAX_PLAYERS)) throw new Error('Karma braucht 2 bis ' + MAX_PLAYERS + ' Spieler');
     var rng = opts.rng || defaultRng;
-    var deck = shuffle(fullDeck(), rng);
+    var decks = DECKS.indexOf(opts.decks) >= 0 && n <= maxPlayers(opts.decks) ? opts.decks : decksFor(n);
+    var deck = shuffle(buildDeck(decks, rng), rng);
     var ps = players.map(function (p) {
       return { name: String(p.name), bot: !!p.bot, hand: [], up: [], down: [], ready: false, swapped: false };
     });
@@ -100,6 +131,8 @@
     }
     return {
       players: ps,
+      decks: decks,         // 1, 1.5 oder 2
+      mixed: !!opts.mixed,  // die Plätze wurden für diese Runde neu gemischt (nur für die Anzeige)
       holdStart: !!opts.holdStart,   // true: sind alle bereit, startet die Runde erst mit startPlay() (Host zählt herunter)
       phase: 'swap',        // 'swap' → 'play' → 'over'
       turn: -1,             // Sitz, der am Zug ist (nur in 'play')
@@ -129,8 +162,8 @@
   /* Darf `card` auf `top` gelegt werden? */
   function canPlayOn(card, top) {
     if (!top) return true;
-    if (top === JR) return false;            // roter Joker: nur aufnehmen
-    if (top === JB) return card === JR;      // schwarzer Joker: nur der rote Joker kontert
+    if (isRedJoker(top)) return false;       // roter Joker: nur aufnehmen
+    if (isBlackJoker(top)) return isRedJoker(card);   // schwarzer Joker: nur ein roter Joker kontert (Schwarz auf Schwarz geht nicht)
     if (isJoker(card)) return true;          // Joker gehen sonst immer
     var r = rank(card), t = rank(top);
     if (r === 2 || r === 7 || r === 10) return true;   // Sonderkarten 2, 7 und 10 gehen auf alles
@@ -168,8 +201,8 @@
   function requirement(s) {
     var top = topCard(s);
     if (!top) return { k: 'any' };
-    if (top === JR) return { k: 'jokerR' };
-    if (top === JB) return { k: 'jokerB' };
+    if (isRedJoker(top)) return { k: 'jokerR' };
+    if (isBlackJoker(top)) return { k: 'jokerB' };
     var t = rank(top);
     if (t === 7) return { k: 'seven' };
     if (t <= 3) return { k: 'any' };         // auf 2 und 3 passt jede Karte
@@ -182,7 +215,7 @@
     var p = s.players[seat], z = zoneOf(p), top = topCard(s);
     var o = { zone: z, playable: [], canPickup: false, canFlip: false, forced: false };
     if (z === 'down') {
-      o.canFlip = top !== JR;
+      o.canFlip = !isRedJoker(top);
     } else {
       var cards = z === 'hand' ? p.hand : p.up.filter(Boolean);
       o.playable = cards.filter(function (c) { return canPlayOn(c, top); });
@@ -325,7 +358,7 @@
   /* Karten liegen bereits nicht mehr in der Zone des Spielers. `active` = Spieler mit Karten vor dem Zug. */
   function resolvePlay(s, seat, cards, from, active, extra) {
     var p = s.players[seat];
-    var counter = topCard(s) === JB && cards[0] === JR;
+    var counter = isBlackJoker(topCard(s)) && isRedJoker(cards[0]);
     for (var i = 0; i < cards.length; i++) s.pile.push(cards[i]);
     s.freePlay = false;
     var r = rank(cards[0]), fx = [], again = false;
@@ -482,7 +515,7 @@
 
     if (a.t === 'play') {
       var cards = a.cards;
-      if (!Array.isArray(cards) || !cards.length || cards.length > 4) return fail('no-cards');
+      if (!Array.isArray(cards) || !cards.length || cards.length > 8) return fail('no-cards');
       if (o.zone !== 'hand' && o.zone !== 'up') return fail('must-flip');
       // Von den offenen Tischkarten darf pro Zug nur eine gelegt werden – auch bei gleichen Werten.
       if (o.zone === 'up' && cards.length > 1) return fail('one-up');
@@ -544,6 +577,8 @@
     if (ev && ev.t === 'flipfail' && ev.seat !== seat) ev.card = null;
     return {
       phase: s.phase,
+      decks: s.decks || 1,
+      mixed: !!s.mixed,
       allReady: s.phase === 'swap' && allReady(s),
       you: seat,
       turn: s.turn,
@@ -663,8 +698,9 @@
   }
 
   return {
-    SUITS: SUITS, JB: JB, JR: JR, HAND_SIZE: HAND_SIZE,
-    fullDeck: fullDeck, rank: rank, suit: suit, isJoker: isJoker,
+    SUITS: SUITS, JB: JB, JR: JR, HAND_SIZE: HAND_SIZE, DECKS: DECKS, MAX_PLAYERS: MAX_PLAYERS,
+    fullDeck: fullDeck, buildDeck: buildDeck, maxPlayers: maxPlayers, decksFor: decksFor,
+    rank: rank, suit: suit, isJoker: isJoker, isRedJoker: isRedJoker, isBlackJoker: isBlackJoker,
     createGame: createGame, applyAction: applyAction, viewFor: viewFor,
     options: options, requirement: requirement, canPlayOn: canPlayOn,
     topCard: topCard, zoneOf: zoneOf, nextSeat: nextSeat, activeCount: activeCount,

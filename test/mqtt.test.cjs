@@ -24,6 +24,7 @@ const assert = require('node:assert');
 const nodeCrypto = require('node:crypto');
 
 const Net = require('../src/net.js');
+Net.T.mix = false;   // feste Sitze; das Mischen der Plätze prüft test/rooms.test.cjs
 const M = require('../src/mqtt.js');
 const Engine = require('../src/engine.js');
 

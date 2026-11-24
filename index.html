@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="de" class="prison">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Karma">
-<meta name="theme-color" content="#0a2c20">
+<meta name="theme-color" content="#1d2226">
 <meta name="format-detection" content="telephone=no">
 <meta name="robots" content="noindex, nofollow">
 <title>Karma</title>
@@ -38,7 +38,8 @@
   --cw: clamp(46px, min(19vw, calc(var(--vh) * 10.5)), 84px);
   --tw: clamp(40px, min(16vw, calc(var(--vh) * 8.4)), 68px);
   --pw: clamp(46px, min(20vw, calc(var(--vh) * 10)), 80px);
-  --mw: clamp(23px, min(8.2vw, calc(var(--vh) * 4.9)), 36px);
+  --mwb: clamp(23px, min(8.2vw, calc(var(--vh) * 4.9)), 36px);
+  --mw: var(--mwb);
   --sw: clamp(60px, min(24vw, calc(var(--vh) * 13.5)), 112px);
   --dw: calc(var(--pw) * .56);
 }
@@ -117,12 +118,11 @@ body[data-screen="game"] #game { display: flex; }
 .card .big { position: absolute; right: calc(var(--w) * .09); bottom: calc(var(--w) * .09); width: calc(var(--w) * .52); height: calc(var(--w) * .52); }
 .card .big svg { width: 100%; height: 100%; display: block; }
 .card.jk { --face-in: inset 0 0 0 calc(var(--w) * .045) currentColor; }
-.card.jk .ci { left: calc(var(--w) * .1); top: calc(var(--w) * .1); min-width: 0; }
-.card.jk .ci svg { width: calc(var(--w) * .26); height: calc(var(--w) * .26); margin: 0; }
-.card.jk .jt { font-size: calc(var(--w) * .135); letter-spacing: .02em; margin-top: calc(var(--w) * .04); writing-mode: vertical-rl; text-orientation: upright; }
-.card.jk .big { right: calc(var(--w) * .1); bottom: calc(var(--w) * .12); width: calc(var(--w) * .5); height: calc(var(--w) * .5); }
+.card.jk .ci { left: calc(var(--w) * .085); top: calc(var(--w) * .08); min-width: 0; flex-direction: row; gap: calc(var(--w) * .035); }
+.card.jk .ci svg { width: calc(var(--w) * .2); height: calc(var(--w) * .2); margin: 0; }
+.card.jk .jt { font-size: calc(var(--w) * .15); letter-spacing: .05em; }
 
-.card.mini .big { display: none; }
+.card.mini .big, .card.mini .fig { display: none; }
 .card.mini .ci { left: 0; top: 0; width: 100%; height: 100%; justify-content: center; }
 .card.mini .rk { font-size: calc(var(--w) * .54); }
 .card.mini .ci svg { width: calc(var(--w) * .46); height: calc(var(--w) * .46); margin-top: calc(var(--w) * .04); }
@@ -253,8 +253,22 @@ body.is-host .guest-only { display: none !important; }
 .table { flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; }
 .opp-top { flex: none; display: flex; justify-content: space-evenly; align-items: flex-start; padding: 2px 4px 0; min-height: 4px; }
 .mid { flex: 0 0 auto; margin-top: auto; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; }
-.opp-side.l { justify-self: start; padding-left: 6px; }
+.opp-side { display: flex; flex-direction: column; gap: 5px; }
+.opp-side.l { justify-self: start; padding-left: 6px; flex-direction: column-reverse; }
 .opp-side.r { justify-self: end; padding-right: 6px; }
+/* Viele Mitspieler: Die Gegner rücken zusammen und werden kleiner (data-k = Zahl der Gegner). */
+.table { --mw: calc(var(--mwb) * var(--os, 1)); }
+.table[data-k="6"], .table[data-k="7"] { --os: .86; }
+.table[data-k="8"], .table[data-k="9"] { --os: .74; }
+.table[data-k="10"] { --os: .66; }
+.table[data-k="11"] { --os: .58; }
+.table[data-k="8"] .opp, .table[data-k="9"] .opp, .table[data-k="10"] .opp, .table[data-k="11"] .opp { padding: 3px 3px 4px; border-radius: 8px; }
+.table[data-k="8"] .opp-head, .table[data-k="9"] .opp-head, .table[data-k="10"] .opp-head, .table[data-k="11"] .opp-head { height: 14px; margin-bottom: 2px; font-size: 10px; gap: 2px; }
+.table[data-k="8"] .opp-hand .card, .table[data-k="9"] .opp-hand .card, .table[data-k="10"] .opp-hand .card, .table[data-k="11"] .opp-hand .card { --w: 8px; }
+.table[data-k="8"] .opp-side, .table[data-k="9"] .opp-side, .table[data-k="10"] .opp-side, .table[data-k="11"] .opp-side { gap: 4px; padding-left: 3px; padding-right: 3px; }
+.table[data-k="8"] .opp-done small, .table[data-k="9"] .opp-done small, .table[data-k="10"] .opp-done small, .table[data-k="11"] .opp-done small { display: none; }
+.table[data-k="8"] .opp-done b, .table[data-k="9"] .opp-done b, .table[data-k="10"] .opp-done b, .table[data-k="11"] .opp-done b { font-size: 11px; }
+.table[data-k="8"] .opp-tag, .table[data-k="9"] .opp-tag, .table[data-k="10"] .opp-tag, .table[data-k="11"] .opp-tag { font-size: 8px; padding: 0 4px; }
 
 .opp { position: relative; padding: 4px 5px 5px; border-radius: var(--box-r, 11px); background: var(--panel); transition: background .2s, box-shadow .2s, opacity .2s; }
 .opp-head { display: flex; align-items: center; justify-content: space-between; gap: 4px; height: 17px; margin-bottom: 3px; width: calc(var(--mw) * 3 + 6px); font-size: clamp(11px, 3.1vw, 13px); }
@@ -522,7 +536,7 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
     --cw: clamp(40px, calc(var(--vh) * 17), 70px);
     --tw: clamp(34px, calc(var(--vh) * 13), 56px);
     --pw: clamp(40px, calc(var(--vh) * 15), 70px);
-    --mw: clamp(22px, calc(var(--vh) * 7), 32px);
+    --mwb: clamp(22px, calc(var(--vh) * 7), 32px);
     --sw: clamp(46px, min(12vw, calc(var(--vh) * 26)), 100px);
   }
   body[data-screen="game"] #game { display: grid; grid-template-columns: minmax(0, 1fr) minmax(250px, 42%); grid-template-rows: auto minmax(0, 1fr); }
@@ -531,6 +545,11 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
   #game .mine { grid-column: 2; grid-row: 2; display: flex; flex-direction: column; justify-content: flex-end; min-width: 0; padding-bottom: max(6px, var(--sab)); }
   .tbar { height: 30px; }
   .over { top: calc(var(--sat) + 40px); }
+  /* Im Querformat ist der Tisch breiter: Auch mit vielen Mitspielern bleiben die Gegner groß. */
+  .table[data-k="6"], .table[data-k="7"] { --os: 1; }
+  .table[data-k="8"], .table[data-k="9"], .table[data-k="10"], .table[data-k="11"] { --os: .84; }
+  .table[data-k="8"] .opp-head, .table[data-k="9"] .opp-head, .table[data-k="10"] .opp-head, .table[data-k="11"] .opp-head { font-size: 11px; height: 15px; }
+  body[data-screen="game"] #game:has(.table[data-k="8"], .table[data-k="9"], .table[data-k="10"], .table[data-k="11"]) { grid-template-columns: minmax(0, 1fr) minmax(230px, 38%); }
   .over-star, .won-star, .logo-fan { display: none; }
   .over-box { padding: 14px 18px; gap: 8px; max-width: 420px; }
   .over-btns { flex-direction: row; }
@@ -570,6 +589,32 @@ html.prison .tagline { margin-bottom: 0; }
 .seg { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
 .seg button { min-height: 40px; padding: 0 2px; border-radius: 10px; font-size: 13px; font-weight: 700; color: var(--ink); background: rgba(255, 255, 255, .09); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .seg button[aria-pressed="true"] { color: var(--on-acc); background: var(--gold); box-shadow: none; }
+.seg.n2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.seg.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.seg.n5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.seg.n5 button { font-size: 12px; }
+.set-head { font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: var(--gold); margin: 0; }
+.set-row.wide > span { flex: 1 1 0; width: auto; min-width: 0; line-height: 1.25; }
+.set-row.wide .vol { flex: 1.6 1 0; }
+.set-row.wide .btn.small { min-width: 150px; }
+.room-opts { margin-top: 0; }
+.sheet .room-opts { margin-top: 14px; }
+.sheet .room-opts + .menu-set { margin-top: 8px; }
+#sheetSet .muted { margin-bottom: -4px; }
+.start-links { display: flex; justify-content: center; gap: 4px; }
+.start-links .btn { flex: 1; padding: 0 8px; }
+
+/* Hohe Bildschirme im Hochformat: Seitlich ist mehr Platz als oben – die Gegner links und rechts dürfen größer sein. */
+@media (orientation: portrait) and (min-height: 740px) {
+  .table[data-k="8"] .opp-side, .table[data-k="9"] .opp-side, .table[data-k="10"] .opp-side, .table[data-k="11"] .opp-side { --mw: calc(var(--mwb) * .8); }
+  .table[data-k="8"] .opp-side .opp-head, .table[data-k="9"] .opp-side .opp-head, .table[data-k="10"] .opp-side .opp-head, .table[data-k="11"] .opp-side .opp-head { font-size: 11px; height: 15px; }
+}
+
+/* „Du bist dran“: Der Bildschirmrand leuchtet zweimal kurz auf – nur der Rand, die Mitte bleibt frei. */
+.turn-glow { position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 50; pointer-events: none; opacity: 0; box-shadow: inset 0 0 0 3px rgba(var(--acc), .85), inset 0 0 34px 6px rgba(var(--acc), .42); }
+.turn-glow.go { animation: turnglow 1.5s ease-out; }
+@keyframes turnglow { 0% { opacity: 0; } 12% { opacity: .9; } 38% { opacity: .2; } 55% { opacity: .75; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .turn-glow.go { animation-duration: .9s; } }
 .set-note { font-size: 13px; line-height: 1.3; color: var(--mute); }
 .set-row .btn.small { flex: none; min-width: 104px; min-height: 40px; }
 .vol { flex: 1; min-width: 0; height: 36px; margin: 0; accent-color: var(--gold); }
@@ -615,21 +660,13 @@ html.prison .over-star, html.prison .won-star { display: none; }
 }
 
 /* ====================================================================
-   Gefängnis-Designs. Der Host wählt Tisch und Karten getrennt; beides gilt für alle im Raum.
-   Tisch:  html[data-table="stahl" | "patio" | "nacht"]     Karten: html[data-cards="stift" | "filz" | "druck"]
-   Alle Strukturen sind eingebettetes SVG-Rauschen oder Verläufe, keine Bilddateien.
+   Designs mit Bildern. Der Host wählt Tisch und Karten getrennt; beides gilt für alle im Raum.
+   Tisch:  html[data-table="stahl" | "hof" | "nacht" | "boss"]     Karten: html[data-cards="stift" | "schwarz" | "tattoo" | "hood"]
+   Die Bilder liegen im Ordner img/. Welche gerade gelten, setzt app.js am Wurzelelement: --tbl (Tisch) und --fig-… (Figuren, Rückseite).
    ==================================================================== */
 :root {
   --n-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.3 0 0 0 -0.42'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   --n-paper: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.3 0 0 0 0 0.2 0 0 0 0 0.05 0.7 0 0 0 -0.26'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  --n-blotch: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012' numOctaves='3' seed='8' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.5 0 0 0 -0.62'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  --n-brushw: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='512' height='256'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.003 .95' numOctaves='2' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0.55 0 0 0 -0.2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  --n-brushk: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='512' height='256'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.004 .7' numOctaves='2' seed='5' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.7 0 0 0 -0.25'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  --n-wood: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='512'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55 .007' numOctaves='3' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2.2 0 0 0 -0.8'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  --n-paint: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='512' height='512'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.045 .011' numOctaves='4' seed='12' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 40 0 0 0 -22.6'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  --n-wear: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.05 .4' numOctaves='2' seed='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 6 0 0 0 -1.2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  --n-stain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.028' numOctaves='2' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.36 0 0 0 0 0.2 0 0 0 0 0.06 3.2 0 0 0 -1.7'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  --n-scuff: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.32' numOctaves='2' seed='15' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.93 0 0 0 0 0.88 0 0 0 0 0.76 5 0 0 0 -2.95'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 .card .u-p { display: none; }
 
@@ -638,139 +675,187 @@ html.prison .con-box h2, html.prison .over-box h2, html.prison .won-box h2, html
 html.prison .chip, html.prison .code-big, html.prison .stock-count, html.prison .pile-count, html.prison #gCode,
 html.prison .seg button, html.prison .g-toast span, html.prison .act-hint.strong { font-family: var(--f-head); }
 
-/* ---------- Tisch „Stahl“: gebürsteter Stahltisch, Schablonenschrift, Orange ---------- */
+/* ---------- Tischbild: hochkant gemalt; im Querformat liegt es gedreht, damit nichts abgeschnitten wird ---------- */
+html[data-table] #app { background: var(--bg0); }
+#app::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; background: var(--veil, linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0))), var(--tbl) center / cover no-repeat; }
+@media (orientation: landscape) {
+  #app::before { top: 50%; left: 50%; width: calc(var(--vh) * 100); height: 100vw; transform: translate(-50%, -50%) rotate(90deg); }
+}
+/* Abseits des Spieltischs (Start, Lobby, Verbinden) liegt der Text frei auf dem Bild: dort etwas abdunkeln */
+body:not([data-screen="game"]):not([data-screen="swap"]) #app::before { filter: brightness(.62); }
+
+/* ---------- Tisch „Stahl“: Stahltisch im Zellenblock, Gitterschatten, Häftlings-Orange ---------- */
 html[data-table="stahl"] {
   --f-head: "Avenir Next Condensed", "DIN Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
-  --ink: #eef1f3; --mute: #a3adb4; --gold: #ff6f17; --gold-d: #c4520a; --acc: 255, 111, 23; --on-acc: #1b1106;
-  --dk: 8, 10, 12; --dim: rgba(18, 21, 24, .55); --panel: rgba(6, 8, 10, .52); --panel-2: #2b3035; --line: rgba(255, 255, 255, .17); --bg0: #23272b;
-  --btn-r: 3px; --pill-r: 3px; --box-r: 3px; --btn-ink: #1b1106;
+  --ink: #eef1f3; --mute: #aeb8bf; --gold: #ff7a1a; --gold-d: #c4520a; --acc: 255, 122, 26; --on-acc: #1b1106;
+  --dk: 8, 10, 12; --dim: rgba(14, 17, 20, .58); --panel: rgba(8, 10, 12, .6); --panel-2: #262b30; --line: rgba(255, 255, 255, .17); --bg0: #1d2226;
+  --btn-r: 4px; --pill-r: 4px; --box-r: 4px; --btn-ink: #1b1106;
   --btn-bg: linear-gradient(180deg, #ff8d30 0%, #ec6710 100%);
-  --btn-sh: inset 0 0 0 2px rgba(0, 0, 0, .3), inset 0 0 0 3px rgba(255, 255, 255, .18), 0 2px 0 #733004, 0 7px 14px rgba(0, 0, 0, .4);
-  --sec-bg: rgba(0, 0, 0, .3); --sec-sh: inset 0 0 0 1.5px rgba(255, 255, 255, .42);
-  --stencil: repeating-linear-gradient(90deg, #000 0 .52em, rgba(0, 0, 0, 0) .52em .565em);
+  --btn-sh: inset 0 0 0 2px rgba(0, 0, 0, .28), inset 0 0 0 3px rgba(255, 255, 255, .18), 0 2px 0 #733004, 0 7px 14px rgba(0, 0, 0, .45);
+  --sec-bg: rgba(0, 0, 0, .45); --sec-sh: inset 0 0 0 1.5px rgba(255, 255, 255, .4);
 }
-html[data-table="stahl"] #app { background: var(--n-brushw), var(--n-brushk), linear-gradient(104deg, rgba(255, 255, 255, 0) 22%, rgba(255, 255, 255, .13) 40%, rgba(255, 255, 255, .03) 52%, rgba(255, 255, 255, 0) 70%), linear-gradient(180deg, #5b646c 0%, #3d444b 52%, #262b30 100%); }
-html[data-table="stahl"] .table::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; background: radial-gradient(circle at 13px 13px, #aab3ba 0 2.5px, #15181b 3px 5px, rgba(0, 0, 0, 0) 5.5px), radial-gradient(circle at calc(100% - 13px) 13px, #aab3ba 0 2.5px, #15181b 3px 5px, rgba(0, 0, 0, 0) 5.5px), radial-gradient(circle at 13px calc(100% - 13px), #aab3ba 0 2.5px, #15181b 3px 5px, rgba(0, 0, 0, 0) 5.5px), radial-gradient(circle at calc(100% - 13px) calc(100% - 13px), #aab3ba 0 2.5px, #15181b 3px 5px, rgba(0, 0, 0, 0) 5.5px); }
-html[data-table="stahl"] .mine::before { content: ""; position: absolute; left: 0; right: 0; top: -5px; height: 5px; background: #ff7a1a; -webkit-mask-image: var(--n-wear); mask-image: var(--n-wear); opacity: .9; pointer-events: none; }
 html[data-table="stahl"] .btn, html[data-table="stahl"] .tbar, html[data-table="stahl"] .tb-title, html[data-table="stahl"] .opp-name,
 html[data-table="stahl"] .chip, html[data-table="stahl"] .sheet-head h2, html[data-table="stahl"] .dialog h2, html[data-table="stahl"] .con-box h2,
 html[data-table="stahl"] .over-box h2, html[data-table="stahl"] .won-box h2, html[data-table="stahl"] .done-title, html[data-table="stahl"] .seg button,
-html[data-table="stahl"] .act-hint.strong { text-transform: uppercase; letter-spacing: .08em; }
-html[data-table="stahl"] .btn { position: relative; font-size: 19px; font-weight: 700; }
+html[data-table="stahl"] .act-hint.strong { text-transform: uppercase; letter-spacing: .07em; }
+html[data-table="stahl"] .btn { font-size: 19px; }
 html[data-table="stahl"] .btn.small { font-size: 15px; }
-html[data-table="stahl"] .actions .btn { font-size: 18px; }
 html[data-table="stahl"] .actions .btn.quiet { font-size: 14px; letter-spacing: .05em; }
-html[data-table="stahl"] .seg button { font-size: 14px; letter-spacing: .05em; border-radius: 3px; }
+html[data-table="stahl"] .seg button { font-size: 14px; letter-spacing: .04em; }
 html[data-table="stahl"] .tbar { font-size: 17px; }
-html[data-table="stahl"] .tbar.me { font-size: 18px; box-shadow: inset 0 0 0 2px rgba(0, 0, 0, .3), 0 0 0 3px rgba(255, 122, 26, .22), 0 4px 14px rgba(0, 0, 0, .35); }
 html[data-table="stahl"] .opp-name { font-size: 14px; }
-/* Schablone: schmale Stege durch die Schrift */
-html[data-table="stahl"] #turnText, html[data-table="stahl"] .chip, html[data-table="stahl"] .tb-title, html[data-table="stahl"] .logo,
-html[data-table="stahl"] .sheet-head h2, html[data-table="stahl"] .dialog h2, html[data-table="stahl"] .con-box h2, html[data-table="stahl"] .over-box h2,
-html[data-table="stahl"] .won-box h2, html[data-table="stahl"] .done-title { -webkit-mask-image: var(--stencil); mask-image: var(--stencil); }
-html[data-table="stahl"] .btn:not(.sec):not(.ghost):not(.danger):not(:disabled)::after { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: inherit; background: inherit; -webkit-clip-path: inset(5px); clip-path: inset(5px); -webkit-mask-image: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0) 0 .52em, #000 .52em .565em); mask-image: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0) 0 .52em, #000 .52em .565em); pointer-events: none; }
-html[data-table="stahl"] .logo { font-family: var(--f-head); font-weight: 700; letter-spacing: .16em; margin-right: -.16em; font-size: 54px; }
-html[data-table="stahl"] .chip { border-radius: 2px; font-size: 17px; letter-spacing: .12em; background: none; box-shadow: none; color: #fbfaf5; text-shadow: 0 1px 2px rgba(0, 0, 0, .5); padding: 2px 10px; }
-html[data-table="stahl"] .chip.warn { color: #ff9a8e; }
-html[data-table="stahl"] .opp:not(.turn) { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1), inset 0 1px 0 rgba(255, 255, 255, .14); }
-html[data-table="stahl"] .ring { color: rgba(255, 138, 48, .7); }
-html[data-table="stahl"] .stock-count, html[data-table="stahl"] .pile-count { border-radius: 2px; background: #131313; font-size: 15px; }
-html[data-table="stahl"] .over-box, html[data-table="stahl"] .won-box { border-radius: 4px; background: linear-gradient(180deg, #3a4047, #2a2f34); }
-html[data-table="stahl"] .over-box h2 { font-size: 27px; }
-html[data-table="stahl"] .rank, html[data-table="stahl"] .wall, html[data-table="stahl"] .code-card, html[data-table="stahl"] .prow, html[data-table="stahl"] .menu-set, html[data-table="stahl"] input[type="text"] { border-radius: 3px; }
-html[data-table="stahl"] .sheet { border-radius: 6px 6px 0 0; }
-html[data-table="stahl"] .dialog { border-radius: 6px; }
-html[data-table="stahl"] .code-big { letter-spacing: .14em; margin-right: -.14em; }
+html[data-table="stahl"] .logo { font-weight: 700; letter-spacing: .16em; margin-right: -.16em; font-size: 56px; }
+html[data-table="stahl"] .chip { font-size: 16px; letter-spacing: .1em; }
 
-/* ---------- Tisch „Patio“: Holztisch mit abgeblätterter Farbe, handgemalte Schilder ---------- */
-html[data-table="patio"] {
+/* ---------- Tisch „Hof“: Betonboden im Gefängnishof, Kreide, Abendsonne ---------- */
+html[data-table="hof"] {
   --f-head: "Marker Felt", "Chalkboard SE", "Segoe Print", "Comic Sans MS", cursive;
-  --ink: #fbf2dc; --mute: #dccaa3; --gold: #f2b62b; --gold-d: #b97f0f; --acc: 242, 182, 43; --on-acc: #3a1c08;
-  --dk: 30, 15, 6; --dim: rgba(45, 26, 12, .55); --panel: rgba(38, 20, 8, .56); --panel-2: #4b3321; --line: rgba(255, 240, 210, .2); --bg0: #4a3422;
-  --btn-r: 9px 13px 8px 12px / 12px 8px 13px 9px; --pill-r: 8px 12px 9px 11px / 11px 9px 12px 8px; --box-r: 7px 10px 6px 9px / 9px 6px 10px 7px; --btn-ink: #3a1c08;
-  --btn-bg: linear-gradient(180deg, #f7c441 0%, #e2a117 100%);
-  --btn-sh: inset 0 0 0 2.5px #a3311c, inset 0 0 0 4px rgba(255, 240, 200, .35), 0 2px 0 #6e3d07, 0 7px 14px rgba(0, 0, 0, .4);
-  --sec-bg: rgba(38, 20, 8, .5); --sec-sh: inset 0 0 0 2px rgba(251, 242, 220, .5);
+  --ink: #fff8e8; --mute: #ead9b6; --gold: #ffd24a; --gold-d: #b98a10; --acc: 255, 210, 74; --on-acc: #33210a;
+  --dk: 34, 22, 10; --dim: rgba(50, 34, 16, .55); --panel: rgba(40, 26, 12, .66); --panel-2: #4a3723; --line: rgba(255, 244, 214, .24); --bg0: #5a4630;
+  --btn-r: 9px 13px 8px 12px / 12px 8px 13px 9px; --pill-r: 8px 12px 9px 11px / 11px 9px 12px 8px; --box-r: 7px 10px 6px 9px / 9px 6px 10px 7px; --btn-ink: #33210a;
+  --btn-bg: linear-gradient(180deg, #ffe07a 0%, #f4bd2c 100%);
+  --btn-sh: inset 0 0 0 2px rgba(255, 255, 255, .55), 0 2px 0 #7a5608, 0 7px 14px rgba(0, 0, 0, .4);
+  --sec-bg: rgba(40, 26, 12, .62); --sec-sh: inset 0 0 0 2px rgba(255, 248, 232, .6);
+  --veil: linear-gradient(rgba(46, 30, 12, .3), rgba(46, 30, 12, .3));
 }
-html[data-table="patio"] #app { background: var(--n-grain), radial-gradient(130% 90% at 50% 40%, rgba(0, 0, 0, 0) 45%, rgba(20, 8, 0, .55) 100%), var(--n-wood), repeating-linear-gradient(90deg, rgba(0, 0, 0, .5) 0 2px, rgba(255, 255, 255, .05) 2px 3px, rgba(0, 0, 0, 0) 3px 25%), linear-gradient(180deg, #8d6c49 0%, #6f5236 58%, #543b26 100%); }
-html[data-table="patio"] #app::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; background: linear-gradient(180deg, #37a79d, #23857f); -webkit-mask-image: var(--n-paint); mask-image: var(--n-paint); opacity: .7; }
-html[data-table="patio"] .btn { font-size: 19px; letter-spacing: .02em; }
-html[data-table="patio"] .btn.small { font-size: 15px; }
-html[data-table="patio"] .actions .btn.quiet { font-size: 14px; }
-html[data-table="patio"] .tbar { font-size: 17px; }
-html[data-table="patio"] .tbar.me { font-size: 18px; box-shadow: inset 0 0 0 2.5px #a3311c, 0 4px 14px rgba(0, 0, 0, .4); }
-html[data-table="patio"] .opp-name { font-size: 14px; font-weight: 400; }
-html[data-table="patio"] .logo { font-family: var(--f-head); letter-spacing: .1em; margin-right: -.1em; font-size: 52px; }
-html[data-table="patio"] .chip:not(.warn):not(.dark) { background: none; box-shadow: none; }
-html[data-table="patio"] .chip { font-size: 17px; text-shadow: 0 1px 3px rgba(0, 0, 0, .7); padding: 3px 12px; }
-html[data-table="patio"] .ring { color: rgba(251, 242, 220, .55); }
-html[data-table="patio"] #gCode { font-size: 14px; letter-spacing: .04em; border-radius: 4px 7px 5px 6px; box-shadow: none; transform: rotate(-1.5deg); background: #a3311c; color: #fbf2dc; }
-html[data-table="patio"] .over-box, html[data-table="patio"] .won-box { border-radius: 10px 14px 9px 13px / 13px 9px 14px 10px; background: var(--n-grain), linear-gradient(180deg, #2c8d86, #1f6f6a); box-shadow: inset 0 0 0 3px #f2b62b, 0 20px 50px rgba(0, 0, 0, .6); }
-html[data-table="patio"] .over-box h2, html[data-table="patio"] .won-box h2 { color: #fbf2dc; font-size: 25px; font-weight: 400; }
-html[data-table="patio"] .over-box .muted, html[data-table="patio"] .won-box p, html[data-table="patio"] .over-box .wait { color: #d5ebe6; }
-html[data-table="patio"] .rank, html[data-table="patio"] .wall { background: rgba(10, 40, 38, .45); }
-html[data-table="patio"] .rank-tag, html[data-table="patio"] .rank b, html[data-table="patio"] .wall-title { color: #c4e0da; }
-html[data-table="patio"] .rank, html[data-table="patio"] .wall, html[data-table="patio"] .code-card, html[data-table="patio"] .prow, html[data-table="patio"] .menu-set, html[data-table="patio"] input[type="text"], html[data-table="patio"] .seg button { border-radius: var(--box-r); }
-html[data-table="patio"] .sheet-head h2, html[data-table="patio"] .dialog h2, html[data-table="patio"] .con-box h2, html[data-table="patio"] .tb-title, html[data-table="patio"] .done-title { font-weight: 400; }
+html[data-table="hof"] .btn { font-size: 19px; }
+html[data-table="hof"] .btn.small { font-size: 15px; }
+html[data-table="hof"] .logo { letter-spacing: .1em; margin-right: -.1em; font-size: 54px; color: #fff8e8; }
+html[data-table="hof"] .opp-name, html[data-table="hof"] .sheet-head h2, html[data-table="hof"] .dialog h2, html[data-table="hof"] .tb-title, html[data-table="hof"] .done-title { font-weight: 400; }
+html[data-table="hof"] #turnText, html[data-table="hof"] .act-hint, html[data-table="hof"] .tagline, html[data-table="hof"] .origin { text-shadow: 0 1px 3px rgba(30, 18, 6, .8); }
 
-/* ---------- Tisch „Nacht“: Steinboden bei Nacht, Mondlicht durchs Gitter, Emailleschilder ---------- */
+/* ---------- Tisch „Nacht“: Zellenboden bei Nacht, Mondlicht durchs Gitter, Feuerzeug ---------- */
 html[data-table="nacht"] {
   --f-head: "American Typewriter", "Courier New", Courier, monospace;
-  --ink: #e7ecf6; --mute: #94a1bd; --gold: #f2bd6a; --gold-d: #a87628; --acc: 242, 189, 106; --on-acc: #101a36;
-  --dk: 6, 9, 18; --dim: rgba(10, 14, 28, .58); --panel: rgba(6, 9, 18, .55); --panel-2: #1b2338; --line: rgba(220, 230, 255, .18); --bg0: #0c101b;
-  --btn-r: 5px; --pill-r: 5px; --box-r: 4px; --btn-ink: #101a36;
-  --btn-bg: linear-gradient(180deg, #f7cd85 0%, #e5a94a 100%);
-  --btn-sh: inset 0 0 0 2px #f7cd85, inset 0 0 0 3.5px #101a36, 0 2px 0 #6b4a16, 0 7px 14px rgba(0, 0, 0, .5);
-  --sec-bg: linear-gradient(180deg, #25345f, #18244a); --sec-sh: inset 0 0 0 2px #1d2a52, inset 0 0 0 3.5px rgba(243, 245, 250, .9), 0 2px 0 #0a0f20, 0 6px 12px rgba(0, 0, 0, .45);
+  --ink: #e7ecf6; --mute: #9aa7c4; --gold: #f2b55f; --gold-d: #a87628; --acc: 242, 181, 95; --on-acc: #14100a;
+  --dk: 4, 7, 14; --dim: rgba(6, 9, 18, .6); --panel: rgba(8, 12, 24, .64); --panel-2: #131a2c; --line: rgba(200, 215, 255, .2); --bg0: #070a12;
+  --btn-r: 6px; --pill-r: 6px; --box-r: 5px; --btn-ink: #1a1206;
+  --btn-bg: linear-gradient(180deg, #f8cf8c 0%, #e3a443 100%);
+  --btn-sh: inset 0 1px 0 rgba(255, 255, 255, .5), 0 2px 0 #6b4a16, 0 0 22px rgba(242, 181, 95, .28), 0 7px 14px rgba(0, 0, 0, .5);
+  --sec-bg: rgba(20, 28, 52, .72); --sec-sh: inset 0 0 0 1.5px rgba(200, 215, 255, .45);
 }
-html[data-table="nacht"] #app { background: var(--n-grain), var(--n-blotch), linear-gradient(90deg, rgba(0, 0, 0, .55) 0 2px, rgba(0, 0, 0, 0) 2px) 0 0 / 120px 180px, linear-gradient(90deg, rgba(0, 0, 0, .55) 0 2px, rgba(0, 0, 0, 0) 2px) 60px 90px / 120px 180px, linear-gradient(180deg, rgba(0, 0, 0, .55) 0 2px, rgba(170, 190, 240, .07) 2px 3px, rgba(0, 0, 0, 0) 3px) 0 0 / 100% 90px, radial-gradient(140% 100% at 50% 36%, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, .7) 100%), linear-gradient(180deg, #333c55 0%, #262d42 55%, #181d2c 100%); }
-html[data-table="nacht"] #app::before { content: ""; position: absolute; left: -22%; top: 9%; width: 144%; height: 47%; pointer-events: none; transform: skewX(-17deg); background: repeating-linear-gradient(90deg, rgba(186, 208, 255, .22) 0 11.5%, rgba(186, 208, 255, 0) 11.5% 16.66%); -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, #000 14%, #000 62%, rgba(0, 0, 0, 0) 100%); mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, #000 14%, #000 62%, rgba(0, 0, 0, 0) 100%); }
-html[data-table="nacht"] .btn { font-size: 17px; font-weight: 700; letter-spacing: .03em; }
+html[data-table="nacht"] .btn { font-size: 16px; letter-spacing: .02em; }
 html[data-table="nacht"] .btn.small { font-size: 14px; }
-html[data-table="nacht"] .btn.sec { color: #f3f5fa; }
-html[data-table="nacht"] .actions .btn.quiet { font-size: 13px; color: var(--mute); }
-html[data-table="nacht"] .tbar { font-size: 16px; }
-html[data-table="nacht"] .tbar.me { font-size: 16px; box-shadow: inset 0 0 0 2px #f7cd85, inset 0 0 0 3.5px #101a36, 0 0 20px rgba(242, 189, 106, .3), 0 4px 12px rgba(0, 0, 0, .45); }
+html[data-table="nacht"] .tbar { font-size: 15px; }
 html[data-table="nacht"] .opp-name { font-size: 12.5px; }
-html[data-table="nacht"] .logo { font-family: var(--f-head); letter-spacing: .14em; margin-right: -.14em; font-size: 44px; }
-html[data-table="nacht"] .opp:not(.turn) { box-shadow: inset 0 0 0 1px rgba(220, 230, 255, .14); }
-html[data-table="nacht"] .chip { font-size: 15px; padding: 6px 14px; }
-html[data-table="nacht"] .chip:not(.warn):not(.dark) { background: linear-gradient(180deg, #25345f, #18244a); color: #f3f5fa; box-shadow: inset 0 0 0 1.5px #1d2a52, inset 0 0 0 2.5px rgba(243, 245, 250, .8); }
-html[data-table="nacht"] .ring { color: rgba(186, 208, 255, .45); }
-html[data-table="nacht"] #gCode { background: linear-gradient(180deg, #25345f, #18244a); border-radius: 4px; box-shadow: inset 0 0 0 1px #1d2a52, inset 0 0 0 2px rgba(243, 245, 250, .85); }
-html[data-table="nacht"] .stock-count, html[data-table="nacht"] .pile-count { border-radius: 3px; }
-html[data-table="nacht"] .over-box, html[data-table="nacht"] .won-box { border-radius: 4px; background: var(--n-grain), linear-gradient(180deg, #232c46, #171d30); }
-html[data-table="nacht"] .over-box h2 { font-size: 22px; }
-html[data-table="nacht"] .won-box h2 { font-size: 19px; }
-html[data-table="nacht"] .rank, html[data-table="nacht"] .wall, html[data-table="nacht"] .code-card, html[data-table="nacht"] .prow, html[data-table="nacht"] .menu-set, html[data-table="nacht"] input[type="text"], html[data-table="nacht"] .seg button { border-radius: 4px; }
-html[data-table="nacht"] .sheet { border-radius: 8px 8px 0 0; }
-html[data-table="nacht"] .dialog { border-radius: 8px; }
 html[data-table="nacht"] .seg button { font-size: 12.5px; }
+html[data-table="nacht"] .logo { letter-spacing: .14em; margin-right: -.14em; font-size: 46px; }
+html[data-table="nacht"] .chip { font-size: 14px; }
+html[data-table="nacht"] body:not([data-screen="game"]):not([data-screen="swap"]) #app::before { filter: brightness(.85); }
 
-/* ---------- Karten „Stift“: schwarzer und roter Kugelschreiber auf Packpapier-Karton ---------- */
+/* ---------- Tisch „Boss“: grüner Filz mit Mahagoni-Rand, Goldkette, Zigarre ---------- */
+html[data-table="boss"] {
+  --f-head: "Didot", "Bodoni 72", "Bodoni MT", "Playfair Display", Georgia, serif;
+  --ink: #f6efdf; --mute: #d2c5a6; --gold: #e9c46a; --gold-d: #9c7a22; --acc: 233, 196, 106; --on-acc: #2a1a06;
+  --dk: 6, 18, 12; --dim: rgba(6, 24, 16, .55); --panel: rgba(4, 20, 13, .6); --panel-2: #3a1712; --line: rgba(246, 232, 200, .22); --bg0: #2a110d;
+  --btn-r: 10px; --pill-r: 999px; --box-r: 9px; --btn-ink: #2a1a06;
+  --btn-bg: linear-gradient(180deg, #f3d98f 0%, #d5a63a 100%);
+  --btn-sh: inset 0 0 0 1.5px #7a5a14, inset 0 0 0 3px rgba(255, 255, 255, .35), 0 2px 0 #5d430c, 0 8px 16px rgba(0, 0, 0, .45);
+  --sec-bg: rgba(40, 14, 10, .68); --sec-sh: inset 0 0 0 1.5px rgba(233, 196, 106, .6);
+}
+html[data-table="boss"] .btn { font-size: 18px; letter-spacing: .03em; }
+html[data-table="boss"] .btn.small { font-size: 15px; }
+html[data-table="boss"] .logo { letter-spacing: .18em; margin-right: -.18em; font-size: 50px; }
+html[data-table="boss"] .seg button { font-size: 13.5px; }
+
+/* ====================================================================
+   Karten. Zahlenkarten sind gezeichnet (Schrift und Symbole), Bildkarten zeigen eine Figur:
+   König = Boss, Dame = Queen, Bube = Läufer, Ass = Emblem, schwarzer Joker = Dealer, roter Joker = Wärter.
+   ==================================================================== */
+.card .fig { position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--w) * 1.13); background: center bottom / cover no-repeat; }
+.card.f-k .fig { background-image: var(--fig-k); }
+.card.f-q .fig { background-image: var(--fig-q); }
+.card.f-j .fig { background-image: var(--fig-j); }
+.card.f-a .fig { background-image: var(--fig-a); }
+.card.f-jb .fig { background-image: var(--fig-jb); }
+.card.f-jr .fig { background-image: var(--fig-jr); }
+html[data-cards] .card.back { background: var(--fig-back) center / 100% 100% no-repeat; --face-in: 0 0 0 0 rgba(0, 0, 0, 0); }
+/* Bildkarten: Wert und Farbe stehen nebeneinander in der Leiste über der Figur */
+.card.fc:not(.mini) .ci { flex-direction: row; align-items: center; min-width: 0; gap: calc(var(--w) * .03); left: calc(var(--w) * .08); top: calc(var(--w) * .055); }
+.card.fc:not(.mini):not(.jk) .rk { font-size: calc(var(--w) * .3); }
+.card.fc:not(.mini):not(.jk) .ci svg { width: calc(var(--w) * .21); height: calc(var(--w) * .21); margin-top: 0; }
+
+/* ---------- Karten „Stift“: Kugelschreiber auf Heftpapier ---------- */
 html[data-cards="stift"] .card .u-s { display: none; }
 html[data-cards="stift"] .card .u-p { display: inline; }
-html[data-cards="stift"] .card { border-radius: calc(var(--w) * .055); background: var(--n-paper), linear-gradient(165deg, #e2cba0 0%, #cfb382 100%); color: #15151a; --card-out: 0 0 0 1px rgba(50, 35, 10, .6), 0 1.5px 0 #96794a, 0 3px 5px rgba(0, 0, 0, .45); }
-html[data-cards="stift"] .card.red { color: #a9101c; }
+html[data-cards="stift"] .card { border-radius: calc(var(--w) * .06); color: #20298f; --card-out: 0 0 0 1px rgba(60, 45, 15, .6), 0 1.5px 0 #a48b55, 0 3px 5px rgba(0, 0, 0, .45);
+  background: var(--n-paper), repeating-linear-gradient(180deg, rgba(70, 150, 190, 0) 0 calc(var(--w) * .118), rgba(70, 150, 190, .42) calc(var(--w) * .118) calc(var(--w) * .13)), linear-gradient(165deg, #fef6d3 0%, #f6e3b0 100%); }
+html[data-cards="stift"] .card.red { color: #c21f2b; }
 html[data-cards="stift"] .card .rk { font-family: "Bradley Hand", "Noteworthy", "Segoe Print", "Comic Sans MS", cursive; font-weight: 700; font-size: calc(var(--w) * .46); letter-spacing: -.03em; -webkit-text-stroke: calc(var(--w) * .012) currentColor; }
 html[data-cards="stift"] .card.mini .rk { font-size: calc(var(--w) * .62); }
 html[data-cards="stift"] .card .ci svg { margin-top: calc(var(--w) * -.01); }
-html[data-cards="stift"] .card.back { background: repeating-linear-gradient(63deg, rgba(21, 21, 26, .85) 0 1px, rgba(21, 21, 26, 0) 1px 3.6px), #d6bb8b; --face-in: inset 0 0 0 calc(var(--w) * .06) #d9bf90, inset 0 0 0 calc(var(--w) * .078) #15151a, inset 0 0 0 calc(var(--w) * .12) #d9bf90, inset 0 0 0 calc(var(--w) * .135) #15151a; }
+html[data-cards="stift"] .card:not(.mini) .ci { left: calc(var(--w) * .13); }
+html[data-cards="stift"] .card.fc:not(.mini):not(.jk) .rk { font-size: calc(var(--w) * .38); }
+html[data-cards="stift"] .card.fc:not(.mini) .ci { top: calc(var(--w) * .02); text-shadow: 0 0 calc(var(--w) * .05) #fdf3cf, 0 0 calc(var(--w) * .05) #fdf3cf; }
+html[data-cards="stift"] .card.jk:not(.mini) .ci { top: calc(var(--w) * .09); left: calc(var(--w) * .1); gap: calc(var(--w) * .045); }
+html[data-cards="stift"] .card.jk .jt { font-family: "Bradley Hand", "Noteworthy", "Segoe Print", "Comic Sans MS", cursive; font-size: calc(var(--w) * .15); }
+/* Die Figuren haben weißen Grund und liegen wie gezeichnet auf dem Kartenpapier */
+html[data-cards="stift"] .card.fc, html[data-cards="tattoo"] .card.fc { isolation: isolate; }
+html[data-cards="stift"] .card .fig, html[data-cards="tattoo"] .card .fig { mix-blend-mode: multiply; }
+html[data-cards="stift"] .card .fig { height: calc(var(--w) * 1.082); }
+html[data-cards="stift"] .card.jk .fig { left: calc(var(--w) * .045); right: calc(var(--w) * .045); bottom: calc(var(--w) * .045); height: calc(var(--w) * .985); }
 
-/* ---------- Karten „Filz“: dicker Filzstift, speckig, ausgefranste Ecken ---------- */
-html[data-cards="filz"] .card { border-radius: calc(var(--w) * .13) calc(var(--w) * .09) calc(var(--w) * .14) calc(var(--w) * .08) / calc(var(--w) * .1) calc(var(--w) * .13) calc(var(--w) * .09) calc(var(--w) * .12); background: var(--n-stain), var(--n-paper), linear-gradient(170deg, #eddfb4 0%, #d6c18d 100%); color: #2a1f14; --card-out: 0 0 0 1px rgba(60, 35, 10, .55), 0 3px 5px rgba(0, 0, 0, .45); }
-html[data-cards="filz"] .card.red { color: #b02d18; }
-html[data-cards="filz"] .card .rk { font-family: "Marker Felt", "Chalkboard SE", "Comic Sans MS", cursive; font-weight: 700; font-size: calc(var(--w) * .43); letter-spacing: -.02em; }
-html[data-cards="filz"] .card.mini .rk { font-size: calc(var(--w) * .6); }
-html[data-cards="filz"] .card svg { stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; }
-html[data-cards="filz"] .card.back { background: var(--n-scuff), var(--n-stain), repeating-linear-gradient(45deg, rgba(240, 225, 185, .5) 0 2px, rgba(240, 225, 185, 0) 2px 9px), repeating-linear-gradient(-45deg, rgba(240, 225, 185, .5) 0 2px, rgba(240, 225, 185, 0) 2px 9px), linear-gradient(160deg, #a4412a, #7c2a18); --face-in: inset 0 0 0 calc(var(--w) * .065) #dccb9c; }
+/* ---------- Karten „Schwarz“: schwarze Karten, weißer und roter Druck ---------- */
+html[data-cards="schwarz"] .card { border-radius: calc(var(--w) * .09); background: #000; color: #f4f2ea;
+  --face-in: inset 0 0 0 calc(var(--w) * .035) #000, inset 0 0 0 calc(var(--w) * .05) rgba(244, 242, 234, .9); --card-out: 0 0 0 1px rgba(255, 255, 255, .34), 0 3px 7px rgba(0, 0, 0, .65); }
+html[data-cards="schwarz"] .card.red { color: #e3212f; }
+html[data-cards="schwarz"] .card.mini { --face-in: inset 0 0 0 1px rgba(244, 242, 234, .75); }
+html[data-cards="schwarz"] .card .ci { left: calc(var(--w) * .1); top: calc(var(--w) * .11); }
+html[data-cards="schwarz"] .card.mini .ci { left: 0; top: 0; }
+html[data-cards="schwarz"] .card .rk { font-family: "Avenir Next Condensed", "DIN Condensed", "Arial Narrow", "Roboto Condensed", sans-serif; font-weight: 800; font-size: calc(var(--w) * .42); letter-spacing: -.01em; }
+html[data-cards="schwarz"] .card.mini .rk { font-size: calc(var(--w) * .6); }
+html[data-cards="schwarz"] .card .big { right: calc(var(--w) * .12); bottom: calc(var(--w) * .12); }
+html[data-cards="schwarz"] .card.fc:not(.mini) .ci { left: calc(var(--w) * .11); top: calc(var(--w) * .085); }
+html[data-cards="schwarz"] .card.fc:not(.mini):not(.jk) .rk { font-size: calc(var(--w) * .33); }
+html[data-cards="schwarz"] .card .fig { left: calc(var(--w) * .06); right: calc(var(--w) * .06); bottom: calc(var(--w) * .06); height: calc(var(--w) * .99); }
+html[data-cards="schwarz"] .card.jk { --face-in: inset 0 0 0 calc(var(--w) * .05) currentColor; }
+html[data-cards="schwarz"] .card.jk .jt { font-family: "Avenir Next Condensed", "DIN Condensed", "Arial Narrow", "Roboto Condensed", sans-serif; font-weight: 800; font-size: calc(var(--w) * .17); letter-spacing: .08em; }
+html[data-cards="schwarz"] .card.back { --card-out: 0 0 0 1px rgba(255, 255, 255, .34), 0 3px 7px rgba(0, 0, 0, .65); }
 
-/* ---------- Karten „Druck“: alter Druck mit feiner Antiqua ---------- */
-html[data-cards="druck"] .card { border-radius: calc(var(--w) * .09); background: var(--n-paper), linear-gradient(165deg, #eef0ea 0%, #d9dccf 100%); color: #14161c; --face-in: inset 0 0 0 calc(var(--w) * .03) #e6e8df, inset 0 0 0 calc(var(--w) * .042) rgba(20, 22, 28, .4); --card-out: 0 0 0 1px rgba(5, 8, 15, .6), 0 3px 6px rgba(0, 0, 0, .55); }
-html[data-cards="druck"] .card.red { color: #b0201c; }
-html[data-cards="druck"] .card .rk { font-family: "Bodoni 72", "Didot", "Bodoni MT", "Playfair Display", Georgia, serif; font-weight: 700; font-size: calc(var(--w) * .42); letter-spacing: -.03em; }
-html[data-cards="druck"] .card.mini .rk { font-size: calc(var(--w) * .6); }
-html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60deg, rgba(226, 232, 245, .3) 0 1px, rgba(226, 232, 245, 0) 1px 7px), repeating-linear-gradient(-60deg, rgba(226, 232, 245, .3) 0 1px, rgba(226, 232, 245, 0) 1px 7px), repeating-linear-gradient(0deg, rgba(226, 232, 245, .16) 0 1px, rgba(226, 232, 245, 0) 1px 6px), linear-gradient(160deg, #24345f, #131d3c); --face-in: inset 0 0 0 calc(var(--w) * .06) #e3e6dc, inset 0 0 0 calc(var(--w) * .075) #131d3c, inset 0 0 0 calc(var(--w) * .095) #e3e6dc; }
+/* ---------- Karten „Tattoo“: Old-School-Tattoo-Vorlagen auf Pergament ---------- */
+html[data-cards="tattoo"] .card { border-radius: calc(var(--w) * .08); background: linear-gradient(170deg, #fdebcb 0%, #f7deb8 100%); color: #1a1512;
+  --face-in: inset 0 0 0 calc(var(--w) * .03) #f8e3bf, inset 0 0 0 calc(var(--w) * .042) #1a1512; --card-out: 0 0 0 1px rgba(40, 25, 10, .6), 0 3px 6px rgba(0, 0, 0, .5); }
+html[data-cards="tattoo"] .card.red { color: #b1151f; }
+html[data-cards="tattoo"] .card.mini { --face-in: inset 0 0 0 1px rgba(26, 21, 18, .7); }
+html[data-cards="tattoo"] .card .ci { left: calc(var(--w) * .09); top: calc(var(--w) * .1); }
+html[data-cards="tattoo"] .card.mini .ci { left: 0; top: 0; }
+html[data-cards="tattoo"] .card .rk { font-family: "Rockwell", "American Typewriter", "Roboto Slab", Georgia, serif; font-weight: 700; font-size: calc(var(--w) * .38); letter-spacing: -.04em; }
+html[data-cards="tattoo"] .card.mini .rk { font-size: calc(var(--w) * .56); }
+html[data-cards="tattoo"] .card svg { stroke: #1a1512; stroke-width: 1.5; stroke-linejoin: round; paint-order: stroke; }
+html[data-cards="tattoo"] .card .big { right: calc(var(--w) * .12); bottom: calc(var(--w) * .12); }
+html[data-cards="tattoo"] .card.fc:not(.mini):not(.jk) { --face-in: 0 0 0 0 rgba(0, 0, 0, 0); }
+html[data-cards="tattoo"] .card.fc:not(.mini) .ci { left: calc(var(--w) * .085); top: calc(var(--w) * .045); }
+html[data-cards="tattoo"] .card.fc:not(.mini):not(.jk) .rk { font-size: calc(var(--w) * .29); }
+html[data-cards="tattoo"] .card .fig { left: calc(var(--w) * .025); right: calc(var(--w) * .025); bottom: calc(var(--w) * .03); height: calc(var(--w) * 1.048); }
+html[data-cards="tattoo"] .card.jk { --face-in: inset 0 0 0 calc(var(--w) * .05) currentColor; }
+html[data-cards="tattoo"] .card.jk:not(.mini) .ci { left: calc(var(--w) * .1); top: calc(var(--w) * .085); }
+html[data-cards="tattoo"] .card.jk .fig { left: calc(var(--w) * .06); right: calc(var(--w) * .06); bottom: calc(var(--w) * .06); height: calc(var(--w) * .97); }
+html[data-cards="tattoo"] .card.jk .jt { font-family: "Rockwell", "American Typewriter", "Roboto Slab", Georgia, serif; }
+
+/* ---------- Karten „Hood“: bunt, dicke Konturen, Sonnenuntergang ---------- */
+html[data-cards="hood"] .card { border-radius: calc(var(--w) * .09); color: #15131a;
+  background: linear-gradient(180deg, #fc8c34 0%, #fc8c34 22%, #f2714e 40%, #c53f87 62%, #4a8da1 84%, #24a8a8 100%);
+  --face-in: inset 0 0 0 calc(var(--w) * .035) #15131a; --card-out: 0 0 0 1px rgba(0, 0, 0, .5), 0 3px 6px rgba(0, 0, 0, .5); }
+html[data-cards="hood"] .card.red { color: #e0132b; }
+html[data-cards="hood"] .card.mini { --face-in: inset 0 0 0 1.5px #15131a; }
+html[data-cards="hood"] .card .ci { left: calc(var(--w) * .09); top: calc(var(--w) * .09); }
+html[data-cards="hood"] .card.mini .ci { left: 0; top: 0; }
+html[data-cards="hood"] .card .rk, html[data-cards="hood"] .card .jt { font-family: "Avenir Next Condensed", "DIN Condensed", "Arial Narrow", "Roboto Condensed", sans-serif; font-weight: 800; color: #fff; -webkit-text-stroke: calc(var(--w) * .05) #15131a; paint-order: stroke fill; }
+html[data-cards="hood"] .card .rk { font-size: calc(var(--w) * .46); letter-spacing: 0; }
+html[data-cards="hood"] .card.red .rk { color: #ffe45c; }
+html[data-cards="hood"] .card.red .jt { color: #ff5d6c; }
+html[data-cards="hood"] .card.mini .rk { font-size: calc(var(--w) * .62); -webkit-text-stroke-width: calc(var(--w) * .075); }
+html[data-cards="hood"] .card svg { stroke: #fff; stroke-width: 2.2; stroke-linejoin: round; paint-order: stroke; overflow: visible; }
+html[data-cards="hood"] .card .big { right: calc(var(--w) * .12); bottom: calc(var(--w) * .12); }
+html[data-cards="hood"] .card.fc:not(.mini) .ci { left: calc(var(--w) * .1); top: calc(var(--w) * .05); }
+html[data-cards="hood"] .card.fc:not(.mini):not(.jk) .rk { font-size: calc(var(--w) * .33); }
+html[data-cards="hood"] .card .fig { left: calc(var(--w) * .035); right: calc(var(--w) * .035); bottom: calc(var(--w) * .035); height: calc(var(--w) * 1.051); }
+html[data-cards="hood"] .card.jk { --face-in: inset 0 0 0 calc(var(--w) * .05) currentColor; }
+html[data-cards="hood"] .card.jk .fig { left: calc(var(--w) * .05); right: calc(var(--w) * .05); bottom: calc(var(--w) * .05); height: calc(var(--w) * 1.017); }
+html[data-cards="hood"] .card.jk .jt { font-size: calc(var(--w) * .17); -webkit-text-stroke-width: calc(var(--w) * .035); }
+
+/* Hinweise liegen frei auf dem Tischbild */
+.act-hint, #turnText, .dir-note { text-shadow: 0 1px 3px rgba(0, 0, 0, .75); }
 
 </style>
 </head>
@@ -826,8 +911,11 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
         <button id="btnJoin" class="btn sec">Beitreten</button>
       </div>
 
-      <button id="btnRules" class="btn ghost" data-act="rules">Regeln</button>
-      <div class="build">Version 2026-11-22 19:31</div>
+      <div class="start-links">
+        <button id="btnRules" class="btn ghost" data-act="rules">Regeln</button>
+        <button class="btn ghost" data-act="settings">Einstellungen</button>
+      </div>
+      <div class="build">Version 2026-11-24 23:46</div>
     </div>
   </section>
 
@@ -855,6 +943,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
         <button id="btnShare" class="btn sec small" data-act="share">Link teilen</button>
       </div>
       <p id="lobbyHint" class="hint"></p>
+      <div id="lobbyOpts" class="menu-set room-opts" hidden></div>
       <div id="lobbyList" class="plist"></div>
       <button id="btnAddBot" class="btn sec host-only">Bot hinzufügen</button>
     </div>
@@ -978,11 +1067,16 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
       <div class="sheet-head"><h2>Regeln</h2><button class="icon-btn" data-act="close" aria-label="Schließen"><svg viewBox="0 0 24 24"><use href="#i-x"/></svg></button></div>
       <div class="rules-text">
         <h3>Ziel</h3>
-        <p>Werde als Erster alle deine Karten los: Handkarten, offene und verdeckte Karten. Die anderen spielen weiter um die Plätze 2, 3, 4 … Wer zuletzt noch Karten hat, hat verloren. Für 2 bis 6 Spieler, mit 52 Karten und 2 Jokern.</p>
+        <p>Werde als Erster alle deine Karten los: Handkarten, offene und verdeckte Karten. Die anderen spielen weiter um die Plätze 2, 3, 4 … Wer zuletzt noch Karten hat, hat verloren. Für 2 bis 12 Spieler.</p>
+
+        <h3>Karten und Spielerzahl</h3>
+        <p>Bis 6 Spieler reicht <b>ein Deck</b>: 52 Karten und 2 Joker (1 schwarz, 1 rot). Bis 9 Spieler braucht es <b>1,5 Decks</b>: Von jedem Wert kommen eine schwarze und eine rote Karte dazu, außerdem ein schwarzer Joker – also 81 Karten mit 3 Jokern (2 schwarz, 1 rot). Bis 12 Spieler sind es <b>2 Decks</b>: 108 Karten mit 4 Jokern (2 schwarz, 2 rot).</p>
+        <p>Normalerweise wählt die App das Deck passend zur Spielerzahl („Auto“). Der Host kann auch von Hand ein größeres Deck nehmen, etwa 1,5 Decks schon zu sechst – dann gibt es mehr zum Nachziehen. Mit mehr als einem Deck gibt es Karten doppelt; gleiche Werte dürfen wie immer zusammen gelegt werden.</p>
 
         <h3>Vorbereitung</h3>
         <p>Jeder bekommt 9 Karten: <b>3 verdeckte</b>, darauf <b>3 offene</b> und <b>3 Handkarten</b>. Alle übrigen Karten bilden den Nachziehstapel.</p>
         <p>Vor dem Start darfst du <b>genau eine</b> Handkarte gegen eine deiner offenen Karten tauschen. Dafür ist <b>eine Minute</b> Zeit. Hast du „Bereit“ zu früh gedrückt, kommst du mit „Zurück“ noch einmal zum Tauschen – bis die Runde beginnt. Sind alle bereit, geht es nach drei Sekunden los; nach einer Minute beginnt die Runde auf jeden Fall. In der ersten Runde wird ausgelost, wer beginnt – danach beginnt immer der <b>Verlierer der letzten Runde</b>. Gespielt wird zunächst im Uhrzeigersinn.</p>
+        <p>Nach jeder Runde werden die <b>Plätze neu gemischt</b>, damit nicht immer dieselben nebeneinander sitzen. Zu zweit ändert das nichts, zu dritt dreht sich nur die Reihenfolge um. Der Host kann das Mischen abschalten.</p>
         <p class="rank-line"><span>Rangfolge</span>3 · 4 · 5 · 6 · 7 · 8 · 9 · 10 · Bube · Dame · König · Ass</p>
         <p><b>Sonderkarten</b> sind die 2, die 7, die 10 und die beiden Joker. Sie dürfen <b>immer</b> gelegt werden – auch auf Bube, Dame, König und Ass. Einzige Ausnahme: Auf einem Joker geht nichts (nur Rot auf Schwarz).</p>
 
@@ -990,7 +1084,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
         <p>Lege eine Karte, die <b>mindestens so hoch</b> ist wie die oberste Karte des Ablagestapels – oder eine Sonderkarte (2, 7, 10, Joker), die geht immer. Mehrere <b>Handkarten</b> desselben Werts darfst du zusammen legen oder einzeln, ganz wie du willst; zusammen gelegt ist das ein einziger Zug. Von den offenen Karten auf dem Tisch geht immer nur eine pro Zug.</p>
 
         <h3>Zeitlimit</h3>
-        <p>Für jeden Zug hast du <b>50 Sekunden</b>. Die Zeit läuft oben neben „Du bist dran“. Ist sie um, wird für dich gespielt: die <b>niedrigste passende Karte</b>, Sonderkarten erst, wenn nichts anderes geht. Passt nichts, nimmst du den Stapel auf – und hast danach wieder 50 Sekunden zum Ausspielen. Bei verdeckten Karten wird eine zufällige aufgedeckt.</p>
+        <p>Für jeden Zug hast du <b>50 Sekunden</b> – der Host kann auch 30 oder 20 Sekunden einstellen, damit es mit vielen Spielern schneller geht. Die Zeit läuft oben neben „Du bist dran“. Ist sie um, wird für dich gespielt: die <b>niedrigste passende Karte</b>, Sonderkarten erst, wenn nichts anderes geht. Passt nichts, nimmst du den Stapel auf – und hast danach wieder die volle Zeit zum Ausspielen. Bei verdeckten Karten wird eine zufällige aufgedeckt.</p>
 
         <h3>Nachziehen</h3>
         <p>Nach deinem Zug ziehst du nach, bis du wieder 3 Handkarten hast. Erst dann ist der Nächste dran. Ist der Nachziehstapel leer, wird nicht mehr gezogen: Spiele deine Hand herunter, danach kommen deine offenen und zuletzt deine verdeckten Karten an die Reihe.</p>
@@ -1006,7 +1100,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
           <li><b>3</b><span><i>Richtungswechsel</i> – die Spielrichtung dreht sich sofort. Bei genau 2 Spielern ist stattdessen der Leger direkt nochmal dran. Die 3 ist <b>keine</b> Sonderkarte, die immer geht: Sie hat ihren normalen Wert und ist die niedrigste Karte. Sie passt also nur auf eine 2, eine 3, den leeren Stapel oder nach einer 7. Auf eine 3 passt danach jede Karte.</span></li>
           <li><b>7</b><span><i>Niedriger spielen</i> – darf immer gelegt werden. Der Nächste muss dann <b>unter 7</b> bleiben (3, 4, 5, 6) oder eine Sonderkarte legen: eine 2, noch eine 7, eine 10 oder einen Joker. Gilt nur für den direkt nächsten Spieler und endet auch, wenn er aufnimmt.</span></li>
           <li><b>10</b><span><i>Stapel entfernen</i> – darf immer gelegt werden. Der ganze Ablagestapel samt 10 ist dauerhaft aus dem Spiel. Mehrere 10er entfernen ihn nur einmal. Der Nächste beginnt einfach mit einer eigenen, beliebigen Karte.</span></li>
-          <li><b>Joker</b><span><i>Stapel aufzwingen</i> – darf immer gelegt werden. Der Nächste muss den ganzen Ablagestapel aufnehmen und spielt danach selbst aus. Der Joker wirkt <b>nur einmal</b>: Beim Aufnehmen ist er – wie die 10 – für diese Runde <b>aus dem Spiel</b>. Er kommt nicht mit auf die Hand und kann nicht noch einmal gelegt werden. Den <b>schwarzen</b> Joker kann man mit dem <b>roten</b> kontern: Dann nimmt der darauffolgende Spieler auf, und beide Joker sind weg. Umgekehrt geht das nicht, und auch eine 10 hebt einen Joker nicht auf. Die beiden Joker sind verschiedene Karten und werden nie zusammen gelegt.</span></li>
+          <li><b>Joker</b><span><i>Stapel aufzwingen</i> – darf immer gelegt werden. Der Nächste muss den ganzen Ablagestapel aufnehmen und spielt danach selbst aus. Der Joker wirkt <b>nur einmal</b>: Beim Aufnehmen ist er – wie die 10 – für diese Runde <b>aus dem Spiel</b>. Er kommt nicht mit auf die Hand und kann nicht noch einmal gelegt werden. Den <b>schwarzen</b> Joker kann man mit dem <b>roten</b> kontern: Dann nimmt der darauffolgende Spieler auf, und beide Joker sind weg. Umgekehrt geht das nicht, Schwarz auf Schwarz auch nicht, und auch eine 10 hebt einen Joker nicht auf. Ein schwarzer und ein roter Joker sind verschiedene Karten und werden nie zusammen gelegt.</span></li>
         </ul>
 
         <h3>Offene Karten</h3>
@@ -1050,8 +1144,11 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
 
         <h3>Bedienung</h3>
         <p>Karte antippen und „Legen“ drücken, den Ablagestapel antippen – oder die Karte einfach in die Tischmitte ziehen. Mehrere gleiche Handkarten nacheinander antippen, um sie zusammen zu legen. Neu gezogene Karten leuchten kurz blau auf.</p>
-        <p>Im Menü gibt es den Schalter <b>Spielhilfe</b>. Ist er an, steht am Stapel, was gerade passt, und unpassende Karten sind abgedunkelt. Ist er aus, gibt es beides nicht – legen kannst du trotzdem nur, was erlaubt ist. Jeder stellt das für sich ein.</p>
-        <p>Ebenfalls im Menü: <b>Töne</b> mit Lautstärke und Stumm-Schalter, auch das stellt jeder für sein Gerät ein. Das <b>Design</b> von Tisch und Karten wählt der Host, es gilt dann für alle im Raum.</p>
+        <p>Bist du dran, hörst du einen Ton, das Handy vibriert (wo der Browser das kann) und der Bildschirmrand leuchtet kurz auf – nur bei dir, nicht bei den anderen.</p>
+        <p>Unter <b>Einstellungen</b> (im Menü und auf der Startseite) stellt jeder für sein Gerät ein: Töne mit eigener Lautstärke für „Du bist dran“ und für die Karten, den Klang, Vibration, Randleuchten und die <b>Spielhilfe</b>. Ist die Spielhilfe an, steht am Stapel, was gerade passt, und unpassende Karten sind abgedunkelt. Ist sie aus, gibt es beides nicht – legen kannst du trotzdem nur, was erlaubt ist.</p>
+        <p>Der <b>Host</b> stellt für alle ein: Decks, Zugzeit, Plätze mischen und das <b>Design</b> von Tisch und Karten.</p>
+        <p>Die Bildkarten: <b>König</b> = der Boss, <b>Dame</b> = die Queen, <b>Bube</b> = der Läufer. Der <b>schwarze Joker</b> ist der Dealer, der <b>rote Joker</b> der Wärter – der Wärter schlägt den Dealer.</p>
+        <p>Mit vielen Mitspielern lohnt es sich, das Handy zu <b>drehen</b>: Im Querformat sind alle größer zu sehen.</p>
       </div>
     </div>
   </div>
@@ -1062,24 +1159,56 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
       <div class="sheet-head"><h2>Menü</h2><button class="icon-btn" data-act="close" aria-label="Schließen"><svg viewBox="0 0 24 24"><use href="#i-x"/></svg></button></div>
       <div class="menu-code"><span>Raum</span><b id="menuCode"></b><button class="btn sec small" data-act="share">Link teilen</button></div>
       <div id="menuList" class="plist compact"></div>
+      <div id="menuOpts" class="menu-set room-opts" hidden></div>
       <div class="menu-set">
         <div class="set-row host-only"><span>Tisch</span><div id="segTable" class="seg" role="group" aria-label="Tisch-Design für alle">
-          <button data-table="normal">Normal</button><button data-table="stahl">Stahl</button><button data-table="patio">Patio</button><button data-table="nacht">Nacht</button>
+          <button data-table="stahl">Stahl</button><button data-table="hof">Hof</button><button data-table="nacht">Nacht</button><button data-table="boss">Boss</button>
         </div></div>
         <div class="set-row host-only"><span>Karten</span><div id="segCards" class="seg" role="group" aria-label="Karten-Design für alle">
-          <button data-cards="normal">Normal</button><button data-cards="stift">Stift</button><button data-cards="filz">Filz</button><button data-cards="druck">Druck</button>
+          <button data-cards="stift">Stift</button><button data-cards="schwarz">Schwarz</button><button data-cards="tattoo">Tattoo</button><button data-cards="hood">Hood</button>
         </div></div>
         <p id="designNote" class="set-note"></p>
-        <div class="set-row"><span>Töne</span><button id="btnMute" class="btn sec small" aria-pressed="true">Ton: an</button><input id="rngVol" class="vol" type="range" min="0" max="100" step="5" value="70" aria-label="Lautstärke"></div>
       </div>
       <div class="menu-btns">
         <p id="menuNote" class="muted menu-note" hidden></p>
         <button id="btnMenuRematch" class="btn" hidden>Neue Runde</button>
+        <button class="btn sec" data-act="settings">Einstellungen: Ton, Vibration …</button>
         <button class="btn sec" data-act="rules">Regeln</button>
-        <button id="btnHelp" class="btn sec" aria-pressed="true">Spielhilfe: an</button>
         <button id="btnMenuGiveUp" class="btn sec" hidden>Aufgeben</button>
         <button id="btnMenuLobby" class="btn sec">Zurück zur Lobby</button>
         <button id="btnLeave" class="btn danger">Spiel verlassen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Einstellungen (pro Gerät) ===== -->
+  <div id="sheetSet" class="sheet-wrap" data-sheet>
+    <div class="sheet scrolly" role="dialog" aria-label="Einstellungen">
+      <div class="sheet-head"><h2>Einstellungen</h2><button class="icon-btn" data-act="close" aria-label="Schließen"><svg viewBox="0 0 24 24"><use href="#i-x"/></svg></button></div>
+      <p class="muted">Gilt nur für dein Gerät. Jeder stellt das für sich ein.</p>
+      <div class="menu-set">
+        <h3 class="set-head">Töne</h3>
+        <div class="set-row wide"><span>Alle Töne</span><button id="btnMute" class="btn sec small" aria-pressed="true">Ton: an</button></div>
+        <div class="set-row wide"><span>Gesamt</span><input id="rngVol" class="vol" type="range" min="0" max="100" step="5" value="70" aria-label="Gesamtlautstärke"></div>
+        <div class="set-row wide"><span>Du bist dran</span><input id="rngVolTurn" class="vol" type="range" min="0" max="100" step="5" value="80" aria-label="Lautstärke für „Du bist dran“"></div>
+        <div id="segChime" class="seg n5" role="group" aria-label="Klang für „Du bist dran“">
+          <button data-chime="glocke">Glocke</button><button data-chime="holz">Holz</button><button data-chime="klopfen">Klopfen</button><button data-chime="gong">Gong</button><button data-chime="aus">Aus</button>
+        </div>
+        <div class="set-row wide"><span>Karten</span><input id="rngVolCards" class="vol" type="range" min="0" max="100" step="5" value="70" aria-label="Lautstärke der Kartentöne"></div>
+        <div class="set-row wide"><span>Letzte 5 Sekunden</span><button id="btnTick" class="btn sec small" aria-pressed="true">Ticken: an</button></div>
+        <p class="set-note">Ist dein Handy stumm geschaltet oder der Bildschirm aus, hörst du nichts.</p>
+      </div>
+      <div class="menu-set">
+        <h3 class="set-head">Vibration</h3>
+        <div id="segHap" class="seg n3" role="group" aria-label="Vibration">
+          <button data-hap="0">Aus</button><button data-hap="1">Leicht</button><button data-hap="2">Stark</button>
+        </div>
+        <p id="hapNote" class="set-note"></p>
+      </div>
+      <div class="menu-set">
+        <h3 class="set-head">Anzeige</h3>
+        <div class="set-row wide"><span>Rand leuchtet, wenn du dran bist</span><button id="btnGlow" class="btn sec small" aria-pressed="true">Randleuchten: an</button></div>
+        <div class="set-row wide"><span>Zeigt, welche Karten passen</span><button id="btnHelp" class="btn sec small" aria-pressed="true">Spielhilfe: an</button></div>
       </div>
     </div>
   </div>
@@ -1105,6 +1234,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
     </div>
   </div>
 
+  <div id="turnGlow" class="turn-glow" aria-hidden="true"></div>
   <div id="fx" class="fx" aria-hidden="true"></div>
   <div id="toast" class="toast" role="status"></div>
 </div>
@@ -1115,9 +1245,15 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
  *
  * Karten-IDs: Farbe + Rang, z. B. "H7", "S14" (Ass). Farben: S ♠, H ♥, D ♦, C ♣.
  * Ränge: 2..10, 11 Bube, 12 Dame, 13 König, 14 Ass. Joker: "JB" (schwarz), "JR" (rot).
+ * Bei mehr als einem Deck gibt es Karten doppelt: Das zweite Exemplar trägt dieselbe ID in
+ * Kleinbuchstaben ("h7", "jb", "jr"). Für die Regeln sind beide Exemplare gleich.
+ *
+ * Decks (opts.decks): 1 = 54 Karten (bis 6 Spieler), 1.5 = 81 Karten (bis 9 Spieler; dazu kommen von
+ * jedem Wert eine zufällige schwarze und eine zufällige rote Karte sowie ein schwarzer Joker, also
+ * 2 schwarze + 1 roter Joker), 2 = 108 Karten (bis 12 Spieler; 2 schwarze + 2 rote Joker).
  *
  * Kurzfassung der Regeln, wie sie hier umgesetzt sind:
- *  - 54 Karten. Jeder bekommt 3 verdeckte, 3 offene, 3 Handkarten; der Rest ist der Nachziehstapel.
+ *  - 54 Karten (bei mehr als 6 Spielern 81 oder 108, siehe oben). Jeder bekommt 3 verdeckte, 3 offene, 3 Handkarten; der Rest ist der Nachziehstapel.
  *  - Vor dem Start darf jeder genau eine Handkarte gegen eine offene Karte tauschen.
  *  - Startspieler zufällig, zunächst im Uhrzeigersinn (aufsteigende Sitze).
  *  - Legen: gleich hoch oder höher als die oberste Karte (3 < 4 < … < 10 < B < D < K < A);
@@ -1166,15 +1302,37 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
   var JB = 'JB', JR = 'JR';
   var HAND_SIZE = 3;
 
+  var DECKS = [1, 1.5, 2];
+  var MAX_PLAYERS = 12;
   function fullDeck() {
     var d = [];
     for (var s = 0; s < 4; s++) for (var r = 2; r <= 14; r++) d.push(SUITS[s] + r);
     d.push(JB, JR);
     return d;
   }
-  function isJoker(id) { return id === JB || id === JR; }
-  function rank(id) { return id === JB ? 15 : id === JR ? 16 : +id.slice(1); }
-  function suit(id) { return isJoker(id) ? 'J' : id.charAt(0); }
+  function isBlackJoker(id) { return id === JB || id === 'jb'; }
+  function isRedJoker(id) { return id === JR || id === 'jr'; }
+  function isJoker(id) { return isBlackJoker(id) || isRedJoker(id); }
+  function rank(id) { return isBlackJoker(id) ? 15 : isRedJoker(id) ? 16 : +id.slice(1); }
+  function suit(id) { return isJoker(id) ? 'J' : id.charAt(0).toUpperCase(); }
+  /* Wie viele Spieler ein Deck trägt (9 Karten pro Spieler) und welches Deck eine Runde mindestens braucht. */
+  function maxPlayers(decks) { return decks === 2 ? 12 : decks === 1.5 ? 9 : 6; }
+  function decksFor(n) { return n <= 6 ? 1 : n <= 9 ? 1.5 : 2; }
+  function buildDeck(decks, rng) {
+    var d = fullDeck(), r;
+    if (decks === 1.5) {
+      // Halbes Deck: von jedem Wert eine schwarze und eine rote Karte – so bleibt jeder Wert gleich häufig.
+      for (r = 2; r <= 14; r++) {
+        d.push((rng() < 0.5 ? 's' : 'c') + r);
+        d.push((rng() < 0.5 ? 'h' : 'd') + r);
+      }
+      d.push('jb');
+    } else if (decks === 2) {
+      for (var s = 0; s < 4; s++) for (r = 2; r <= 14; r++) d.push(SUITS[s].toLowerCase() + r);
+      d.push('jb', 'jr');
+    }
+    return d;
+  }
 
   function defaultRng() {
     var c = typeof crypto !== 'undefined' && crypto.getRandomValues ? crypto : null;
@@ -1191,14 +1349,17 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
     return a;
   }
 
-  /* players: [{name, bot}] (2–6). opts: {rng, startSeat (sonst zufällig), startBy ('loser', wenn der
-   * Verlierer der Vorrunde beginnt), holdStart (Runde beginnt erst mit startPlay())} */
+  /* players: [{name, bot}] (2–12). opts: {rng, decks (1 | 1.5 | 2; reicht das Deck nicht für alle, wird
+   * das kleinste passende genommen), startSeat (sonst zufällig), startBy ('loser', wenn der Verlierer
+   * der Vorrunde beginnt), holdStart (Runde beginnt erst mit startPlay()),
+   * mixed (nur für die Anzeige: die Plätze wurden neu gemischt)} */
   function createGame(players, opts) {
     opts = opts || {};
     var n = players.length;
-    if (!(n >= 2 && n <= 6)) throw new Error('Karma braucht 2 bis 6 Spieler');
+    if (!(n >= 2 && n <= MAX_PLAYERS)) throw new Error('Karma braucht 2 bis ' + MAX_PLAYERS + ' Spieler');
     var rng = opts.rng || defaultRng;
-    var deck = shuffle(fullDeck(), rng);
+    var decks = DECKS.indexOf(opts.decks) >= 0 && n <= maxPlayers(opts.decks) ? opts.decks : decksFor(n);
+    var deck = shuffle(buildDeck(decks, rng), rng);
     var ps = players.map(function (p) {
       return { name: String(p.name), bot: !!p.bot, hand: [], up: [], down: [], ready: false, swapped: false };
     });
@@ -1212,6 +1373,8 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
     }
     return {
       players: ps,
+      decks: decks,         // 1, 1.5 oder 2
+      mixed: !!opts.mixed,  // die Plätze wurden für diese Runde neu gemischt (nur für die Anzeige)
       holdStart: !!opts.holdStart,   // true: sind alle bereit, startet die Runde erst mit startPlay() (Host zählt herunter)
       phase: 'swap',        // 'swap' → 'play' → 'over'
       turn: -1,             // Sitz, der am Zug ist (nur in 'play')
@@ -1241,8 +1404,8 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
   /* Darf `card` auf `top` gelegt werden? */
   function canPlayOn(card, top) {
     if (!top) return true;
-    if (top === JR) return false;            // roter Joker: nur aufnehmen
-    if (top === JB) return card === JR;      // schwarzer Joker: nur der rote Joker kontert
+    if (isRedJoker(top)) return false;       // roter Joker: nur aufnehmen
+    if (isBlackJoker(top)) return isRedJoker(card);   // schwarzer Joker: nur ein roter Joker kontert (Schwarz auf Schwarz geht nicht)
     if (isJoker(card)) return true;          // Joker gehen sonst immer
     var r = rank(card), t = rank(top);
     if (r === 2 || r === 7 || r === 10) return true;   // Sonderkarten 2, 7 und 10 gehen auf alles
@@ -1280,8 +1443,8 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
   function requirement(s) {
     var top = topCard(s);
     if (!top) return { k: 'any' };
-    if (top === JR) return { k: 'jokerR' };
-    if (top === JB) return { k: 'jokerB' };
+    if (isRedJoker(top)) return { k: 'jokerR' };
+    if (isBlackJoker(top)) return { k: 'jokerB' };
     var t = rank(top);
     if (t === 7) return { k: 'seven' };
     if (t <= 3) return { k: 'any' };         // auf 2 und 3 passt jede Karte
@@ -1294,7 +1457,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
     var p = s.players[seat], z = zoneOf(p), top = topCard(s);
     var o = { zone: z, playable: [], canPickup: false, canFlip: false, forced: false };
     if (z === 'down') {
-      o.canFlip = top !== JR;
+      o.canFlip = !isRedJoker(top);
     } else {
       var cards = z === 'hand' ? p.hand : p.up.filter(Boolean);
       o.playable = cards.filter(function (c) { return canPlayOn(c, top); });
@@ -1437,7 +1600,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
   /* Karten liegen bereits nicht mehr in der Zone des Spielers. `active` = Spieler mit Karten vor dem Zug. */
   function resolvePlay(s, seat, cards, from, active, extra) {
     var p = s.players[seat];
-    var counter = topCard(s) === JB && cards[0] === JR;
+    var counter = isBlackJoker(topCard(s)) && isRedJoker(cards[0]);
     for (var i = 0; i < cards.length; i++) s.pile.push(cards[i]);
     s.freePlay = false;
     var r = rank(cards[0]), fx = [], again = false;
@@ -1594,7 +1757,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
 
     if (a.t === 'play') {
       var cards = a.cards;
-      if (!Array.isArray(cards) || !cards.length || cards.length > 4) return fail('no-cards');
+      if (!Array.isArray(cards) || !cards.length || cards.length > 8) return fail('no-cards');
       if (o.zone !== 'hand' && o.zone !== 'up') return fail('must-flip');
       // Von den offenen Tischkarten darf pro Zug nur eine gelegt werden – auch bei gleichen Werten.
       if (o.zone === 'up' && cards.length > 1) return fail('one-up');
@@ -1656,6 +1819,8 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
     if (ev && ev.t === 'flipfail' && ev.seat !== seat) ev.card = null;
     return {
       phase: s.phase,
+      decks: s.decks || 1,
+      mixed: !!s.mixed,
       allReady: s.phase === 'swap' && allReady(s),
       you: seat,
       turn: s.turn,
@@ -1775,8 +1940,9 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
   }
 
   return {
-    SUITS: SUITS, JB: JB, JR: JR, HAND_SIZE: HAND_SIZE,
-    fullDeck: fullDeck, rank: rank, suit: suit, isJoker: isJoker,
+    SUITS: SUITS, JB: JB, JR: JR, HAND_SIZE: HAND_SIZE, DECKS: DECKS, MAX_PLAYERS: MAX_PLAYERS,
+    fullDeck: fullDeck, buildDeck: buildDeck, maxPlayers: maxPlayers, decksFor: decksFor,
+    rank: rank, suit: suit, isJoker: isJoker, isRedJoker: isRedJoker, isBlackJoker: isBlackJoker,
     createGame: createGame, applyAction: applyAction, viewFor: viewFor,
     options: options, requirement: requirement, canPlayOn: canPlayOn,
     topCard: topCard, zoneOf: zoneOf, nextSeat: nextSeat, activeCount: activeCount,
@@ -1814,12 +1980,16 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
   var ID_ALPHA = 'abcdefghijklmnopqrstuvwxyz0123456789';
   var STORE_KEY = 'karma.session.v1';
   var MAX_AGE = 12 * 3600 * 1000;
-  var BOT_NAMES = ['Bot Ada', 'Bot Ben', 'Bot Cleo', 'Bot Dino', 'Bot Elli'];
+  var BOT_NAMES = ['Bot Ada', 'Bot Ben', 'Bot Cleo', 'Bot Dino', 'Bot Elli', 'Bot Finn', 'Bot Gina', 'Bot Hugo', 'Bot Ida', 'Bot Jo', 'Bot Kim'];
+  var MAX_PLAYERS = 12;
+  var TURN_SECS = [20, 30, 50];       // Zugzeit, die der Host wählen kann
+  var DECK_OPTS = ['auto', 1, 1.5, 2];
   /* Zeiten in ms – in Tests überschreibbar */
   var T = { tick: 400, ping: 3000, hostDead: 10000, playerDead: 10000, resend: 1200, hello: 1500, joinTimeout: 9000, bot: 900, sweep: 2000,
     turn: 50000,    // Zeit pro Zug; danach zieht der Host automatisch (0 = kein Zeitlimit)
     swap: 60000,    // Zeit für die Tauschphase; danach beginnt die Runde, auch wenn nicht alle bereit sind (0 = kein Limit)
-    start: 3000 };  // sind alle bereit: so lange kann man „Bereit“ noch zurücknehmen (0 = Runde beginnt sofort)
+    start: 3000,    // sind alle bereit: so lange kann man „Bereit“ noch zurücknehmen (0 = Runde beginnt sofort)
+    mix: true };    // Plätze nach jeder Runde mischen, solange der Host nichts anderes einstellt
 
   function randId(len, alpha) {
     alpha = alpha || ID_ALPHA;
@@ -1889,15 +2059,51 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
     return t;
   };
 
-  var DESIGNS = { table: ['normal', 'stahl', 'patio', 'nacht'], cards: ['normal', 'stift', 'filz', 'druck'] };
+  /* Der jeweils erste Eintrag ist die Vorgabe. */
+  var DESIGNS = { table: ['stahl', 'hof', 'nacht', 'boss'], cards: ['stift', 'schwarz', 'tattoo', 'hood'] };
   /* Was vom Host kommt, wird nur in bekannter Form übernommen. */
   function cleanRoom(r) {
     if (!r || typeof r !== 'object') return null;
     return {
-      table: DESIGNS.table.indexOf(r.table) >= 0 ? r.table : 'normal',
-      cards: DESIGNS.cards.indexOf(r.cards) >= 0 ? r.cards : 'normal',
-      wins: Array.isArray(r.wins) ? r.wins.slice(0, 6).map(function (n) { return typeof n === 'number' && n > 0 ? Math.min(999, n | 0) : 0; }) : []
+      table: DESIGNS.table.indexOf(r.table) >= 0 ? r.table : DESIGNS.table[0],
+      cards: DESIGNS.cards.indexOf(r.cards) >= 0 ? r.cards : DESIGNS.cards[0],
+      wins: Array.isArray(r.wins) ? r.wins.slice(0, MAX_PLAYERS).map(function (n) { return typeof n === 'number' && n > 0 ? Math.min(999, n | 0) : 0; }) : [],
+      decks: DECK_OPTS.indexOf(r.decks) >= 0 ? r.decks : 'auto',
+      decksNow: r.decksNow === 1.5 || r.decksNow === 2 ? r.decksNow : 1,
+      mix: r.mix !== false,
+      turn: typeof r.turn === 'number' && r.turn >= 0 && r.turn <= 600 ? r.turn : 50
     };
+  }
+  /* Neue Sitzordnung für die nächste Runde. ids = bisherige Reihenfolge im Kreis. Gesucht ist eine
+   * Reihenfolge, in der möglichst niemand denselben Nachbarn behält: derselbe Hintermann zählt doppelt,
+   * derselbe Nachbar auf der anderen Seite einfach. Zu zweit gibt es nichts zu mischen, zu dritt nur die
+   * umgekehrte Richtung, ab fünf geht es meist ganz ohne alte Nachbarn. Sitz 0 bleibt, wo er ist (der Kreis
+   * wird nur gedreht) – am Tisch zählt allein, wer neben wem sitzt. */
+  function mixOrder(ids, rand) {
+    var n = ids.length, i, k;
+    if (n < 3) return ids.slice();
+    rand = rand || Math.random;
+    var next = {}, prev = {};
+    for (i = 0; i < n; i++) { next[ids[i]] = ids[(i + 1) % n]; prev[ids[i]] = ids[(i + n - 1) % n]; }
+    function score(a) {
+      var sc = 0;
+      for (var j = 0; j < n; j++) {
+        var nx = a[(j + 1) % n];
+        if (next[a[j]] === nx) sc += 2; else if (prev[a[j]] === nx) sc += 1;
+      }
+      return sc;
+    }
+    var best = null, bestSc = Infinity;
+    for (k = 0; k < 400 && bestSc > 0; k++) {
+      var a = ids.slice(1);
+      for (i = a.length - 1; i > 0; i--) {
+        var r = rand(), j = r >= 0 && r < 1 ? Math.floor(r * (i + 1)) : 0, t = a[i]; a[i] = a[j]; a[j] = t;
+      }
+      a.unshift(ids[0]);
+      var sc = score(a);
+      if (sc < bestSc) { best = a; bestSc = sc; }
+    }
+    return best;
   }
   function idleSnap() {
     return { stage: 'idle', error: null, code: null, isHost: false, seat: -1, conn: 'offline', hostOnline: false, pending: 0, lobby: null, view: null, room: null };
@@ -1915,7 +2121,9 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
    *   pending: Anzahl noch unbestätigter eigener Aktionen
    *   lobby: { starter, players: [{name, bot, auto, online, left}] }   Sitzreihenfolge = Uhrzeigersinn; starter = Sitz, der die nächste Runde beginnt (Verlierer), sonst -1
    *   view: KarmaEngine.viewFor(...) oder null (in der Lobby)
-   *   room: { table, cards, wins: [Siege je Sitz] }   Design (stellt der Host ein, gilt für alle) und Strichliste
+   *   room: { table, cards, wins: [Siege je Sitz],    Design (stellt der Host ein, gilt für alle) und Strichliste
+   *           decks: 'auto'|1|1.5|2 (Wahl des Hosts), decksNow: 1|1.5|2 (was gerade gilt bzw. bei dieser Spielerzahl gelten würde),
+   *           mix: bool (Plätze nach jeder Runde mischen), turn: Sekunden pro Zug (0 = kein Limit) }
    * }
    */
   function createSession(opts) {
@@ -2026,11 +2234,27 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
     /* Design und Strichliste: gehören zum Raum, nicht zur Runde. */
     function roomInfo() {
       var d = H.design || {};
+      var o = H.opts || {};
       return {
-        table: DESIGNS.table.indexOf(d.table) >= 0 ? d.table : 'normal',
-        cards: DESIGNS.cards.indexOf(d.cards) >= 0 ? d.cards : 'normal',
-        wins: H.players.map(function (p) { return p.wins | 0; })
+        table: DESIGNS.table.indexOf(d.table) >= 0 ? d.table : DESIGNS.table[0],
+        cards: DESIGNS.cards.indexOf(d.cards) >= 0 ? d.cards : DESIGNS.cards[0],
+        wins: H.players.map(function (p) { return p.wins | 0; }),
+        decks: DECK_OPTS.indexOf(o.decks) >= 0 ? o.decks : 'auto',
+        decksNow: H.game ? (H.game.decks || 1) : decksNow(H.players.length),
+        mix: mixOn(),
+        turn: Math.round(turnMs() / 1000)
       };
+    }
+    function mixOn() { var m = H.opts && H.opts.mix; return m == null ? !!T.mix : !!m; }
+    /* Das Deck für n Spieler: die Wahl des Hosts, wenn sie reicht – sonst das kleinste, das reicht. */
+    function decksNow(n) {
+      var need = E.decksFor(Math.max(2, n)), want = H.opts && H.opts.decks;
+      return typeof want === 'number' && want >= need ? want : need;
+    }
+    /* Zeit pro Zug: stellt der Host ein (20/30/50 s); ohne Wahl gilt T.turn. T.turn = 0 schaltet das Limit ganz ab. */
+    function turnMs() {
+      var sec = H && H.opts && H.opts.turn;
+      return T.turn > 0 && TURN_SECS.indexOf(sec) >= 0 ? sec * 1000 : T.turn;
     }
     /* Ein Strich für den Sieger, sobald er feststeht – einmal pro Runde. Sitze und H.players decken sich während einer Partie. */
     function countWin() {
@@ -2071,9 +2295,9 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
         } else {
           next = { key: base, base: base, swapEnd: swapEnd, end: swapEnd, total: T.swap, kind: 'swap' };
         }
-      } else if (g && g.phase === 'play' && T.turn > 0) {
+      } else if (g && g.phase === 'play' && turnMs() > 0) {
         var key = 'play:' + (H.round || 0) + ':' + g.seq;
-        next = clock && clock.key === key ? clock : { key: key, end: now + T.turn, total: T.turn, kind: 'turn' };
+        next = clock && clock.key === key ? clock : { key: key, end: now + turnMs(), total: turnMs(), kind: 'turn' };
       }
       clock = next;
       if (clockTimer) { clearTimeout(clockTimer); clockTimer = null; }
@@ -2142,12 +2366,25 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
       H.loserPid = null;
       if (g && g.phase === 'over' && typeof g.loser === 'number' && H.players[g.loser]) H.loserPid = H.players[g.loser].pid;
     }
+    /* Nach jeder gespielten Runde werden die Plätze neu gemischt (abschaltbar). Die Strichliste hängt am
+     * Spieler, nicht am Platz. true, wenn sich die Reihenfolge geändert hat. */
+    function mixSeats() {
+      if (!(H.round > 0) || !mixOn() || H.players.length < 3) return false;
+      var by = {}, ids = H.players.map(function (p, i) { by[i] = p; return i; });
+      var order = mixOrder(ids, api.random);
+      var same = order.every(function (x, i) { return x === i; });
+      if (!same) H.players = order.map(function (i) { return by[i]; });
+      return !same;
+    }
     function newGame() {
-      var ps = H.players.filter(function (q) { return !q.left; }), opts = {};
+      dropLeft();
+      var mixed = mixSeats();
+      var ps = H.players, opts = { decks: decksNow(H.players.length) };
       for (var i = ps.length - 1; i >= 0; i--) if (H.loserPid && ps[i].pid === H.loserPid) { opts.startSeat = i; opts.startBy = 'loser'; }
       H.loserPid = null;
       H.round = (H.round || 0) + 1;   // Aktionen tragen die Rundennummer: Nachzügler aus einer alten Runde zählen nicht
       if (T.start > 0) opts.holdStart = true;   // alle bereit → kurzer Countdown, erst dann beginnt die Runde (siehe armClock)
+      if (mixed) opts.mixed = true;
       return E.createGame(ps.map(function (q) { return { name: q.name, bot: !!q.bot }; }), opts);
     }
     function removePlayer(i) { H.players.splice(i, 1); }
@@ -2165,7 +2402,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
         if (H.kicked && H.kicked.indexOf(m.pid) >= 0) return deny(m.pid, 'kicked');
         if (m.t !== 'hello' || m.pid === 'local' || m.pid.indexOf('bot-') === 0) return deny(m.pid, 'unknown');
         if (H.game) return deny(m.pid, 'running');
-        if (H.players.length >= 6) return deny(m.pid, 'full');
+        if (H.players.length >= MAX_PLAYERS) return deny(m.pid, 'full');
         H.players.push({ pid: m.pid, name: cleanName(m.name), online: true, seen: now, ack: 0 });
         return bump();
       }
@@ -2247,18 +2484,20 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
 
     /* Host-Befehle:
      *  {op:'addBot'}  {op:'kick', seat}            nur in der Lobby
-     *  {op:'start'}                                Partie starten (2–6 Spieler; es beginnt der Verlierer der letzten Runde, sonst wird ausgelost)
+     *  {op:'start'}                                Partie starten (2–12 Spieler; es beginnt der Verlierer der letzten Runde, sonst wird ausgelost)
      *  {op:'rematch'}                              neue Runde, sobald es einen Sieger gibt oder die Partie vorbei ist
      *  {op:'toLobby'}                              Partie abbrechen / zurück in die Lobby
      *  {op:'auto', seat, on}                       Bot übernimmt für einen abwesenden Spieler
      *  {op:'design', table, cards}                 Tisch- und Karten-Design für alle (jederzeit; fehlt ein Wert, bleibt er)
+     *  {op:'opts', decks, mix, turn}               Spiel-Einstellungen (jederzeit; fehlt ein Wert, bleibt er): decks 'auto'|1|1.5|2 und
+     *                                              mix (Plätze mischen) gelten ab der nächsten Runde, turn (20|30|50 s) ab dem nächsten Zug
      */
     session.lobby = function (op) {
       if (role !== 'host' || !H || !op) return false;
       var seat = op.seat | 0, p = H.players[seat];
       switch (op.op) {
         case 'addBot':
-          if (H.game || H.players.length >= 6) return false;
+          if (H.game || H.players.length >= MAX_PLAYERS) return false;
           H.players.push({ pid: 'bot-' + randId(6), name: nextBotName(), bot: true });
           break;
         case 'kick':
@@ -2302,6 +2541,13 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
           if (DESIGNS.table.indexOf(nt) < 0 || DESIGNS.cards.indexOf(nc) < 0) return false;
           if (nt === cd.table && nc === cd.cards) return true;
           H.design = { table: nt, cards: nc };
+          break;
+        case 'opts':
+          var o = H.opts || {}, no = { decks: DECK_OPTS.indexOf(o.decks) >= 0 ? o.decks : 'auto', mix: o.mix, turn: o.turn };
+          if (op.decks != null) { if (DECK_OPTS.indexOf(op.decks) < 0) return false; no.decks = op.decks; }
+          if (op.mix != null) no.mix = !!op.mix;
+          if (op.turn != null) { if (TURN_SECS.indexOf(op.turn) < 0) return false; no.turn = op.turn; }
+          H.opts = no;
           break;
         default:
           return false;
@@ -2464,11 +2710,14 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
     return session;
   }
 
-  return {
+  var api = {
     createSession: createSession, transports: transports, memBus: memBus, T: T,
     normalizeCode: normalizeCode, cleanName: cleanName, randId: randId,
-    CODE_ALPHA: CODE_ALPHA, STORE_KEY: STORE_KEY, DESIGNS: DESIGNS
+    CODE_ALPHA: CODE_ALPHA, STORE_KEY: STORE_KEY, DESIGNS: DESIGNS,
+    MAX_PLAYERS: MAX_PLAYERS, TURN_SECS: TURN_SECS, DECK_OPTS: DECK_OPTS,
+    mixOrder: mixOrder, random: Math.random   // random: in Tests überschreibbar
   };
+  return api;
 });
 
 </script>
@@ -3030,6 +3279,8 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
 
   var RANK_LABEL = { 11: 'B', 12: 'D', 13: 'K', 14: 'A' };
   var RANK_NAME = { 11: 'Bube', 12: 'Dame', 13: 'König', 14: 'Ass' };
+  /* Bildkarten: Bube = Läufer, Dame = Queen, König = Boss, Ass = Emblem; schwarzer Joker = Dealer, roter Joker = Wärter. */
+  var FIG_OF = { 11: 'j', 12: 'q', 13: 'k', 14: 'a' };
   var SUIT_NAME = { S: 'Pik', H: 'Herz', D: 'Karo', C: 'Kreuz' };
   var SUIT_ORDER = { S: 0, H: 1, C: 2, D: 3, J: 4 };
   function rankName(r) { return RANK_NAME[r] || String(r); }
@@ -3042,13 +3293,14 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
     var d = el('div', 'card' + (extra ? ' ' + extra : ''));
     d.setAttribute('data-card', id);
     if (E.isJoker(id)) {
-      d.className += ' jk' + (id === E.JR ? ' red' : '');
-      d.innerHTML = '<div class="ci">' + suitSvg('J') + '<span class="jt">JOKER</span></div><div class="big">' + suitSvg('J') + '</div>';
-      d.setAttribute('aria-label', id === E.JR ? 'Roter Joker' : 'Schwarzer Joker');
+      d.className += ' jk fc ' + (E.isRedJoker(id) ? 'red f-jr' : 'f-jb');
+      d.innerHTML = '<div class="fig"></div><div class="ci">' + suitSvg('J') + '<span class="jt">JOKER</span></div>';
+      d.setAttribute('aria-label', E.isRedJoker(id) ? 'Roter Joker' : 'Schwarzer Joker');
     } else {
       var s = E.suit(id), r = E.rank(id);
       if (s === 'H' || s === 'D') d.className += ' red';
-      d.innerHTML = '<div class="ci"><span class="rk' + (r === 10 ? ' ten' : '') + '">' + (RANK_LABEL[r] || r) + '</span>' + suitSvg(s) + '</div><div class="big">' + suitSvg(s) + '</div>';
+      if (FIG_OF[r]) d.className += ' fc f-' + FIG_OF[r];
+      d.innerHTML = (FIG_OF[r] ? '<div class="fig"></div>' : '') + '<div class="ci"><span class="rk' + (r === 10 ? ' ten' : '') + '">' + (RANK_LABEL[r] || r) + '</span>' + suitSvg(s) + '</div>' + (FIG_OF[r] ? '' : '<div class="big">' + suitSvg(s) + '</div>');
       d.setAttribute('aria-label', SUIT_NAME[s] + ' ' + rankName(r));
     }
     return d;
@@ -3073,12 +3325,19 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
   var NAME_KEY = 'karma.name';
 
   /* ---------- Töne: im Code erzeugt (Web Audio), keine Dateien ----------
-   * Lautstärke und Stumm-Schalter gelten pro Gerät (karma.vol, karma.mute). Safari gibt erst nach einer
-   * Berührung Ton aus – der Audio-Kontext entsteht deshalb beim ersten Antippen. */
+   * Alles gilt pro Gerät: Gesamtlautstärke und Stumm-Schalter (karma.vol, karma.mute), dazu eigene Regler für
+   * den „Du bist dran“-Ton (karma.vol.turn) und die Kartentöne (karma.vol.cards), die Wahl des Klangs
+   * (karma.chime) und das Ticken der letzten Sekunden (karma.tick). Safari gibt erst nach einer Berührung
+   * Ton aus – der Audio-Kontext entsteht deshalb beim ersten Antippen. */
+  var CHIME_NAME = { glocke: 'Glocke', holz: 'Holz', klopfen: 'Klopfen', gong: 'Gong', aus: 'Aus' };
   var Snd = (function () {
-    var AC = window.AudioContext || window.webkitAudioContext, ctx = null, out = null, nbuf = null;
-    var vol = parseFloat(sGet(LS, 'karma.vol')), mute = sGet(LS, 'karma.mute') === '1';
-    if (!(vol >= 0 && vol <= 1)) vol = 0.7;
+    var AC = window.AudioContext || window.webkitAudioContext, ctx = null, out = null, nbuf = null, bus = {}, dst = null;
+    function num(key, def) { var v = parseFloat(sGet(LS, key)); return v >= 0 && v <= 1 ? v : def; }
+    var vol = num('karma.vol', 0.7), mute = sGet(LS, 'karma.mute') === '1';
+    var gv = { turn: num('karma.vol.turn', 0.8), cards: num('karma.vol.cards', 0.7) };
+    var chime = sGet(LS, 'karma.chime'), tickOn = sGet(LS, 'karma.tick') !== '0';
+    if (!CHIME_NAME[chime]) chime = 'glocke';
+    var GROUP = { place: 'cards', draw: 'cards', deal: 'cards', flip: 'cards', pickup: 'cards', burn: 'cards', glocke: 'turn', holz: 'turn', klopfen: 'turn', gong: 'turn' };
     function level() { return mute ? 0 : vol * vol; }   // quadratisch: der Regler wirkt so gleichmäßiger
     function unlock() {
       if (!AC) return;
@@ -3088,6 +3347,11 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
           out = ctx.createGain();
           out.gain.value = level();
           out.connect(ctx.destination);
+          ['turn', 'cards'].forEach(function (g) {
+            bus[g] = ctx.createGain();
+            bus[g].gain.value = gv[g] * gv[g];
+            bus[g].connect(out);
+          });
         }
         if (ctx.state !== 'running' && ctx.resume) ctx.resume();
       } catch (e) { ctx = null; }
@@ -3112,7 +3376,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
       g.gain.setValueAtTime(0.0001, t);
       g.gain.linearRampToValueAtTime(peak, t + (attack || 0.005));
       g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      src.connect(flt); flt.connect(g); g.connect(out);
+      src.connect(flt); flt.connect(g); g.connect(dst);
       src.start(t, Math.random() * 0.5);
       src.stop(t + dur + 0.03);
     }
@@ -3124,13 +3388,20 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
       g.gain.setValueAtTime(0.0001, t);
       g.gain.linearRampToValueAtTime(peak, t + 0.008);
       g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      o.connect(g); g.connect(out);
+      o.connect(g); g.connect(dst);
       o.start(t);
       o.stop(t + dur + 0.03);
     }
     function notes(t, list, gap, last) {
       list.forEach(function (f, i) { tone(t + i * gap, i === list.length - 1 ? last : gap * 1.5, 'triangle', f, f, 0.28); });
     }
+    /* weicher Glockenton: Grundton mit zwei leisen, schneller verklingenden Obertönen */
+    function bell(t, f, dur, peak) {
+      tone(t, dur, 'sine', f, f, peak);
+      tone(t, dur * 0.55, 'sine', f * 2.01, f * 2.01, peak * 0.22);
+      tone(t, dur * 0.3, 'sine', f * 3.02, f * 3.02, peak * 0.08);
+    }
+    function knock(t, peak) { tone(t, 0.11, 'sine', 210, 95, peak); hiss(t, 0.05, 'lowpass', 1400, 500, 0.7, peak * 0.5); }
     var S = {
       place: function (t) { hiss(t, 0.07, 'bandpass', 2600, 900, 0.8, 0.55); tone(t, 0.09, 'sine', 170, 70, 0.5); },            // Karte landet auf dem Stapel
       draw: function (t) { hiss(t, 0.13, 'bandpass', 1400, 4200, 1.2, 0.3, 0.05); },                                          // Karte gleitet vom Nachziehstapel
@@ -3146,13 +3417,23 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
       timeout: function (t) { tone(t, 0.16, 'sawtooth', 220, 200, 0.2); tone(t + 0.2, 0.3, 'sawtooth', 165, 140, 0.2); },     // Zeit abgelaufen
       win: function (t) { notes(t, [523, 659, 784, 1047], 0.11, 0.5); },                                                       // der Erste ist fertig
       over: function (t) { notes(t, [392, 523, 659], 0.14, 0.55); tone(t + 0.28, 0.6, 'sine', 196, 196, 0.18); },              // Runde vorbei
-      lose: function (t) { notes(t, [392, 330, 262], 0.17, 0.6); }                                                             // Runde vorbei, selbst verloren
+      lose: function (t) { notes(t, [392, 330, 262], 0.17, 0.6); },                                                            // Runde vorbei, selbst verloren
+      /* „Du bist dran“ – vier Klänge zur Wahl */
+      glocke: function (t) { bell(t, 880, 0.9, 0.4); bell(t + 0.17, 1318.5, 1.2, 0.36); },
+      holz: function (t) { [523.25, 659.25, 783.99].forEach(function (f, i) { tone(t + i * 0.1, 0.28, 'triangle', f, f, 0.42); tone(t + i * 0.1, 0.07, 'sine', f * 4, f * 4, 0.1); }); },
+      klopfen: function (t) { knock(t, 0.85); knock(t + 0.16, 0.7); knock(t + 0.42, 0.9); },
+      gong: function (t) { bell(t, 196, 1.6, 0.5); bell(t + 0.02, 293.66, 1.3, 0.3); tone(t, 1.1, 'sine', 98, 98, 0.3); }
     };
+    function play(name, delayMs) {
+      if (!ctx || mute || ctx.state !== 'running' || doc.visibilityState === 'hidden' || !S[name]) return;
+      if (name === 'tick' && !tickOn) return;
+      dst = bus[GROUP[name]] || out;
+      try { S[name](ctx.currentTime + (delayMs > 0 ? delayMs / 1000 : 0) + 0.01); } catch (e) {}
+    }
     return {
-      play: function (name, delayMs) {
-        if (!ctx || mute || ctx.state !== 'running' || doc.visibilityState === 'hidden' || !S[name]) return;
-        try { S[name](ctx.currentTime + (delayMs > 0 ? delayMs / 1000 : 0) + 0.01); } catch (e) {}
-      },
+      play: play,
+      /* „Du bist dran“ mit dem gewählten Klang (oder gar nicht, wenn „Aus“ gewählt ist) */
+      turn: function () { if (chime !== 'aus') play(chime); },
       vol: function () { return vol; },
       muted: function () { return mute; },
       setVol: function (v) {
@@ -3164,30 +3445,92 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
         mute = !!m;
         sSet(LS, 'karma.mute', mute ? '1' : '0');
         if (out) out.gain.value = level();
+      },
+      groupVol: function (g) { return gv[g]; },
+      setGroupVol: function (g, v) {
+        if (!(g in gv)) return;
+        gv[g] = Math.max(0, Math.min(1, +v || 0));
+        sSet(LS, 'karma.vol.' + g, String(gv[g]));
+        if (bus[g]) bus[g].gain.value = gv[g] * gv[g];
+      },
+      chime: function () { return chime; },
+      setChime: function (c) { if (CHIME_NAME[c]) { chime = c; sSet(LS, 'karma.chime', c); } },
+      tick: function () { return tickOn; },
+      setTick: function (on) { tickOn = !!on; sSet(LS, 'karma.tick', tickOn ? '1' : '0'); }
+    };
+  })();
+
+  /* ---------- Vibration (pro Gerät: karma.hap = 0 aus, 1 leicht, 2 stark) ----------
+   * Android: navigator.vibrate. Das iPhone kennt das im Browser nicht; dort gibt ein unsichtbarer Schalter
+   * (<input type="checkbox" switch>) beim Umlegen einen kurzen Tipp – das klappt ab iOS 18 und im Wesentlichen
+   * nur als direkte Folge einer Berührung. Wo beides fehlt, passiert einfach nichts. */
+  var Hap = (function () {
+    var lvl = parseInt(sGet(LS, 'karma.hap'), 10), last = 0;
+    if (!(lvl >= 0 && lvl <= 2)) lvl = 1;
+    var canVib = typeof navigator.vibrate === 'function';
+    var ios = /iP(hone|ad|od)/.test(navigator.userAgent || '') || (/Mac/.test(navigator.platform || '') && navigator.maxTouchPoints > 1);
+    var PAT = { tick: [8], tap: [14], turn: [45, 70, 45], bad: [18, 45, 18], win: [30, 60, 30, 60, 90] };
+    var IOS_N = { tick: 1, tap: 1, turn: 2, bad: 2, win: 3 };
+    function iosTick() {
+      try {
+        var lab = doc.createElement('label'), inp = doc.createElement('input');
+        lab.setAttribute('aria-hidden', 'true');
+        lab.style.display = 'none';
+        inp.type = 'checkbox';
+        inp.setAttribute('switch', '');
+        lab.appendChild(inp);
+        doc.head.appendChild(lab);
+        lab.click();
+        doc.head.removeChild(lab);
+      } catch (e) {}
+    }
+    function fire(kind, force) {
+      if ((!lvl && !force) || !PAT[kind]) return;
+      var now = Date.now();
+      if (kind === 'tick' && now - last < 45) return;
+      last = now;
+      if (canVib) {
+        var k = lvl === 2 ? 2.4 : 1;
+        try { navigator.vibrate(PAT[kind].map(function (ms, i) { return i % 2 ? ms : Math.round(ms * k); })); } catch (e) {}
+      } else if (ios) {
+        for (var i = 0; i < IOS_N[kind]; i++) { if (i) setTimeout(iosTick, i * 120); else iosTick(); }
       }
+    }
+    return {
+      fire: fire,
+      level: function () { return lvl; },
+      setLevel: function (n) { lvl = n === 2 ? 2 : n === 1 ? 1 : 0; sSet(LS, 'karma.hap', String(lvl)); },
+      supported: function () { return canVib || ios; },
+      ios: function () { return ios && !canVib; }
     };
   })();
 
   /* ---------- Design: Tisch und Karten ----------
    * Der Host stellt beides ein, es gilt für alle im Raum (kommt mit jedem Stand als snap.room).
    * Das zuletzt gesehene Design merkt sich das Gerät, damit auch die Startseite so aussieht. */
-  var TABLE_NAME = { normal: 'Normal', stahl: 'Stahl', patio: 'Patio', nacht: 'Nacht' };
-  var CARDS_NAME = { normal: 'Normal', stift: 'Stift', filz: 'Filz', druck: 'Druck' };
-  var THEME_COLOR = { normal: '#0a2c20', stahl: '#2b3035', patio: '#4a3422', nacht: '#161b2a' };
+  var TABLE_NAME = { stahl: 'Stahl', hof: 'Hof', nacht: 'Nacht', boss: 'Boss' };
+  var CARDS_NAME = { stift: 'Stift', schwarz: 'Schwarz', tattoo: 'Tattoo', hood: 'Hood' };
+  var THEME_COLOR = { stahl: '#1d2226', hof: '#5a4630', nacht: '#070a12', boss: '#2a110d' };
+  /* Bilder liegen als eigene Dateien im Ordner img/ neben der Seite: je Tisch eines, je Kartensatz sechs Figuren und die Rückseite. */
+  var FIGS = ['k', 'q', 'j', 'a', 'jb', 'jr', 'back'];
   var design = { table: '', cards: '' };
   function applyDesign(table, cards) {
-    if (!TABLE_NAME[table]) table = 'normal';
-    if (!CARDS_NAME[cards]) cards = 'normal';
+    if (!TABLE_NAME[table]) table = N.DESIGNS.table[0];
+    if (!CARDS_NAME[cards]) cards = N.DESIGNS.cards[0];
     if (table === design.table && cards === design.cards) return;
-    design.table = table; design.cards = cards;
     var root = doc.documentElement, meta = doc.querySelector('meta[name="theme-color"]');
+    if (table !== design.table) root.style.setProperty('--tbl', 'url("img/t-' + table + '.jpg")');
+    if (cards !== design.cards) FIGS.forEach(function (k) {
+      var src = 'img/c-' + cards + '-' + k + '.jpg';
+      root.style.setProperty('--fig-' + k, 'url("' + src + '")');
+      try { new Image().src = src; } catch (e) { /* nur Vorladen */ }
+    });
+    design.table = table; design.cards = cards;
     root.setAttribute('data-table', table);
     root.setAttribute('data-cards', cards);
-    root.classList.toggle('prison', table !== 'normal');
     if (meta) meta.setAttribute('content', THEME_COLOR[table]);
     sSet(LS, 'karma.design', table + '|' + cards);
   }
-  function prison() { return design.table !== 'normal'; }
   (function () { var d = (sGet(LS, 'karma.design') || '').split('|'); applyDesign(d[0], d[1]); })();
   /* Strichliste: je fünf Siege ein Bündel (vier Striche und ein Querstrich). Zu sehen nur in den Gefängnis-Designs. */
   var TALLY_SVG = ' fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="';
@@ -3239,6 +3582,10 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
   var dealAt = 0, DEAL_GAP = 80;  // Rundenstart: wann das Austeilen begonnen hat
   /* Spielhilfe (pro Gerät): Hinweis am Stapel, welche Karten passen, und unpassende Karten abgedunkelt. */
   var help = sGet(LS, 'karma.help') !== '0';
+  /* Randleuchten, wenn man drankommt (pro Gerät abschaltbar). */
+  var glow = sGet(LS, 'karma.glow') !== '0';
+  var turnOpen = false;           // „Du bist dran“ wurde für den laufenden eigenen Zug schon gemeldet
+  var tipShown = false;           // Hinweis „Handy drehen“ kam in dieser Sitzung schon
   var press = null, drag = null, dragDone = null;
   var cwCache = 0;
   var hashOwned = false;
@@ -3299,6 +3646,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
     openSheetId = id;
     $(id).classList.add('open');
     if (id === 'sheetMenu') renderMenu();
+    if (id === 'sheetSet') renderSettings();
   }
   function closeSheet() {
     if (openSheetId) $(openSheetId).classList.remove('open');
@@ -3481,7 +3829,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
     syncJoinUi();
   }
   var ERR_TEXT = {
-    full: ['Raum ist voll', 'In diesem Raum sitzen schon 6 Spieler.'],
+    full: ['Raum ist voll', 'In diesem Raum sitzen schon 12 Spieler.'],
     running: ['Spiel läuft bereits', 'Du kannst dazukommen, sobald der Host wieder in der Lobby ist.'],
     kicked: ['Du wurdest entfernt', 'Der Host hat dich aus dem Raum genommen.'],
     closed: ['Raum geschlossen', 'Der Host hat den Raum beendet.'],
@@ -3540,7 +3888,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
     var s = cur, lob = s.lobby;
     if (!lob) return;
     $('lobbyCode').textContent = s.code || '';
-    $('codeLabel').textContent = prison() ? 'Häftlingsnummer (Raumcode)' : 'Raumcode';
+    $('codeLabel').textContent = 'Häftlingsnummer (Raumcode)';
     var list = $('lobbyList'), n = lob.players.length;
     clear(list);
     /* Der Verlierer der letzten Runde beginnt die nächste; sonst wird ausgelost. */
@@ -3566,9 +3914,64 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
     else hint = who;
     $('lobbyHint').textContent = hint;
     $('btnShare').hidden = soloOnly;
-    $('btnAddBot').disabled = n >= 6;
+    renderRoomOpts($('lobbyOpts'));
+    $('btnAddBot').disabled = n >= N.MAX_PLAYERS;
     $('btnStart').disabled = n < 2;
     $('btnStart').textContent = n < 2 ? 'Mindestens 2 Spieler' : 'Spiel starten (' + n + ' Spieler)';
+  }
+
+  /* ---------- Spiel-Einstellungen des Hosts: Deck, Zugzeit, Plätze mischen ----------
+   * Der Host sieht Schalter, alle anderen eine Zeile mit dem, was gilt. Steht in der Lobby und im Menü. */
+  var DECK_LABEL = { auto: 'Auto', 1: '1', 1.5: '1,5', 2: '2' };
+  var DECK_INFO = { 1: '54 Karten, 2 Joker', 1.5: '81 Karten, 3 Joker (2 schwarz, 1 rot)', 2: '108 Karten, 4 Joker (2 schwarz, 2 rot)' };
+  function deckWord(d) { return d === 1 ? '1 Deck' : DECK_LABEL[d] + ' Decks'; }
+  function segRow(label, attr, items, current) {
+    var row = el('div', 'set-row'), seg = el('div', 'seg n' + items.length);
+    row.appendChild(el('span', null, label));
+    seg.setAttribute('role', 'group');
+    seg.setAttribute('aria-label', label);
+    items.forEach(function (it) {
+      var b = el('button', null, it[1]);
+      b.setAttribute(attr, String(it[0]));
+      b.setAttribute('aria-pressed', it[0] === current ? 'true' : 'false');
+      seg.appendChild(b);
+    });
+    row.appendChild(seg);
+    return row;
+  }
+  function renderRoomOpts(box) {
+    var s = cur, r = s && s.room;
+    clear(box);
+    box.hidden = !r;
+    if (!r) return;
+    var n = s.lobby ? s.lobby.players.filter(function (p) { return !p.left; }).length : 0;
+    var running = s.stage === 'game';
+    var now = deckWord(r.decksNow) + ' · ' + DECK_INFO[r.decksNow];
+    if (!s.isHost) {
+      box.appendChild(el('p', 'set-note', (running ? 'Diese Runde: ' : 'Gespielt wird mit: ') + now + '.'));
+      box.appendChild(el('p', 'set-note', (r.turn > 0 ? r.turn + ' Sekunden pro Zug. ' : 'Kein Zeitlimit. ') +
+        (r.mix ? 'Die Plätze werden nach jeder Runde neu gemischt.' : 'Die Plätze bleiben, wie sie sind.') + ' Das stellt der Host ein.'));
+      return;
+    }
+    box.appendChild(segRow('Decks', 'data-decks', [['auto', 'Auto'], [1, '1'], [1.5, '1,5'], [2, '2']], r.decks));
+    var note = (running ? 'Diese Runde: ' : 'Jetzt: ') + now + '.';
+    if (!running && typeof r.decks === 'number' && r.decks < r.decksNow) note += ' Für ' + n + ' Spieler reicht ' + deckWord(r.decks) + ' nicht.';
+    else if (running && r.decks !== 'auto' && r.decks !== r.decksNow) note += ' Deine Wahl gilt ab der nächsten Runde.';
+    else if (r.decks === 'auto') note += ' Auto: bis 6 Spieler 1 Deck, bis 9 Spieler 1,5, darüber 2.';
+    box.appendChild(el('p', 'set-note', note));
+    if (r.turn > 0) box.appendChild(segRow('Zugzeit', 'data-turn', N.TURN_SECS.map(function (t) { return [t, t + ' s']; }), r.turn));
+    box.appendChild(segRow('Plätze', 'data-mix', [[1, 'Mischen'], [0, 'Fest']], r.mix ? 1 : 0));
+  }
+  function pickRoomOpt(e) {
+    var b = e.target && e.target.closest ? e.target.closest('button') : null;
+    if (!b || !cur || !cur.isHost) return;
+    var op = { op: 'opts' };
+    if (b.hasAttribute('data-decks')) { var d = b.getAttribute('data-decks'); op.decks = d === 'auto' ? 'auto' : parseFloat(d); }
+    else if (b.hasAttribute('data-turn')) op.turn = parseInt(b.getAttribute('data-turn'), 10);
+    else if (b.hasAttribute('data-mix')) op.mix = b.getAttribute('data-mix') === '1';
+    else return;
+    Hap.fire('tick');
+    session.lobby(op);
   }
 
   /* ---------- Tauschphase ---------- */
@@ -3630,7 +4033,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
       c.appendChild(el('span', null, i === v.you ? 'Du' : q.name));
       chips.appendChild(c);
     });
-    $('swStart').textContent = startText(v);
+    $('swStart').textContent = (v.mixed ? 'Die Plätze wurden neu gemischt. ' : '') + startText(v);
   }
   /* Die erste Runde beginnt ein ausgeloster Spieler, danach der Verlierer der Runde davor. */
   function startText(v) {
@@ -3659,7 +4062,8 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
     if (!swapSel || shownZone(swapSel) == null) swapSel = id;
     else if (swapSel === id) swapSel = null;
     else if (shownZone(swapSel) === shownZone(id)) swapSel = id;
-    else return setSwap(swapSel, id);
+    else { Hap.fire('tap'); return setSwap(swapSel, id); }
+    Hap.fire('tick');
     renderSwap();
   }
   function doReady() {
@@ -3667,6 +4071,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
     var a = { t: 'ready' };
     if (swapPrev) a.swap = { hand: swapPrev.hand, up: swapPrev.up };
     opt = { kind: 'ready', seq: cur.view.seq, after: snapCount };
+    Hap.fire('tap');
     swapSel = null;
     renderSwap();
     if (!session.act(a)) { opt = null; renderSwap(); }
@@ -3731,7 +4136,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
   /* ---------- Spieltisch: Rendern ---------- */
 
   function renderGame() {
-    var d = display(), plate = prison() && cur.code ? cur.code : '';
+    var d = display(), plate = cur.code || '';
     if ($('gCode').textContent !== plate) $('gCode').textContent = plate;
     renderTop(d);
     renderOpps(d);
@@ -3781,7 +4186,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
       bar.style.transform = 'scaleX(' + Math.max(0, Math.min(1, left / c.total)).toFixed(3) + ')';
     }
     t.classList.toggle('low', turn && secs <= 10);
-    if (turn && v.turn === v.you && secs >= 1 && secs <= 5 && tickSec !== v.seq + ':' + secs) { tickSec = v.seq + ':' + secs; Snd.play('tick'); }
+    if (turn && v.turn === v.you && secs >= 1 && secs <= 5 && tickSec !== v.seq + ':' + secs) { tickSec = v.seq + ':' + secs; Snd.play('tick'); if (Snd.tick()) Hap.fire('tick'); }
     var txt = '', go = false;
     if (c && v.phase === 'swap') {
       go = c.kind === 'start';
@@ -3835,14 +4240,22 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
     else if (off) box.appendChild(el('span', 'opp-tag', cur.isHost ? 'offline – tippen' : 'offline'));
     return box;
   }
+  /* Wie viele Gegner an jeder Seite sitzen (der Rest oben): bis 5 Gegner je einer, bis 7 je zwei, darüber je drei. */
+  function sideCount(k) { return k < 3 ? 0 : k <= 5 ? 1 : k <= 7 ? 2 : 3; }
   function renderOpps(d) {
-    var n = d.v.players.length, k = n - 1, top = $('oppTop'), L = $('oppL'), R = $('oppR');
+    var n = d.v.players.length, k = n - 1, top = $('oppTop'), L = $('oppL'), R = $('oppR'), side = sideCount(k);
     clear(top); clear(L); clear(R);
+    $('table').setAttribute('data-k', k);
     for (var i = 0; i < k; i++) {
       var seat = (d.me + 1 + i) % n, box = top;
-      /* im Uhrzeigersinn: der nächste Spieler sitzt links von dir, dann oben herum nach rechts */
-      if (k >= 3) { if (i === 0) box = L; else if (i === k - 1) box = R; }
+      /* im Uhrzeigersinn: der nächste Spieler sitzt links unten neben dir, dann links hinauf, oben herum und rechts wieder herunter */
+      if (i < side) box = L; else if (i >= k - side) box = R;
       box.appendChild(oppPanel(d, seat));
+    }
+    /* Viele Mitspieler: im Querformat sind alle deutlich größer – einmal darauf hinweisen. */
+    if (k >= 7 && !tipShown && window.innerHeight > window.innerWidth && window.innerWidth < 520) {
+      tipShown = true;
+      setTimeout(function () { toast(['Tipp: Dreh dein Handy', 'Im Querformat sind alle Mitspieler größer zu sehen']); }, 1200);
     }
   }
   function pileTf(id, idx) {
@@ -3928,6 +4341,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
     var avail = sc.clientWidth - 16, step = 0;
     if (n > 1) step = Math.max(14, Math.min(cw + 6, (avail - cw) / (Math.min(n, 12) - 1)));
     var total = n ? cw + step * (n - 1) : 0;
+    handStep = step;
     box.style.width = Math.ceil(total) + 'px';
     sc.classList.toggle('scrolls', total > avail + 1);
     for (var i = 0; i < n; i++) handNodes[handOrder[i]].style.transform = 'translate3d(' + (i * step).toFixed(1) + 'px,0,0)';
@@ -3935,6 +4349,13 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
     info.hidden = n <= 12;
     if (n > 12) info.textContent = n + ' Karten \u2190 wischen \u2192';
   }
+  /* Blättert man durch ein großes Blatt, tickt es bei jeder Karte, die vorbeizieht. */
+  var handStep = 0, handIdx = -1;
+  $('handScroll').addEventListener('scroll', function () {
+    if (!handStep || !this.classList.contains('scrolls')) return;
+    var i = Math.round(this.scrollLeft / handStep);
+    if (i !== handIdx) { if (handIdx >= 0) Hap.fire('tick'); handIdx = i; }
+  }, { passive: true });
   function renderHand(d) {
     var box = $('hand'), ids = d.hand, keep = {}, fresh = [], inHand = !!(d.my && d.my.zone === 'hand');
     var first = !box.firstChild && !handOrder.length;   // erster Aufbau: sofort sichtbar, ohne Einblenden
@@ -3990,7 +4411,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
       /* Aufnehmen geht immer, solange etwas liegt. Dringend ist es nur, wenn nichts anderes geht (forced).
        * Schwarzer Joker oben und der rote ist spielbar: Aufnehmen und Kontern stehen gleichwertig nebeneinander.
        * Sonst ist es ein freiwilliger, taktischer Zug – klein und mit Rückfrage. */
-      counter = showL && showP && top === E.JB;
+      counter = showL && showP && E.isBlackJoker(top);
       quiet = showL && showP && !counter;
       pulse = d.my.forced;
       if (d.my.forced) {
@@ -4098,7 +4519,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
       row((v.finished.length + 1) + '.', seat, seat === gave ? 'hat aufgegeben' : left, 'last', sub);
     });
     /* Die Wand: ein Strich für jede gewonnene Runde in diesem Raum. */
-    if (prison()) {
+    {
       var wall = el('div', 'wall');
       wall.appendChild(el('div', 'wall-title', 'Strichliste: gewonnene Runden in diesem Raum'));
       v.players.forEach(function (p, seat) {
@@ -4141,21 +4562,38 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
     $('btnMenuGiveUp').disabled = !!giving;
     $('btnMenuLobby').hidden = !(s.isHost && s.stage === 'game');
     $('btnLeave').textContent = s.isHost ? 'Raum schließen' : 'Spiel verlassen';
-    renderSettings();
-  }
-  /* Einstellungen im Menü: Design (nur der Host, für alle) und Töne (pro Gerät). */
-  function renderSettings() {
-    [['segTable', 'data-table', design.table], ['segCards', 'data-cards', design.cards]].forEach(function (x) {
-      var bs = $(x[0]).children;
-      for (var i = 0; i < bs.length; i++) bs[i].setAttribute('aria-pressed', bs[i].getAttribute(x[1]) === x[2] ? 'true' : 'false');
-    });
+    renderRoomOpts($('menuOpts'));
+    pressSeg('segTable', 'data-table', design.table);
+    pressSeg('segCards', 'data-cards', design.cards);
     $('designNote').textContent = cur && cur.isHost ? 'Tisch und Karten gelten für alle im Raum.'
       : 'Design: Tisch ' + TABLE_NAME[design.table] + ', Karten ' + CARDS_NAME[design.cards] + '. Das stellt der Host ein.';
-    var m = Snd.muted(), b = $('btnMute'), r = $('rngVol');
-    b.textContent = m ? 'Ton: aus' : 'Ton: an';
-    b.setAttribute('aria-pressed', m ? 'false' : 'true');
-    r.disabled = m;
-    if (doc.activeElement !== r) r.value = String(Math.round(Snd.vol() * 100));
+  }
+  function pressSeg(id, attr, val) {
+    var bs = $(id).children;
+    for (var i = 0; i < bs.length; i++) bs[i].setAttribute('aria-pressed', bs[i].getAttribute(attr) === String(val) ? 'true' : 'false');
+  }
+  function onOff(id, label, on) {
+    var b = $(id);
+    b.textContent = label + ': ' + (on ? 'an' : 'aus');
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+  /* Einstellungen (pro Gerät): Töne, Vibration, Randleuchten, Spielhilfe. */
+  function renderSettings() {
+    var m = Snd.muted();
+    onOff('btnMute', 'Ton', !m);
+    [['rngVol', Snd.vol()], ['rngVolTurn', Snd.groupVol('turn')], ['rngVolCards', Snd.groupVol('cards')]].forEach(function (x) {
+      var r = $(x[0]);
+      r.disabled = m;
+      if (doc.activeElement !== r) r.value = String(Math.round(x[1] * 100));
+    });
+    pressSeg('segChime', 'data-chime', Snd.chime());
+    onOff('btnTick', 'Ticken', Snd.tick());
+    pressSeg('segHap', 'data-hap', Hap.level());
+    $('hapNote').textContent = !Hap.supported() ? 'Dieses Gerät kann im Browser nicht vibrieren.'
+      : Hap.ios() ? 'Am iPhone gibt es im Browser nur einen kurzen Tipp beim Antippen (ab iOS 18). Ob es bei „Du bist dran“ klappt, hängt vom Gerät ab.'
+        : 'Vibriert, wenn du dran bist, beim Wählen, Legen und Aufnehmen.';
+    onOff('btnGlow', 'Randleuchten', glow);
+    onOff('btnHelp', 'Spielhilfe', help);
   }
   /* Neue Runde: sofort, wenn die Runde vorbei ist – mit Rückfrage, solange noch gespielt wird. */
   function askRematch() {
@@ -4264,8 +4702,13 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
       if (!v || v.phase !== 'play' || !v.canGiveUp) giving = null;
       else if (snap._n > giving.after && (snap.isHost || snap.pending === 0)) { giving = null; toast('Aufgeben hat nicht geklappt – bitte nochmal.'); }
     }
-    if (!v) { opt = null; resetGame(); renderAll(); return null; }
+    if (!v) { opt = null; turnOpen = false; resetGame(); renderAll(); return null; }
     var had = null, me = v.players[v.you];
+    /* „Du bist dran“: einmal je eigenem Zug – nicht nach dem eigenen Aufnehmen oder der eigenen 3, und erst,
+     * wenn der Zug davor zu Ende gezeigt ist. Übersprungene Zwischenstände melden nichts. */
+    var signal = false;
+    if (v.phase === 'play' && v.turn === v.you) { if (!turnOpen && !skip) { turnOpen = true; signal = true; } }
+    else turnOpen = false;
     if (opt) {
       var answered = !snap.isHost && snap.pending === 0 && snap._n > opt.after;
       if (opt.kind === 'ready') { if (v.phase !== 'swap' || (me && me.ready) || answered) opt = null; }
@@ -4291,7 +4734,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
 
     var ev = v.ev, p = null;
     if (pv && ev && ev.seq === v.seq && v.seq > pv.seq && !skip) {
-      if (ev.auto) { toast(ev.seat === v.you ? 'Zeit abgelaufen – es wurde für dich gespielt' : 'Zeit abgelaufen: Für ' + nameOf(v, ev.seat) + ' wurde gespielt'); Snd.play('timeout'); }
+      if (ev.auto) { toast(ev.seat === v.you ? 'Zeit abgelaufen – es wurde für dich gespielt' : 'Zeit abgelaufen: Für ' + nameOf(v, ev.seat) + ' wurde gespielt'); Snd.play('timeout'); if (ev.seat === v.you) Hap.fire('bad'); }
       else if (ev.t === 'start' && ev.forced) { toast('Zeit abgelaufen – die Runde beginnt'); Snd.play('timeout'); }
     }
     if (pv && pv.phase === 'play' && v.phase === 'over' && !skip) Snd.play(v.loser === v.you ? 'lose' : 'over', 650);
@@ -4314,9 +4757,24 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
         gToast(ev.seat === v.you ? 'Du hast aufgegeben' : nameOf(v, ev.seat) + ' hat aufgegeben', false, 2400);
       }
       if (myTurnNow) revealPlayable();
+      if (signal) turnSignal();
       return null;
     }
-    return p.then(function () { settle(); if (myTurnNow) revealPlayable(); }, function (e) { console.error(e); settle(); });
+    return p.then(function () { settle(); if (myTurnNow) revealPlayable(); if (signal) turnSignal(); }, function (e) { console.error(e); settle(); });
+  }
+  /* Ton, Vibration und ein kurzes Leuchten am Bildschirmrand – nur beim Spieler, der dran ist. */
+  function turnSignal() {
+    var v = cur && cur.stage === 'game' ? cur.view : null;
+    if (!v || v.phase !== 'play' || v.turn !== v.you) return;
+    Snd.turn();
+    Hap.fire('turn');
+    if (glow && doc.visibilityState !== 'hidden') flashEdge();
+  }
+  function flashEdge() {
+    var g = $('turnGlow');
+    g.classList.remove('go');
+    void g.offsetWidth;
+    g.classList.add('go');
   }
   function revealPlayable() {
     var sc = $('handScroll'), v = cur && cur.view;
@@ -4599,7 +5057,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
       return animDraw(dr);
     }).then(function () {
       if (!ev.place || v.phase !== 'play') return null;
-      if (ev.fx.indexOf('win') >= 0) { showWon(ev.seat); renderWon(display()); Snd.play('win'); }
+      if (ev.fx.indexOf('win') >= 0) { showWon(ev.seat); renderWon(display()); Snd.play('win'); if (ev.seat === me) Hap.fire('win'); }
       return wait(500);            // kurz stehen lassen, bevor der Nächste zieht
     });
   }
@@ -4607,7 +5065,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
   function goneOf(ev) { return Array.isArray(ev.gone) ? ev.gone : []; }
   function goneLine(ev) {
     var k = goneOf(ev).length;
-    return !k ? '' : k > 1 ? 'Beide Joker sind aus dem Spiel' : 'Joker ist aus dem Spiel';
+    return !k ? '' : k > 2 ? 'Alle ' + k + ' Joker sind aus dem Spiel' : k > 1 ? 'Beide Joker sind aus dem Spiel' : 'Joker ist aus dem Spiel';
   }
   function takesLine(ev, v) {
     return ev.seat === v.you ? 'Du nimmst ' + countText(ev.n) + ' auf' : nameOf(v, ev.seat) + ' nimmt ' + countText(ev.n) + ' auf';
@@ -4681,7 +5139,8 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
   function tapCard(id, zone) {
     var d = display();
     if (!d.my || d.my.zone !== zone) return;
-    if (d.my.playable.indexOf(id) < 0) { shake(myCardNode(id)); if (help) flashReq(); else toast('Diese Karte passt nicht'); return; }
+    if (d.my.playable.indexOf(id) < 0) { Hap.fire('bad'); shake(myCardNode(id)); if (help) flashReq(); else toast('Diese Karte passt nicht'); return; }
+    Hap.fire('tick');
     var i = sel.indexOf(id);
     if (i >= 0) sel.splice(i, 1);
     else if (zone === 'hand' && sel.length && E.rank(sel[0]) === E.rank(id)) sel.push(id);   // offene Karten: nur eine pro Zug
@@ -4702,6 +5161,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
     if (lock) { afterLock = function () { tryPlay(ids, null); }; return true; }
     if (!rects) rects = ids.map(function (id) { var n = myCardNode(id); return n ? rectOf(n) : null; });
     opt = { kind: 'play', cards: ids.slice(), seq: d.v.seq, after: snapCount };
+    Hap.fire('tap');
     sel = [];
     renderGame();
     var fly = flyToPile(ids, rects);
@@ -4725,6 +5185,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
     if (!d.my || !d.my.canPickup) return;
     if (lock) { afterLock = doPickup; return; }
     opt = { kind: 'pickup', seq: d.v.seq, after: snapCount };
+    Hap.fire('tap');
     sel = [];
     renderMine();
     if (!session.act({ t: 'pickup' })) { opt = null; renderMine(); }
@@ -4735,6 +5196,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
     if (!d.my.canFlip) { flashReq(); return; }
     if (lock) { afterLock = function () { doFlip(slot); }; return; }
     opt = { kind: 'flip', slot: slot, seq: d.v.seq, after: snapCount };
+    Hap.fire('tap');
     renderMine();
     if (!session.act({ t: 'flip', slot: slot })) { opt = null; renderMine(); }
   }
@@ -4746,7 +5208,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
   function playButton() {
     var d = display();
     var top = d.v.pile.length ? d.v.pile[d.v.pile.length - 1] : null;
-    if (!sel.length && d.my && d.my.zone !== 'down' && top === E.JB && d.my.playable.length === 1) tryPlay(d.my.playable.slice(), null);
+    if (!sel.length && d.my && d.my.zone !== 'down' && E.isBlackJoker(top) && d.my.playable.length) tryPlay(d.my.playable.slice(0, 1), null);
     else playSelection();
   }
 
@@ -4801,6 +5263,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
       });
     }
     drag = { group: group, items: items, ids: items.map(function (it) { return it.id; }), info: info, over: null };
+    Hap.fire('tick');
     body.classList.add('dragging');
     return true;
   }
@@ -4943,19 +5406,36 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
   on('btnStart', function () { session.lobby({ op: 'start' }); });
   on('btnUndo', function () { if (swapEditable()) { swapPrev = null; swapSel = null; renderSwap(); } });
   on('btnReady', readyButton);
-  function renderHelpBtn() {
-    var b = $('btnHelp');
-    b.textContent = 'Spielhilfe: ' + (help ? 'an' : 'aus');
-    b.setAttribute('aria-pressed', help ? 'true' : 'false');
-  }
   on('btnHelp', function () {
     help = !help;
     sSet(LS, 'karma.help', help ? '1' : '0');
-    renderHelpBtn();
+    renderSettings();
     if (cur && cur.stage === 'game') renderAll();
     toast(help ? 'Spielhilfe an: Du siehst, welche Karten passen' : 'Spielhilfe aus: keine Hinweise, keine grauen Karten');
   });
-  renderHelpBtn();
+  on('btnGlow', function () {
+    glow = !glow;
+    sSet(LS, 'karma.glow', glow ? '1' : '0');
+    renderSettings();
+    if (glow) flashEdge();
+  });
+  on('btnTick', function () { Snd.setTick(!Snd.tick()); renderSettings(); Snd.play('tick'); });
+  on('segChime', function (e) {
+    var b = e.target.closest ? e.target.closest('button') : null;
+    if (!b) return;
+    Snd.setChime(b.getAttribute('data-chime'));
+    renderSettings();
+    Snd.turn();   // gleich vorspielen
+  });
+  on('segHap', function (e) {
+    var b = e.target.closest ? e.target.closest('button') : null;
+    if (!b) return;
+    Hap.setLevel(parseInt(b.getAttribute('data-hap'), 10));
+    renderSettings();
+    Hap.fire('turn');
+  });
+  $('lobbyOpts').addEventListener('click', pickRoomOpt);
+  $('menuOpts').addEventListener('click', pickRoomOpt);
   function pickDesign(e) {
     var b = e.target && e.target.closest ? e.target.closest('button') : null;
     if (!b || !cur || !cur.isHost) return;
@@ -4970,6 +5450,10 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
   });
   $('rngVol').addEventListener('input', function () { Snd.setVol(this.value / 100); });
   $('rngVol').addEventListener('change', function () { Snd.setVol(this.value / 100); Snd.play('place'); });
+  $('rngVolTurn').addEventListener('input', function () { Snd.setGroupVol('turn', this.value / 100); });
+  $('rngVolTurn').addEventListener('change', function () { Snd.setGroupVol('turn', this.value / 100); Snd.play(Snd.chime() === 'aus' ? 'glocke' : Snd.chime()); });
+  $('rngVolCards').addEventListener('input', function () { Snd.setGroupVol('cards', this.value / 100); });
+  $('rngVolCards').addEventListener('change', function () { Snd.setGroupVol('cards', this.value / 100); Snd.play('place'); });
   on('btnPickup', askPickup);
   on('btnPlay', playButton);
   on('pileTap', playSelection);
@@ -5014,6 +5498,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
       var a = t.getAttribute('data-act');
       if (a === 'menu') openSheet('sheetMenu');
       else if (a === 'rules') openSheet('sheetRules');
+      else if (a === 'settings') openSheet('sheetSet');
       else if (a === 'share') shareLink();
       else if (a === 'close') closeSheet();
       return;
@@ -5073,7 +5558,7 @@ html[data-cards="druck"] .card.back { background: repeating-linear-gradient(60de
 
   (function init() {
     var fan = $('logoFan');
-    ['H10', 'JR', 'S2'].forEach(function (id) { fan.appendChild(cardFace(id)); });
+    ['S13', 'JR', 'H12'].forEach(function (id) { fan.appendChild(cardFace(id)); });
     $('inName').value = sGet(LS, NAME_KEY) || '';
     var hc = hashCode();
     if (hc) $('inCode').value = hc;

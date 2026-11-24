@@ -11,6 +11,7 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const E = require(path.join(__dirname, '..', 'src', 'engine.js'));
 const N = require(path.join(__dirname, '..', 'src', 'net.js'));
+N.T.mix = false;
 
 function mulberry32(a) {
   return function () {
