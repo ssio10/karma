@@ -273,7 +273,6 @@
     if (!CARDS_NAME[cards]) cards = N.DESIGNS.cards[0];
     if (table === design.table && cards === design.cards) return;
     var root = doc.documentElement, meta = doc.querySelector('meta[name="theme-color"]');
-    if (table !== design.table) root.style.setProperty('--tbl', 'url("img/t-' + table + '.jpg")');
     if (cards !== design.cards) FIGS.forEach(function (k) {
       var src = 'img/c-' + cards + '-' + k + '.jpg';
       root.style.setProperty('--fig-' + k, 'url("' + src + '")');

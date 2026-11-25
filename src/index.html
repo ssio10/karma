@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de" class="prison">
+<html lang="de" class="prison" data-table="stahl" data-cards="stift">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -8,10 +8,12 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Karma">
 <meta name="theme-color" content="#1d2226">
+<!-- Das zuletzt gesehene Tisch-Design gilt schon vor dem ersten Bild: iPhone-Safari färbt Status- und Werkzeugleiste nach dem, was es zuerst sieht. -->
+<script>(function () { try { var d = (localStorage.getItem('karma.design') || '').split('|'), r = document.documentElement, c = { stahl: '#1d2226', hof: '#5a4630', nacht: '#070a12', boss: '#2a110d' }; if (c[d[0]]) { r.setAttribute('data-table', d[0]); document.querySelector('meta[name="theme-color"]').setAttribute('content', c[d[0]]); } if (/^(stift|schwarz|tattoo|hood)$/.test(d[1])) r.setAttribute('data-cards', d[1]); } catch (e) {} })();</script>
 <meta name="format-detection" content="telephone=no">
 <meta name="robots" content="noindex, nofollow">
 <title>Karma</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23114a35'/%3E%3Ctext x='32' y='45' font-size='38' text-anchor='middle' fill='%23f3c552' font-family='sans-serif' font-weight='700'%3EK%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231d2226'/%3E%3Ctext x='32' y='45' font-size='38' text-anchor='middle' fill='%23ff7a1a' font-family='sans-serif' font-weight='700'%3EK%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="style.css">
 </head>
 <body data-screen="start">

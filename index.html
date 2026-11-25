@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de" class="prison">
+<html lang="de" class="prison" data-table="stahl" data-cards="stift">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -8,10 +8,12 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Karma">
 <meta name="theme-color" content="#1d2226">
+<!-- Das zuletzt gesehene Tisch-Design gilt schon vor dem ersten Bild: iPhone-Safari färbt Status- und Werkzeugleiste nach dem, was es zuerst sieht. -->
+<script>(function () { try { var d = (localStorage.getItem('karma.design') || '').split('|'), r = document.documentElement, c = { stahl: '#1d2226', hof: '#5a4630', nacht: '#070a12', boss: '#2a110d' }; if (c[d[0]]) { r.setAttribute('data-table', d[0]); document.querySelector('meta[name="theme-color"]').setAttribute('content', c[d[0]]); } if (/^(stift|schwarz|tattoo|hood)$/.test(d[1])) r.setAttribute('data-cards', d[1]); } catch (e) {} })();</script>
 <meta name="format-detection" content="telephone=no">
 <meta name="robots" content="noindex, nofollow">
 <title>Karma</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23114a35'/%3E%3Ctext x='32' y='45' font-size='38' text-anchor='middle' fill='%23f3c552' font-family='sans-serif' font-weight='700'%3EK%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231d2226'/%3E%3Ctext x='32' y='45' font-size='38' text-anchor='middle' fill='%23ff7a1a' font-family='sans-serif' font-weight='700'%3EK%3C/text%3E%3C/svg%3E">
 <style>
 /* Karma – Oberfläche. Nur System-Schriften, keine externen Dateien. */
 :root {
@@ -29,7 +31,7 @@
   --on-acc: #241a02;        /* Schrift auf der Akzentfarbe */
   --dk: 4, 18, 13;          /* dunkler Grundton für Schilder und Schleier */
   --dim: rgba(6, 28, 20, .5);
-  --bg0: #07231a;
+  --bg0: #1d2226;
   --sat: env(safe-area-inset-top, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
   --sal: env(safe-area-inset-left, 0px);
@@ -64,9 +66,7 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 
 #app {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden;
-  background:
-    radial-gradient(120% 75% at 50% 36%, rgba(46, 140, 102, .55) 0%, rgba(20, 86, 62, .25) 48%, rgba(0, 0, 0, 0) 78%),
-    linear-gradient(180deg, #10503a 0%, #0b3a2a 55%, #072519 100%);
+  background: var(--bg0);
 }
 @supports (height: 100dvh) { #app { bottom: auto; height: 100dvh; } }
 
@@ -662,7 +662,7 @@ html.prison .over-star, html.prison .won-star { display: none; }
 /* ====================================================================
    Designs mit Bildern. Der Host wählt Tisch und Karten getrennt; beides gilt für alle im Raum.
    Tisch:  html[data-table="stahl" | "hof" | "nacht" | "boss"]     Karten: html[data-cards="stift" | "schwarz" | "tattoo" | "hood"]
-   Die Bilder liegen im Ordner img/. Welche gerade gelten, setzt app.js am Wurzelelement: --tbl (Tisch) und --fig-… (Figuren, Rückseite).
+   Die Bilder liegen im Ordner img/. Das Tischbild (--tbl) hängt am Tisch-Design; die Figuren und die Rückseite (--fig-…) setzt app.js am Wurzelelement.
    ==================================================================== */
 :root {
   --n-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.3 0 0 0 -0.42'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
@@ -676,7 +676,6 @@ html.prison .chip, html.prison .code-big, html.prison .stock-count, html.prison 
 html.prison .seg button, html.prison .g-toast span, html.prison .act-hint.strong { font-family: var(--f-head); }
 
 /* ---------- Tischbild: hochkant gemalt; im Querformat liegt es gedreht, damit nichts abgeschnitten wird ---------- */
-html[data-table] #app { background: var(--bg0); }
 #app::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; background: var(--veil, linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0))), var(--tbl) center / cover no-repeat; }
 @media (orientation: landscape) {
   #app::before { top: 50%; left: 50%; width: calc(var(--vh) * 100); height: 100vw; transform: translate(-50%, -50%) rotate(90deg); }
@@ -693,6 +692,7 @@ html[data-table="stahl"] {
   --btn-bg: linear-gradient(180deg, #ff8d30 0%, #ec6710 100%);
   --btn-sh: inset 0 0 0 2px rgba(0, 0, 0, .28), inset 0 0 0 3px rgba(255, 255, 255, .18), 0 2px 0 #733004, 0 7px 14px rgba(0, 0, 0, .45);
   --sec-bg: rgba(0, 0, 0, .45); --sec-sh: inset 0 0 0 1.5px rgba(255, 255, 255, .4);
+  --tbl: url("img/t-stahl.jpg");
 }
 html[data-table="stahl"] .btn, html[data-table="stahl"] .tbar, html[data-table="stahl"] .tb-title, html[data-table="stahl"] .opp-name,
 html[data-table="stahl"] .chip, html[data-table="stahl"] .sheet-head h2, html[data-table="stahl"] .dialog h2, html[data-table="stahl"] .con-box h2,
@@ -717,6 +717,7 @@ html[data-table="hof"] {
   --btn-sh: inset 0 0 0 2px rgba(255, 255, 255, .55), 0 2px 0 #7a5608, 0 7px 14px rgba(0, 0, 0, .4);
   --sec-bg: rgba(40, 26, 12, .62); --sec-sh: inset 0 0 0 2px rgba(255, 248, 232, .6);
   --veil: linear-gradient(rgba(46, 30, 12, .3), rgba(46, 30, 12, .3));
+  --tbl: url("img/t-hof.jpg");
 }
 html[data-table="hof"] .btn { font-size: 19px; }
 html[data-table="hof"] .btn.small { font-size: 15px; }
@@ -733,6 +734,7 @@ html[data-table="nacht"] {
   --btn-bg: linear-gradient(180deg, #f8cf8c 0%, #e3a443 100%);
   --btn-sh: inset 0 1px 0 rgba(255, 255, 255, .5), 0 2px 0 #6b4a16, 0 0 22px rgba(242, 181, 95, .28), 0 7px 14px rgba(0, 0, 0, .5);
   --sec-bg: rgba(20, 28, 52, .72); --sec-sh: inset 0 0 0 1.5px rgba(200, 215, 255, .45);
+  --tbl: url("img/t-nacht.jpg");
 }
 html[data-table="nacht"] .btn { font-size: 16px; letter-spacing: .02em; }
 html[data-table="nacht"] .btn.small { font-size: 14px; }
@@ -752,6 +754,7 @@ html[data-table="boss"] {
   --btn-bg: linear-gradient(180deg, #f3d98f 0%, #d5a63a 100%);
   --btn-sh: inset 0 0 0 1.5px #7a5a14, inset 0 0 0 3px rgba(255, 255, 255, .35), 0 2px 0 #5d430c, 0 8px 16px rgba(0, 0, 0, .45);
   --sec-bg: rgba(40, 14, 10, .68); --sec-sh: inset 0 0 0 1.5px rgba(233, 196, 106, .6);
+  --tbl: url("img/t-boss.jpg");
 }
 html[data-table="boss"] .btn { font-size: 18px; letter-spacing: .03em; }
 html[data-table="boss"] .btn.small { font-size: 15px; }
@@ -915,7 +918,7 @@ html[data-cards="hood"] .card.jk .jt { font-size: calc(var(--w) * .17); -webkit-
         <button id="btnRules" class="btn ghost" data-act="rules">Regeln</button>
         <button class="btn ghost" data-act="settings">Einstellungen</button>
       </div>
-      <div class="build">Version 2026-11-24 23:46</div>
+      <div class="build">Version 2026-11-25 00:00</div>
     </div>
   </section>
 
@@ -3519,7 +3522,6 @@ html[data-cards="hood"] .card.jk .jt { font-size: calc(var(--w) * .17); -webkit-
     if (!CARDS_NAME[cards]) cards = N.DESIGNS.cards[0];
     if (table === design.table && cards === design.cards) return;
     var root = doc.documentElement, meta = doc.querySelector('meta[name="theme-color"]');
-    if (table !== design.table) root.style.setProperty('--tbl', 'url("img/t-' + table + '.jpg")');
     if (cards !== design.cards) FIGS.forEach(function (k) {
       var src = 'img/c-' + cards + '-' + k + '.jpg';
       root.style.setProperty('--fig-' + k, 'url("' + src + '")');
