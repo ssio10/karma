@@ -920,6 +920,25 @@ html[data-table="stahl"] .dz button, html[data-table="stahl"] .set-head { text-t
 .won-box, .over-box { box-shadow: inset 0 0 0 1.5px rgba(var(--acc), .5), 0 18px 44px rgba(0, 0, 0, .6); }
 @media (prefers-reduced-motion: reduce) { .logo-fan .card, .tbar.me, .pile-tap.thud .pile { animation: none; } }
 
+/* ---------- Startseite: offene Räume ---------- */
+.rooms { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.rooms-head { display: flex; align-items: center; gap: 10px; color: var(--mute); font-size: 13px; }
+.rooms-head::before, .rooms-head::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.rooms-list { display: flex; flex-direction: column; gap: 6px; }
+.rooms-note { text-align: center; color: var(--mute); font-size: 14px; min-height: 20px; }
+.rooms-note:empty { display: none; }
+.rrow { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 54px; padding: 6px 8px 6px 14px; text-align: left; border-radius: var(--r-panel); background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); transition: transform .08s; }
+.rrow:active { transform: scale(.98); }
+.rrow .dot { width: 10px; height: 10px; flex: none; border-radius: 50%; background: #58d68d; box-shadow: 0 0 0 3px rgba(88, 214, 141, .18); }
+.rrow.busy .dot { background: var(--gold); box-shadow: 0 0 0 3px rgba(var(--acc), .2); }
+.rmain { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.rmain b { font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rmain small { font-size: 12.5px; color: var(--mute); }
+.rgo { flex: none; min-height: 38px; padding: 0 14px; display: inline-flex; align-items: center; border-radius: var(--btn-r, 12px); font-family: var(--f-head); font-weight: 700; font-size: 15px; color: var(--btn-ink, #241a02); background: var(--btn-bg, linear-gradient(180deg, #f8d573, #e9b33b)); }
+.rrow.busy { opacity: .78; }
+.rrow.busy .rgo { background: none; color: var(--mute); padding: 0 8px; font-weight: 600; }
+html[data-table="stahl"] .rgo { text-transform: uppercase; letter-spacing: .06em; }
+
 </style>
 </head>
 <body data-screen="start">
@@ -979,11 +998,17 @@ html[data-table="stahl"] .dz button, html[data-table="stahl"] .set-head { text-t
         <button id="btnJoin" class="btn sec">Beitreten</button>
       </div>
 
+      <div id="roomBox" class="rooms" hidden>
+        <div class="rooms-head">Offene Räume</div>
+        <div id="roomList" class="rooms-list"></div>
+        <p id="roomNote" class="rooms-note"></p>
+      </div>
+
       <div class="start-links">
         <button id="btnRules" class="btn ghost" data-act="rules">Regeln</button>
         <button class="btn ghost" data-act="settings">Einstellungen</button>
       </div>
-      <div class="build">Version 2026-11-25 18:19</div>
+      <div class="build">Version 2026-11-25 18:34</div>
     </div>
   </section>
 
@@ -1218,6 +1243,7 @@ html[data-table="stahl"] .dz button, html[data-table="stahl"] .set-head { text-t
         <p>Karten mit Wirkung tragen unten links ein kleines Zeichen: ein <b>offenes Schloss</b> auf der 2 (frei), <b>zwei Pfeile</b> auf der 3 (Richtungswechsel), ein <b>Pfeil nach unten</b> auf der 7 (niedriger spielen) und eine <b>Flamme</b> auf der 10 (Stapel weg). Auch diese Zeichen gehören zur Spielhilfe.</p>
         <p>Der <b>Host</b> stellt für alle ein: Decks, Zugzeit, Plätze mischen und das <b>Design</b> von Tisch und Karten.</p>
         <p>Die Bildkarten: <b>König</b> = der Boss, <b>Dame</b> = die Queen, <b>Bube</b> = der Läufer. Der <b>schwarze Joker</b> ist der Dealer, der <b>rote Joker</b> der Wärter – der Wärter schlägt den Dealer.</p>
+        <p>Auf der Startseite stehen unter <b>Offene Räume</b> alle Räume, die gerade offen sind: mit dem Namen des Hosts, der Zahl der Spieler und ob dort noch gewartet oder schon gespielt wird. Ein Tipp auf einen wartenden Raum tritt bei – ohne Code. Läuft dort schon eine Runde, kannst du dazukommen, sobald der Host wieder in der Lobby ist.</p>
         <p>Mit vielen Mitspielern lohnt es sich, das Handy zu <b>drehen</b>: Im Querformat sind alle größer zu sehen.</p>
       </div>
     </div>
@@ -2054,7 +2080,10 @@ html[data-table="stahl"] .dz button, html[data-table="stahl"] .set-head { text-t
     turn: 50000,    // Zeit pro Zug; danach zieht der Host automatisch (0 = kein Zeitlimit)
     swap: 60000,    // Zeit für die Tauschphase; danach beginnt die Runde, auch wenn nicht alle bereit sind (0 = kein Limit)
     start: 3000,    // sind alle bereit: so lange kann man „Bereit“ noch zurücknehmen (0 = Runde beginnt sofort)
-    mix: true };    // Plätze nach jeder Runde mischen, solange der Host nichts anderes einstellt
+    mix: true,      // Plätze nach jeder Runde mischen, solange der Host nichts anderes einstellt
+    dirBeat: 4000,  // Aushang: so oft meldet der Host seinen Raum
+    dirGone: 11000, // Aushang: so lange ohne Meldung, dann gilt ein Raum als geschlossen
+    dirWait: 2500 };// Aushang: so lange nach dem Verbinden gilt die Liste noch als „wird gesucht“
 
   function randId(len, alpha) {
     alpha = alpha || ID_ALPHA;
@@ -2170,11 +2199,74 @@ html[data-table="stahl"] .dz button, html[data-table="stahl"] .set-head { text-t
     }
     return best;
   }
+  /* ---------- Aushang: Liste der offenen Räume ----------
+   * Jeder Host meldet seinen Raum auf einem festen, allen bekannten Kanal: Code, Name des Hosts, Zahl der
+   * Spieler und ob gerade gespielt wird. Die Startseite hört dort zu und zeigt die Liste. Es gibt keinen
+   * Server, der sich etwas merkt: Der Host meldet sich alle T.dirBeat neu und sofort, wenn jemand fragt
+   * (Kanal 'q'); bleibt die Meldung T.dirGone lang aus, verschwindet der Raum aus der Liste.
+   * Der Kanal ist nicht geheim – wer die Seite kennt, sieht die Räume und kann beitreten. So gewollt. */
+  var DIR_CODE = '#karma-aushang-1';   // kein gültiger Raumcode: kann mit keinem Raum zusammenfallen
+  var DIR_OPTS = { max: 3 };           // für den Aushang reichen drei der Relays
+  function cleanEntry(m) {
+    if (!m || typeof m !== 'object') return null;
+    var code = normalizeCode(m.code), n = m.n | 0;
+    if (code.length !== 5 || code !== m.code) return null;
+    if (m.gone) return { code: code, gone: true };
+    if (n < 1 || n > MAX_PLAYERS) return null;
+    return { code: code, host: cleanName(m.host), n: n, max: MAX_PLAYERS, state: m.st === 'game' ? 'game' : 'lobby' };
+  }
+  /* opts: { transport: 'mqtt'|'bc'|'mem', onChange({searching, rooms: [{code, host, n, max, state}]}) }
+   * Liefert { close(), kick() }. rooms: Lobbys zuerst, dann nach Name. */
+  function watchRooms(opts) {
+    opts = opts || {};
+    var make = transports[opts.transport || 'mqtt'], onChange = opts.onChange || function () {};
+    if (!make) throw new Error('Unbekannter Transport: ' + opts.transport);
+    var tr = make(DIR_CODE, DIR_OPTS), rooms = {}, closed = false, since = 0, last = '', timer = null;
+    function report() {
+      if (closed) return;
+      var now = Date.now(), list = [];
+      for (var c in rooms) { if (now - rooms[c].seen > T.dirGone) delete rooms[c]; else list.push(rooms[c].e); }
+      list.sort(function (a, b) {
+        return (a.state === 'game') - (b.state === 'game') || (a.host < b.host ? -1 : a.host > b.host ? 1 : 0) || (a.code < b.code ? -1 : 1);
+      });
+      var out = { searching: !since || (!list.length && now - since < T.dirWait), rooms: list }, key = JSON.stringify(out);
+      if (key === last) return;
+      last = key;
+      try { onChange(out); } catch (e) { if (typeof console !== 'undefined') console.error(e); }
+    }
+    tr.onMessage = function (ch, m) {
+      var e = ch === 'r' ? cleanEntry(m) : null;
+      if (!e) return;
+      if (e.gone) delete rooms[e.code]; else rooms[e.code] = { e: e, seen: Date.now() };
+      report();
+    };
+    tr.onStatus = function (on) {
+      if (!on || closed) return;
+      if (!since) since = Date.now();
+      tr.publish('q', { t: 'who' });
+      report();
+    };
+    tr.subscribe('r');
+    tr.start();
+    timer = setInterval(report, 1000);
+    return {
+      close: function () {
+        if (closed) return;
+        closed = true;
+        clearInterval(timer);
+        tr.onMessage = null; tr.onStatus = null;
+        try { tr.close(); } catch (e) {}
+      },
+      kick: function () { if (!closed) { tr.kick(); tr.publish('q', { t: 'who' }); } }
+    };
+  }
+
   function idleSnap() {
     return { stage: 'idle', error: null, code: null, isHost: false, seat: -1, conn: 'offline', hostOnline: false, pending: 0, lobby: null, view: null, room: null };
   }
 
-  /* opts: { engine, storage (localStorage-artig, optional), transport: 'mqtt'|'bc'|'mem', onUpdate(snap) }
+  /* opts: { engine, storage (localStorage-artig, optional), transport: 'mqtt'|'bc'|'mem', onUpdate(snap),
+   *         announce: true = als Host den Raum im Aushang melden (siehe watchRooms) }
    *
    * snap = {
    *   stage: 'idle' | 'connecting' | 'lobby' | 'game' | 'error',
@@ -2197,6 +2289,8 @@ html[data-table="stahl"] .dz button, html[data-table="stahl"] .set-head { text-t
     var store = opts.storage || null;
     var kind = opts.transport || 'mqtt';
     var onUpdate = opts.onUpdate || function () {};
+    var announce = !!opts.announce;
+    var dir = null, dirTimer = null, dirSoon = null, dirLast = '';   // Host: Verbindung zum Aushang
 
     var role = null, tr = null, online = false, tickTimer = null, botTimer = null, closeTimer = null;
     var clock = null, clockTimer = null;   // Host: laufendes Zeitlimit {key, base, swapEnd, end, total, kind: 'turn'|'swap'|'start'}
@@ -2275,7 +2369,45 @@ html[data-table="stahl"] .dz button, html[data-table="stahl"] .set-head { text-t
       if (tickTimer) clearInterval(tickTimer);
       tickTimer = setInterval(role === 'host' ? hostTick : clientTick, role === 'host' ? T.sweep : T.tick);
     }
+    /* ---------- Host: Raum im Aushang melden ---------- */
+    function dirEntry() {
+      return { code: H.code, host: H.players[0] ? H.players[0].name : '', n: H.players.filter(function (p) { return !p.left; }).length, st: H.game ? 'game' : 'lobby' };
+    }
+    function dirSend() {
+      if (!dir || role !== 'host' || !H) return;
+      var e = dirEntry();
+      dirLast = JSON.stringify(e);
+      dir.publish('r', e);
+    }
+    /* Nach einer Frage oder Änderung: gleich melden, aber mehrere Anlässe kurz hintereinander nur einmal. */
+    function dirSendSoon() {
+      if (!dir || dirSoon) return;
+      dirSoon = setTimeout(function () { dirSoon = null; dirSend(); }, 150);
+    }
+    function dirOpen() {
+      if (!announce || dir || !transports[kind]) return;
+      dir = transports[kind](DIR_CODE, DIR_OPTS);
+      dir.onMessage = function (ch) { if (ch === 'q') dirSendSoon(); };
+      dir.onStatus = function (on) { if (on) dirSendSoon(); };
+      dir.subscribe('q');
+      dir.start();
+      dirTimer = setInterval(dirSend, T.dirBeat);
+    }
+    function dirClose(bye) {
+      if (dirTimer) { clearInterval(dirTimer); dirTimer = null; }
+      if (dirSoon) { clearTimeout(dirSoon); dirSoon = null; }
+      var old = dir;
+      dir = null; dirLast = '';
+      if (!old) return;
+      old.onMessage = null; old.onStatus = null;
+      if (bye && H) {   // Abschied noch hinausschicken, dann schließen
+        old.publish('r', { code: H.code, gone: true });
+        setTimeout(function () { try { old.close(); } catch (e) {} }, 300);
+      } else { try { old.close(); } catch (e) {} }
+    }
+
     function teardown() {
+      dirClose(false);
       if (tickTimer) { clearInterval(tickTimer); tickTimer = null; }
       if (botTimer) { clearTimeout(botTimer); botTimer = null; }
       if (clockTimer) { clearTimeout(clockTimer); clockTimer = null; }
@@ -2388,6 +2520,7 @@ html[data-table="stahl"] .dz button, html[data-table="stahl"] .set-head { text-t
       armClock();
       save();
       for (var i = 0; i < H.players.length; i++) sendState(i);
+      if (dir && JSON.stringify(dirEntry()) !== dirLast) dirSendSoon();
       emit();
       driveBots();
     }
@@ -2529,6 +2662,7 @@ html[data-table="stahl"] .dz button, html[data-table="stahl"] .set-head { text-t
     function startHost() {
       role = 'host';
       openTransport(H.code, 'h', hostOnMsg);
+      dirOpen();
       armClock();
       save();
       emit();
@@ -2745,6 +2879,7 @@ html[data-table="stahl"] .dz button, html[data-table="stahl"] .set-head { text-t
     session.leave = function (silent) {
       if (role === 'client' && C && tr && !C.error) clientSend({ t: 'bye' });
       if (role === 'host' && H && tr) H.players.forEach(function (p) { if (!p.bot && !p.local) deny(p.pid, 'closed'); });
+      if (role === 'host' && H) dirClose(true);
       var old = tr;
       if (old) {   // kurz offen lassen, damit der Abschied noch rausgeht
         tr = null; old.onMessage = null; old.onStatus = null;
@@ -2759,6 +2894,7 @@ html[data-table="stahl"] .dz button, html[data-table="stahl"] .set-head { text-t
     /* Nach App-Wechsel / Bildschirm an: Verbindung prüfen und sofort neu abgleichen. */
     session.wake = function () {
       if (tr) tr.kick();
+      if (dir) { dir.kick(); dirSendSoon(); }
       if (role === 'client' && C) { C.nextPing = 0; C.nextHello = 0; C.nextResend = 0; clientTick(); }
     };
 
@@ -2776,7 +2912,7 @@ html[data-table="stahl"] .dz button, html[data-table="stahl"] .set-head { text-t
   }
 
   var api = {
-    createSession: createSession, transports: transports, memBus: memBus, T: T,
+    createSession: createSession, watchRooms: watchRooms, transports: transports, memBus: memBus, T: T,
     normalizeCode: normalizeCode, cleanName: cleanName, randId: randId,
     CODE_ALPHA: CODE_ALPHA, STORE_KEY: STORE_KEY, DESIGNS: DESIGNS,
     MAX_PLAYERS: MAX_PLAYERS, TURN_SECS: TURN_SECS, DECK_OPTS: DECK_OPTS,
@@ -3047,7 +3183,8 @@ html[data-table="stahl"] .dz button, html[data-table="stahl"] .set-head { text-t
 
   /* ---------- Transport ---------- */
 
-  Net.transports.mqtt = function (roomCode) {
+  /* o.max: höchstens so viele Broker benutzen (die ersten der Liste) – für den Aushang der offenen Räume. */
+  Net.transports.mqtt = function (roomCode, o) {
     var t = { onMessage: null, onStatus: null };
     var keys = roomKeys(roomCode);
     var prefix = 'karma1/' + keys.tag + '/';
@@ -3223,7 +3360,7 @@ html[data-table="stahl"] .dz button, html[data-table="stahl"] .set-head { text-t
       if (started || closed) return;
       started = true;
       WS = Net.MQTT_WebSocket || root.WebSocket;
-      brokers = (Net.MQTT_BROKERS || []).map(function (spec) {
+      brokers = (Net.MQTT_BROKERS || []).slice(0, o && o.max > 0 ? o.max : undefined).map(function (spec) {
         var o = typeof spec === 'string' ? { url: spec } : spec || {};
         return {
           url: String(o.url), user: o.user, pass: o.pass, clientId: '',
@@ -3774,6 +3911,46 @@ html[data-table="stahl"] .dz button, html[data-table="stahl"] .set-head { text-t
     if (!n) return;
     try { session.host(n); } catch (e) { console.error(e); startError('Der Raum konnte nicht erstellt werden. Bitte versuche es nochmal.'); }
   }
+  /* ---------- Offene Räume (Startseite) ----------
+   * Solange die Startseite zu sehen ist, hört die App am Aushang mit (KarmaNet.watchRooms). */
+  var watcher = null, roomState = { searching: true, rooms: [] };
+  function syncWatch() {
+    var want = body.getAttribute('data-screen') === 'start' && !soloOnly && doc.visibilityState !== 'hidden';
+    if (want && !watcher) {
+      roomState = { searching: true, rooms: [] };
+      try { watcher = N.watchRooms({ transport: netKind, onChange: function (o) { roomState = o; renderRooms(); } }); } catch (e) { console.error(e); watcher = null; }
+      renderRooms();
+    } else if (!want && watcher) { watcher.close(); watcher = null; }
+  }
+  function renderRooms() {
+    var box = $('roomBox'), list = $('roomList'), rooms = roomState.rooms;
+    box.hidden = soloOnly || !watcher;
+    if (box.hidden) return;
+    clear(list);
+    rooms.forEach(function (r) {
+      var open = r.state !== 'game' && r.n < r.max;
+      var row = el('button', 'rrow' + (open ? '' : ' busy'));
+      row.setAttribute('data-code', r.code);
+      if (!open) row.disabled = true;
+      row.appendChild(el('span', 'dot'));
+      var mid = el('span', 'rmain');
+      mid.appendChild(el('b', null, 'Raum von ' + r.host));
+      mid.appendChild(el('small', null, (r.n === 1 ? '1 Spieler' : r.n + ' Spieler') + ' · ' + (r.state === 'game' ? 'Runde läuft' : r.n >= r.max ? 'voll' : 'wartet in der Lobby')));
+      row.appendChild(mid);
+      row.appendChild(el('span', 'rgo', open ? 'Beitreten' : r.state === 'game' ? 'läuft' : 'voll'));
+      row.setAttribute('aria-label', 'Raum von ' + r.host + ', ' + r.n + ' Spieler, ' + (open ? 'beitreten' : 'läuft gerade'));
+      list.appendChild(row);
+    });
+    $('roomNote').textContent = rooms.length ? '' : roomState.searching ? 'Suche offene Räume …' : 'Gerade ist kein Raum offen.';
+  }
+  function joinListed(e) {
+    var b = e.target && e.target.closest ? e.target.closest('.rrow') : null;
+    if (!b || b.disabled) return;
+    var n = getName();
+    if (!n) return;
+    Hap.fire('tick');
+    try { session.join(b.getAttribute('data-code'), n); } catch (err) { console.error(err); startError('Beitreten hat nicht geklappt. Bitte versuche es nochmal.'); }
+  }
   function doJoin() {
     if (soloOnly) { toast('Beitreten geht nur mit Online-Verbindung.'); return; }
     var code = N.normalizeCode($('inCode').value);
@@ -3891,6 +4068,7 @@ html[data-table="stahl"] .dz button, html[data-table="stahl"] .set-head { text-t
     else renderGame();
     if (openSheetId === 'sheetMenu') renderMenu();
     syncGiveUp();
+    syncWatch();
   }
   function renderStart() {
     var only = !sGet(SS, N.STORE_KEY) && savedSession(LS);
@@ -5512,6 +5690,7 @@ html[data-table="stahl"] .dz button, html[data-table="stahl"] .set-head { text-t
   function on(id, fn) { $(id).addEventListener('click', fn); }
   on('btnCreate', doCreate);
   on('btnJoin', doJoin);
+  on('roomList', joinListed);
   on('btnResume', doResume);
   on('btnConBack', function () { session.leave(); });
   on('btnAddBot', function () { session.lobby({ op: 'addBot' }); });
@@ -5653,8 +5832,10 @@ html[data-table="stahl"] .dz button, html[data-table="stahl"] .set-head { text-t
   function wake() {
     try { session.wake(); } catch (e) {}
     syncWakeLock();
+    syncWatch();
+    if (watcher) watcher.kick();
   }
-  doc.addEventListener('visibilitychange', function () { if (doc.visibilityState === 'visible') wake(); else syncWakeLock(); });
+  doc.addEventListener('visibilitychange', function () { if (doc.visibilityState === 'visible') wake(); else { syncWakeLock(); syncWatch(); } });
   window.addEventListener('pageshow', wake);
   window.addEventListener('online', wake);
   var resizeTimer = 0;
@@ -5677,7 +5858,7 @@ html[data-table="stahl"] .dz button, html[data-table="stahl"] .set-head { text-t
     $('inName').value = sGet(LS, NAME_KEY) || '';
     var hc = hashCode();
     if (hc) $('inCode').value = hc;
-    session = N.createSession({ engine: E, storage: storage, transport: netKind, onUpdate: onSnap });
+    session = N.createSession({ engine: E, storage: storage, transport: netKind, onUpdate: onSnap, announce: true });
     cur = session.snap;
     renderAll();
     if (soloOnly) startError(SOLO_NOTE);

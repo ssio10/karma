@@ -463,6 +463,46 @@
     if (!n) return;
     try { session.host(n); } catch (e) { console.error(e); startError('Der Raum konnte nicht erstellt werden. Bitte versuche es nochmal.'); }
   }
+  /* ---------- Offene Räume (Startseite) ----------
+   * Solange die Startseite zu sehen ist, hört die App am Aushang mit (KarmaNet.watchRooms). */
+  var watcher = null, roomState = { searching: true, rooms: [] };
+  function syncWatch() {
+    var want = body.getAttribute('data-screen') === 'start' && !soloOnly && doc.visibilityState !== 'hidden';
+    if (want && !watcher) {
+      roomState = { searching: true, rooms: [] };
+      try { watcher = N.watchRooms({ transport: netKind, onChange: function (o) { roomState = o; renderRooms(); } }); } catch (e) { console.error(e); watcher = null; }
+      renderRooms();
+    } else if (!want && watcher) { watcher.close(); watcher = null; }
+  }
+  function renderRooms() {
+    var box = $('roomBox'), list = $('roomList'), rooms = roomState.rooms;
+    box.hidden = soloOnly || !watcher;
+    if (box.hidden) return;
+    clear(list);
+    rooms.forEach(function (r) {
+      var open = r.state !== 'game' && r.n < r.max;
+      var row = el('button', 'rrow' + (open ? '' : ' busy'));
+      row.setAttribute('data-code', r.code);
+      if (!open) row.disabled = true;
+      row.appendChild(el('span', 'dot'));
+      var mid = el('span', 'rmain');
+      mid.appendChild(el('b', null, 'Raum von ' + r.host));
+      mid.appendChild(el('small', null, (r.n === 1 ? '1 Spieler' : r.n + ' Spieler') + ' · ' + (r.state === 'game' ? 'Runde läuft' : r.n >= r.max ? 'voll' : 'wartet in der Lobby')));
+      row.appendChild(mid);
+      row.appendChild(el('span', 'rgo', open ? 'Beitreten' : r.state === 'game' ? 'läuft' : 'voll'));
+      row.setAttribute('aria-label', 'Raum von ' + r.host + ', ' + r.n + ' Spieler, ' + (open ? 'beitreten' : 'läuft gerade'));
+      list.appendChild(row);
+    });
+    $('roomNote').textContent = rooms.length ? '' : roomState.searching ? 'Suche offene Räume …' : 'Gerade ist kein Raum offen.';
+  }
+  function joinListed(e) {
+    var b = e.target && e.target.closest ? e.target.closest('.rrow') : null;
+    if (!b || b.disabled) return;
+    var n = getName();
+    if (!n) return;
+    Hap.fire('tick');
+    try { session.join(b.getAttribute('data-code'), n); } catch (err) { console.error(err); startError('Beitreten hat nicht geklappt. Bitte versuche es nochmal.'); }
+  }
   function doJoin() {
     if (soloOnly) { toast('Beitreten geht nur mit Online-Verbindung.'); return; }
     var code = N.normalizeCode($('inCode').value);
@@ -580,6 +620,7 @@
     else renderGame();
     if (openSheetId === 'sheetMenu') renderMenu();
     syncGiveUp();
+    syncWatch();
   }
   function renderStart() {
     var only = !sGet(SS, N.STORE_KEY) && savedSession(LS);
@@ -2201,6 +2242,7 @@
   function on(id, fn) { $(id).addEventListener('click', fn); }
   on('btnCreate', doCreate);
   on('btnJoin', doJoin);
+  on('roomList', joinListed);
   on('btnResume', doResume);
   on('btnConBack', function () { session.leave(); });
   on('btnAddBot', function () { session.lobby({ op: 'addBot' }); });
@@ -2342,8 +2384,10 @@
   function wake() {
     try { session.wake(); } catch (e) {}
     syncWakeLock();
+    syncWatch();
+    if (watcher) watcher.kick();
   }
-  doc.addEventListener('visibilitychange', function () { if (doc.visibilityState === 'visible') wake(); else syncWakeLock(); });
+  doc.addEventListener('visibilitychange', function () { if (doc.visibilityState === 'visible') wake(); else { syncWakeLock(); syncWatch(); } });
   window.addEventListener('pageshow', wake);
   window.addEventListener('online', wake);
   var resizeTimer = 0;
@@ -2366,7 +2410,7 @@
     $('inName').value = sGet(LS, NAME_KEY) || '';
     var hc = hashCode();
     if (hc) $('inCode').value = hc;
-    session = N.createSession({ engine: E, storage: storage, transport: netKind, onUpdate: onSnap });
+    session = N.createSession({ engine: E, storage: storage, transport: netKind, onUpdate: onSnap, announce: true });
     cur = session.snap;
     renderAll();
     if (soloOnly) startError(SOLO_NOTE);

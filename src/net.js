@@ -34,7 +34,10 @@
     turn: 50000,    // Zeit pro Zug; danach zieht der Host automatisch (0 = kein Zeitlimit)
     swap: 60000,    // Zeit für die Tauschphase; danach beginnt die Runde, auch wenn nicht alle bereit sind (0 = kein Limit)
     start: 3000,    // sind alle bereit: so lange kann man „Bereit“ noch zurücknehmen (0 = Runde beginnt sofort)
-    mix: true };    // Plätze nach jeder Runde mischen, solange der Host nichts anderes einstellt
+    mix: true,      // Plätze nach jeder Runde mischen, solange der Host nichts anderes einstellt
+    dirBeat: 4000,  // Aushang: so oft meldet der Host seinen Raum
+    dirGone: 11000, // Aushang: so lange ohne Meldung, dann gilt ein Raum als geschlossen
+    dirWait: 2500 };// Aushang: so lange nach dem Verbinden gilt die Liste noch als „wird gesucht“
 
   function randId(len, alpha) {
     alpha = alpha || ID_ALPHA;
@@ -150,11 +153,74 @@
     }
     return best;
   }
+  /* ---------- Aushang: Liste der offenen Räume ----------
+   * Jeder Host meldet seinen Raum auf einem festen, allen bekannten Kanal: Code, Name des Hosts, Zahl der
+   * Spieler und ob gerade gespielt wird. Die Startseite hört dort zu und zeigt die Liste. Es gibt keinen
+   * Server, der sich etwas merkt: Der Host meldet sich alle T.dirBeat neu und sofort, wenn jemand fragt
+   * (Kanal 'q'); bleibt die Meldung T.dirGone lang aus, verschwindet der Raum aus der Liste.
+   * Der Kanal ist nicht geheim – wer die Seite kennt, sieht die Räume und kann beitreten. So gewollt. */
+  var DIR_CODE = '#karma-aushang-1';   // kein gültiger Raumcode: kann mit keinem Raum zusammenfallen
+  var DIR_OPTS = { max: 3 };           // für den Aushang reichen drei der Relays
+  function cleanEntry(m) {
+    if (!m || typeof m !== 'object') return null;
+    var code = normalizeCode(m.code), n = m.n | 0;
+    if (code.length !== 5 || code !== m.code) return null;
+    if (m.gone) return { code: code, gone: true };
+    if (n < 1 || n > MAX_PLAYERS) return null;
+    return { code: code, host: cleanName(m.host), n: n, max: MAX_PLAYERS, state: m.st === 'game' ? 'game' : 'lobby' };
+  }
+  /* opts: { transport: 'mqtt'|'bc'|'mem', onChange({searching, rooms: [{code, host, n, max, state}]}) }
+   * Liefert { close(), kick() }. rooms: Lobbys zuerst, dann nach Name. */
+  function watchRooms(opts) {
+    opts = opts || {};
+    var make = transports[opts.transport || 'mqtt'], onChange = opts.onChange || function () {};
+    if (!make) throw new Error('Unbekannter Transport: ' + opts.transport);
+    var tr = make(DIR_CODE, DIR_OPTS), rooms = {}, closed = false, since = 0, last = '', timer = null;
+    function report() {
+      if (closed) return;
+      var now = Date.now(), list = [];
+      for (var c in rooms) { if (now - rooms[c].seen > T.dirGone) delete rooms[c]; else list.push(rooms[c].e); }
+      list.sort(function (a, b) {
+        return (a.state === 'game') - (b.state === 'game') || (a.host < b.host ? -1 : a.host > b.host ? 1 : 0) || (a.code < b.code ? -1 : 1);
+      });
+      var out = { searching: !since || (!list.length && now - since < T.dirWait), rooms: list }, key = JSON.stringify(out);
+      if (key === last) return;
+      last = key;
+      try { onChange(out); } catch (e) { if (typeof console !== 'undefined') console.error(e); }
+    }
+    tr.onMessage = function (ch, m) {
+      var e = ch === 'r' ? cleanEntry(m) : null;
+      if (!e) return;
+      if (e.gone) delete rooms[e.code]; else rooms[e.code] = { e: e, seen: Date.now() };
+      report();
+    };
+    tr.onStatus = function (on) {
+      if (!on || closed) return;
+      if (!since) since = Date.now();
+      tr.publish('q', { t: 'who' });
+      report();
+    };
+    tr.subscribe('r');
+    tr.start();
+    timer = setInterval(report, 1000);
+    return {
+      close: function () {
+        if (closed) return;
+        closed = true;
+        clearInterval(timer);
+        tr.onMessage = null; tr.onStatus = null;
+        try { tr.close(); } catch (e) {}
+      },
+      kick: function () { if (!closed) { tr.kick(); tr.publish('q', { t: 'who' }); } }
+    };
+  }
+
   function idleSnap() {
     return { stage: 'idle', error: null, code: null, isHost: false, seat: -1, conn: 'offline', hostOnline: false, pending: 0, lobby: null, view: null, room: null };
   }
 
-  /* opts: { engine, storage (localStorage-artig, optional), transport: 'mqtt'|'bc'|'mem', onUpdate(snap) }
+  /* opts: { engine, storage (localStorage-artig, optional), transport: 'mqtt'|'bc'|'mem', onUpdate(snap),
+   *         announce: true = als Host den Raum im Aushang melden (siehe watchRooms) }
    *
    * snap = {
    *   stage: 'idle' | 'connecting' | 'lobby' | 'game' | 'error',
@@ -177,6 +243,8 @@
     var store = opts.storage || null;
     var kind = opts.transport || 'mqtt';
     var onUpdate = opts.onUpdate || function () {};
+    var announce = !!opts.announce;
+    var dir = null, dirTimer = null, dirSoon = null, dirLast = '';   // Host: Verbindung zum Aushang
 
     var role = null, tr = null, online = false, tickTimer = null, botTimer = null, closeTimer = null;
     var clock = null, clockTimer = null;   // Host: laufendes Zeitlimit {key, base, swapEnd, end, total, kind: 'turn'|'swap'|'start'}
@@ -255,7 +323,45 @@
       if (tickTimer) clearInterval(tickTimer);
       tickTimer = setInterval(role === 'host' ? hostTick : clientTick, role === 'host' ? T.sweep : T.tick);
     }
+    /* ---------- Host: Raum im Aushang melden ---------- */
+    function dirEntry() {
+      return { code: H.code, host: H.players[0] ? H.players[0].name : '', n: H.players.filter(function (p) { return !p.left; }).length, st: H.game ? 'game' : 'lobby' };
+    }
+    function dirSend() {
+      if (!dir || role !== 'host' || !H) return;
+      var e = dirEntry();
+      dirLast = JSON.stringify(e);
+      dir.publish('r', e);
+    }
+    /* Nach einer Frage oder Änderung: gleich melden, aber mehrere Anlässe kurz hintereinander nur einmal. */
+    function dirSendSoon() {
+      if (!dir || dirSoon) return;
+      dirSoon = setTimeout(function () { dirSoon = null; dirSend(); }, 150);
+    }
+    function dirOpen() {
+      if (!announce || dir || !transports[kind]) return;
+      dir = transports[kind](DIR_CODE, DIR_OPTS);
+      dir.onMessage = function (ch) { if (ch === 'q') dirSendSoon(); };
+      dir.onStatus = function (on) { if (on) dirSendSoon(); };
+      dir.subscribe('q');
+      dir.start();
+      dirTimer = setInterval(dirSend, T.dirBeat);
+    }
+    function dirClose(bye) {
+      if (dirTimer) { clearInterval(dirTimer); dirTimer = null; }
+      if (dirSoon) { clearTimeout(dirSoon); dirSoon = null; }
+      var old = dir;
+      dir = null; dirLast = '';
+      if (!old) return;
+      old.onMessage = null; old.onStatus = null;
+      if (bye && H) {   // Abschied noch hinausschicken, dann schließen
+        old.publish('r', { code: H.code, gone: true });
+        setTimeout(function () { try { old.close(); } catch (e) {} }, 300);
+      } else { try { old.close(); } catch (e) {} }
+    }
+
     function teardown() {
+      dirClose(false);
       if (tickTimer) { clearInterval(tickTimer); tickTimer = null; }
       if (botTimer) { clearTimeout(botTimer); botTimer = null; }
       if (clockTimer) { clearTimeout(clockTimer); clockTimer = null; }
@@ -368,6 +474,7 @@
       armClock();
       save();
       for (var i = 0; i < H.players.length; i++) sendState(i);
+      if (dir && JSON.stringify(dirEntry()) !== dirLast) dirSendSoon();
       emit();
       driveBots();
     }
@@ -509,6 +616,7 @@
     function startHost() {
       role = 'host';
       openTransport(H.code, 'h', hostOnMsg);
+      dirOpen();
       armClock();
       save();
       emit();
@@ -725,6 +833,7 @@
     session.leave = function (silent) {
       if (role === 'client' && C && tr && !C.error) clientSend({ t: 'bye' });
       if (role === 'host' && H && tr) H.players.forEach(function (p) { if (!p.bot && !p.local) deny(p.pid, 'closed'); });
+      if (role === 'host' && H) dirClose(true);
       var old = tr;
       if (old) {   // kurz offen lassen, damit der Abschied noch rausgeht
         tr = null; old.onMessage = null; old.onStatus = null;
@@ -739,6 +848,7 @@
     /* Nach App-Wechsel / Bildschirm an: Verbindung prüfen und sofort neu abgleichen. */
     session.wake = function () {
       if (tr) tr.kick();
+      if (dir) { dir.kick(); dirSendSoon(); }
       if (role === 'client' && C) { C.nextPing = 0; C.nextHello = 0; C.nextResend = 0; clientTick(); }
     };
 
@@ -756,7 +866,7 @@
   }
 
   var api = {
-    createSession: createSession, transports: transports, memBus: memBus, T: T,
+    createSession: createSession, watchRooms: watchRooms, transports: transports, memBus: memBus, T: T,
     normalizeCode: normalizeCode, cleanName: cleanName, randId: randId,
     CODE_ALPHA: CODE_ALPHA, STORE_KEY: STORE_KEY, DESIGNS: DESIGNS,
     MAX_PLAYERS: MAX_PLAYERS, TURN_SECS: TURN_SECS, DECK_OPTS: DECK_OPTS,

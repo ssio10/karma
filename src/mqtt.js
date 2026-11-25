@@ -258,7 +258,8 @@
 
   /* ---------- Transport ---------- */
 
-  Net.transports.mqtt = function (roomCode) {
+  /* o.max: höchstens so viele Broker benutzen (die ersten der Liste) – für den Aushang der offenen Räume. */
+  Net.transports.mqtt = function (roomCode, o) {
     var t = { onMessage: null, onStatus: null };
     var keys = roomKeys(roomCode);
     var prefix = 'karma1/' + keys.tag + '/';
@@ -434,7 +435,7 @@
       if (started || closed) return;
       started = true;
       WS = Net.MQTT_WebSocket || root.WebSocket;
-      brokers = (Net.MQTT_BROKERS || []).map(function (spec) {
+      brokers = (Net.MQTT_BROKERS || []).slice(0, o && o.max > 0 ? o.max : undefined).map(function (spec) {
         var o = typeof spec === 'string' ? { url: spec } : spec || {};
         return {
           url: String(o.url), user: o.user, pass: o.pass, clientId: '',
