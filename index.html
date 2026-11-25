@@ -32,13 +32,14 @@
   --dk: 4, 18, 13;          /* dunkler Grundton für Schilder und Schleier */
   --dim: rgba(6, 28, 20, .5);
   --bg0: #1d2226;
+  --r-panel: 16px; --r-in: 12px; --r-chip: 999px;   /* Ecken: Flächen, Eingaben und Schalter, kleine Schilder */
   --sat: env(safe-area-inset-top, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
   --sal: env(safe-area-inset-left, 0px);
   --sar: env(safe-area-inset-right, 0px);
   /* Kartengrößen: Hand, eigene Auslage, Ablagestapel, Gegner, Tauschphase, Nachziehstapel */
-  --cw: clamp(46px, min(19vw, calc(var(--vh) * 10.5)), 84px);
-  --tw: clamp(40px, min(16vw, calc(var(--vh) * 8.4)), 68px);
+  --cw: clamp(46px, min(21vw, calc(var(--vh) * 10.8)), 90px);
+  --tw: clamp(40px, min(17vw, calc(var(--vh) * 8.6)), 72px);
   --pw: clamp(46px, min(20vw, calc(var(--vh) * 10)), 80px);
   --mwb: clamp(23px, min(8.2vw, calc(var(--vh) * 4.9)), 36px);
   --mw: var(--mwb);
@@ -89,7 +90,7 @@ body[data-screen="game"] #game { display: flex; }
   box-shadow: var(--btn-sh, inset 0 1px 0 rgba(255, 255, 255, .5), 0 2px 0 #a57716, 0 8px 18px rgba(0, 0, 0, .28));
   transition: transform .08s, opacity .15s;
 }
-.btn:active { transform: translateY(2px); }
+.btn:active { transform: translateY(2px); filter: brightness(.9); }
 .btn.sec { color: var(--ink); background: var(--sec-bg, rgba(255, 255, 255, .13)); box-shadow: var(--sec-sh, inset 0 0 0 1px var(--line)); }
 .btn.ghost { color: var(--mute); background: none; box-shadow: none; font-weight: 600; }
 .btn.danger { color: #ffd9d9; background: rgba(207, 26, 48, .22); box-shadow: inset 0 0 0 1px rgba(255, 120, 130, .35); }
@@ -140,17 +141,12 @@ body[data-screen="game"] #game { display: flex; }
 /* ---------- Start ---------- */
 #start { align-items: center; }
 .start-inner { width: 100%; max-width: 400px; margin: auto; padding: 20px 22px calc(18px + var(--sab)); display: flex; flex-direction: column; gap: 12px; }
-.logo-fan { position: relative; height: 92px; margin: 4px auto 0; width: 150px; }
-.logo-fan .card { --w: 58px; position: absolute; left: 46px; top: 6px; transform-origin: 50% 120%; }
-.logo-fan .card:nth-child(1) { transform: rotate(-22deg); }
-.logo-fan .card:nth-child(2) { transform: rotate(0deg); }
-.logo-fan .card:nth-child(3) { transform: rotate(22deg); }
 .logo { text-align: center; font-size: 46px; font-weight: 800; letter-spacing: .22em; margin-right: -.22em; color: var(--gold); text-shadow: 0 2px 0 rgba(0, 0, 0, .35), 0 8px 24px rgba(0, 0, 0, .35); }
 .tagline { text-align: center; color: var(--mute); font-size: 15px; margin-top: -8px; margin-bottom: 6px; }
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field span { font-size: 13px; font-weight: 600; color: var(--mute); padding-left: 4px; }
 input[type="text"] {
-  width: 100%; min-height: 50px; border-radius: 14px; border: 0; outline: 0; padding: 0 16px; font-size: 18px; font-weight: 600;
+  width: 100%; min-height: 50px; border-radius: var(--r-in); border: 0; outline: 0; padding: 0 16px; font-size: 18px; font-weight: 600;
   color: var(--ink); background: rgba(0, 0, 0, .3); box-shadow: inset 0 0 0 1px var(--line);
 }
 input[type="text"]::placeholder { color: rgba(255, 255, 255, .32); font-weight: 500; }
@@ -161,7 +157,7 @@ input[type="text"]:focus { box-shadow: inset 0 0 0 2px var(--gold); }
 .join-row .code-in { flex: 1; min-width: 0; text-align: center; letter-spacing: .28em; text-transform: uppercase; font-size: 20px; font-weight: 700; padding: 0 8px; }
 .join-row .code-in::placeholder { letter-spacing: .28em; }
 .join-row .btn { flex: none; }
-.alert { padding: 10px 14px; border-radius: 12px; background: rgba(207, 26, 48, .22); box-shadow: inset 0 0 0 1px rgba(255, 120, 130, .35); color: #ffe1e1; font-size: 14px; }
+.alert { padding: 10px 14px; border-radius: var(--r-in); background: rgba(207, 26, 48, .22); box-shadow: inset 0 0 0 1px rgba(255, 120, 130, .35); color: #ffe1e1; font-size: 14px; }
 .build { text-align: center; color: rgba(255, 255, 255, .28); font-size: 11px; margin-top: 2px; }
 .shake { animation: shake .36s; }
 @keyframes shake { 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
@@ -183,13 +179,13 @@ input[type="text"]:focus { box-shadow: inset 0 0 0 2px var(--gold); }
 /* ---------- Lobby ---------- */
 .lobby-body { flex: 1; min-height: 0; padding: 4px 16px 12px; display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 520px; margin: 0 auto; }
 .lobby-body > * { flex: none; }
-.code-card { background: var(--panel); border-radius: 18px; padding: 12px 16px 14px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.code-label { font-size: 12px; font-weight: 600; color: var(--mute); text-transform: uppercase; letter-spacing: .12em; }
-.code-big { font-size: clamp(38px, 13vw, 54px); font-weight: 800; letter-spacing: .18em; margin-right: -.18em; color: var(--gold); line-height: 1.1; -webkit-user-select: text; user-select: text; }
-.code-card .btn { margin-top: 6px; }
+.lobby-body { -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 22px), rgba(0, 0, 0, 0)); mask-image: linear-gradient(180deg, #000 calc(100% - 22px), rgba(0, 0, 0, 0)); padding-bottom: 24px; }
+.code-card { background: var(--panel); border-radius: var(--r-panel); padding: 10px 12px 10px 16px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 10px; box-shadow: inset 0 0 0 1px var(--line); }
+.code-label { grid-column: 1 / 3; font-size: 11px; font-weight: 600; color: var(--mute); text-transform: uppercase; letter-spacing: .12em; }
+.code-big { font-size: clamp(32px, 10.5vw, 46px); font-weight: 800; letter-spacing: .16em; color: var(--gold); line-height: 1.1; white-space: nowrap; -webkit-user-select: text; user-select: text; }
 .hint { color: var(--mute); font-size: 14px; text-align: center; }
 .plist { display: flex; flex-direction: column; gap: 6px; }
-.prow { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 6px 6px 6px 14px; border-radius: 14px; background: var(--panel); text-align: left; width: 100%; }
+.prow { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 6px 6px 6px 14px; border-radius: var(--r-panel); background: var(--panel); text-align: left; width: 100%; }
 .prow-main { flex: 1; min-width: 0; min-height: 40px; display: flex; align-items: center; gap: 10px; text-align: left; }
 .prow .dot { width: 10px; height: 10px; border-radius: 50%; background: #58d68d; flex: none; box-shadow: 0 0 0 3px rgba(88, 214, 141, .18); }
 .prow.off .dot { background: #7c8a84; box-shadow: none; }
@@ -199,7 +195,7 @@ input[type="text"]:focus { box-shadow: inset 0 0 0 2px var(--gold); }
 .prow .psub { font-size: 12px; color: var(--gold); font-weight: 600; }
 .prow .psub.grey { color: var(--mute); }
 .prow.gone .pname > span:first-child { text-decoration: line-through; opacity: .65; }
-.badge { flex: none; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 999px; background: rgba(255, 255, 255, .14); color: var(--ink); }
+.badge { flex: none; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: var(--r-chip); background: rgba(255, 255, 255, .14); color: var(--ink); }
 .badge.gold { background: rgba(var(--acc), .22); color: var(--gold); }
 .badge.red { background: rgba(207, 26, 48, .3); color: #ffc9c9; }
 .prow .icon-btn { color: var(--mute); }
@@ -226,11 +222,11 @@ body.is-host .guest-only { display: none !important; }
 .sw-row .card.drop { box-shadow: var(--face-in), 0 0 0 4px var(--gold), 0 0 22px rgba(var(--acc), .7); transform: scale(1.05); }
 .sw-row.locked .card { cursor: default; }
 .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 4px; }
-.pchip { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--panel); color: var(--mute); max-width: 46vw; }
+.pchip { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: var(--r-chip); background: var(--panel); color: var(--mute); max-width: 46vw; }
 .pchip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pchip svg { width: 14px; height: 14px; flex: none; }
 .pchip i { width: 14px; text-align: center; font-style: normal; flex: none; }
-.pchip.ok { color: #0d2a1e; background: #7fdca4; }
+.pchip.ok { color: var(--on-acc); background: var(--gold); }
 .sw-start { font-size: 13px; color: var(--mute); text-align: center; min-height: 18px; }
 .sw-clock { font-size: 15px; font-weight: 700; color: var(--ink); text-align: center; min-height: 20px; font-variant-numeric: tabular-nums; }
 .sw-clock.low { color: #ff8b7e; }
@@ -258,6 +254,7 @@ body.is-host .guest-only { display: none !important; }
 .opp-side.r { justify-self: end; padding-right: 6px; }
 /* Viele Mitspieler: Die Gegner rücken zusammen und werden kleiner (data-k = Zahl der Gegner). */
 .table { --mw: calc(var(--mwb) * var(--os, 1)); }
+.table[data-k="1"], .table[data-k="2"] { --os: 1.3; }   /* wenige Mitspieler: mehr Platz, größere Karten */
 .table[data-k="6"], .table[data-k="7"] { --os: .86; }
 .table[data-k="8"], .table[data-k="9"] { --os: .74; }
 .table[data-k="10"] { --os: .66; }
@@ -330,6 +327,8 @@ body.is-host .opp.off { cursor: pointer; }
 
 .req-row { flex: none; margin-bottom: auto; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 2px 8px 6px; }
 .chip { max-width: min(100%, 290px); text-wrap: balance; padding: 5px 14px; border-radius: var(--pill-r, 999px); background: rgba(var(--dk), .6); box-shadow: inset 0 0 0 1px var(--line); font-size: clamp(13px, 3.7vw, 15px); font-weight: 700; text-align: center; transition: transform .15s, background .15s; }
+.chip b { display: block; font-weight: inherit; }
+.chip small { display: block; margin-top: 1px; font-size: .76em; font-weight: 600; letter-spacing: .02em; text-transform: none; opacity: .72; }
 .chip.warn { background: rgba(207, 26, 48, .5); box-shadow: inset 0 0 0 1px rgba(255, 140, 150, .5); }
 .chip.dark { background: rgba(0, 0, 0, .7); }
 .chip.flash { animation: flash .5s; }
@@ -337,7 +336,7 @@ body.is-host .opp.off { cursor: pointer; }
 .tinfo { font-size: 12px; color: var(--mute); min-height: 16px; text-align: center; }
 .tinfo.rep { color: #f0c987; }
 .g-toast { position: absolute; left: 8px; right: 8px; bottom: 4px; display: flex; justify-content: center; transform: translateY(8px) scale(.94); opacity: 0; pointer-events: none; z-index: 40; transition: opacity .18s, transform .18s; }
-.g-toast span { max-width: 100%; padding: 9px 20px; border-radius: 16px; background: rgba(var(--dk), .93); color: var(--gold); font-size: clamp(16px, 4.8vw, 22px); line-height: 1.2; font-weight: 800; text-align: center; box-shadow: 0 0 0 1.5px rgba(var(--acc), .5), 0 10px 30px rgba(0, 0, 0, .5); }
+.g-toast span { max-width: 100%; padding: 9px 20px; border-radius: var(--r-panel); background: rgba(var(--dk), .93); color: var(--gold); font-size: clamp(16px, 4.8vw, 22px); line-height: 1.2; font-weight: 800; text-align: center; box-shadow: 0 0 0 1.5px rgba(var(--acc), .5), 0 10px 30px rgba(0, 0, 0, .5); }
 .g-toast span i, .toast span i { display: block; font-style: normal; }
 .g-toast span i.more { font-size: .78em; margin-top: 3px; color: var(--ink); }
 .g-toast.show { opacity: 1; transform: none; }
@@ -346,7 +345,7 @@ body.is-host .opp.off { cursor: pointer; }
 
 .won { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: none; align-items: center; justify-content: center; padding: 6px 14px; z-index: 57; pointer-events: none; }
 .won.open { display: flex; }
-.won-box { pointer-events: auto; width: 100%; max-width: 330px; background: var(--panel-2); border-radius: 20px; padding: 14px 16px; text-align: center; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 0 0 1.5px rgba(var(--acc), .55), 0 18px 44px rgba(0, 0, 0, .6); animation: wonin .32s cubic-bezier(.2, .9, .3, 1.25); }
+.won-box { pointer-events: auto; width: 100%; max-width: 330px; background: var(--panel-2); border-radius: var(--r-panel); padding: 14px 16px; text-align: center; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 0 0 1.5px rgba(var(--acc), .55), 0 18px 44px rgba(0, 0, 0, .6); animation: wonin .32s cubic-bezier(.2, .9, .3, 1.25); }
 @keyframes wonin { from { transform: scale(.8); opacity: 0; } }
 .won-star { width: 40px; height: 40px; margin: 0 auto; color: var(--gold); }
 .won-box h2 { font-size: 21px; line-height: 1.2; color: var(--gold); overflow-wrap: anywhere; }
@@ -369,12 +368,12 @@ body.is-host .opp.off { cursor: pointer; }
 @keyframes bob { 50% { transform: translateY(-6%); } }
 
 .hand-wrap { min-width: 0; }
-.hand-info { position: absolute; right: 8px; top: 8px; z-index: 5; max-width: 86px; font-size: 11px; line-height: 1.25; font-weight: 700; text-align: center; color: var(--mute); background: rgba(var(--dk), .6); padding: 4px 8px; border-radius: 10px; pointer-events: none; }
-.hand-scroll { overflow-x: auto; overflow-y: hidden; padding: 22px 8px 4px; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; scrollbar-width: none; touch-action: none; }
+.hand-info { position: absolute; right: 8px; top: 8px; z-index: 5; max-width: 86px; font-size: 11px; line-height: 1.25; font-weight: 700; text-align: center; color: var(--mute); background: rgba(var(--dk), .6); padding: 4px 8px; border-radius: var(--r-in); pointer-events: none; }
+.hand-scroll { overflow-x: auto; overflow-y: hidden; padding: 22px 8px 10px; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; scrollbar-width: none; touch-action: none; }
 .hand-scroll::-webkit-scrollbar { display: none; }
 .hand-scroll.scrolls { touch-action: pan-x; }
 .hand { position: relative; height: calc(var(--cw) * 1.4); margin: 0 auto; }
-.hc { position: absolute; left: 0; top: 0; transition: transform .24s cubic-bezier(.2, .8, .2, 1); will-change: transform; }
+.hc { position: absolute; left: 0; top: 0; transform-origin: 50% 100%; transition: transform .24s cubic-bezier(.2, .8, .2, 1); will-change: transform; }
 .hc .card { --w: var(--cw); transition: transform .14s, box-shadow .14s, opacity .2s; cursor: pointer; }
 .hc.enter .card { opacity: 0; transform: translateY(40%); }
 /* frisch nachgezogen: kurz blau umrandet (nur Deckkraft wird animiert) */
@@ -392,7 +391,7 @@ body.is-host .opp.off { cursor: pointer; }
 .card.lifted { opacity: 0 !important; transition: none !important; }
 .hc .card.shake, .my-table .card.shake { animation: shake .36s; }
 
-.actions { display: flex; align-items: center; gap: 8px; height: 52px; padding: 2px 10px 0; }
+.actions { display: flex; align-items: center; gap: 8px; height: 50px; padding: 0 10px; }
 .act-hint { flex: 1; min-width: 0; font-size: 14px; color: var(--mute); text-align: center; line-height: 1.25; }
 .act-hint.strong { font-size: 15px; font-weight: 700; color: var(--gold); }
 .actions .btn { min-height: 46px; flex: 1; padding: 0 10px; font-size: 16px; white-space: nowrap; }
@@ -409,7 +408,7 @@ body.is-host .opp.off { cursor: pointer; }
 .done-text:empty { display: none; }
 .done-panel .btn { min-width: 180px; }
 /* Aufgeben: klein links neben den eigenen Tischkarten, mit dem Daumen erreichbar. Nur da, solange zwei Spieler übrig sind. */
-.give-up { position: absolute; left: 6px; top: 6px; z-index: 6; width: 62px; min-height: 48px; padding: 5px 2px 4px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--mute); font-size: 11px; font-weight: 700; line-height: 1.1; background: rgba(var(--dk), .38); box-shadow: inset 0 0 0 1px var(--line); transition: opacity .15s; }
+.give-up { position: absolute; left: 6px; top: 6px; z-index: 6; width: 62px; min-height: 48px; padding: 5px 2px 4px; border-radius: var(--r-in); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--mute); font-size: 11px; font-weight: 700; line-height: 1.1; background: rgba(var(--dk), .38); box-shadow: inset 0 0 0 1px var(--line); transition: opacity .15s; }
 .give-up svg { width: 18px; height: 18px; flex: none; }
 .give-up:active { background: rgba(207, 26, 48, .3); color: #ffd9d9; }
 .give-up:disabled { opacity: .45; pointer-events: none; }
@@ -422,13 +421,13 @@ body.is-host .opp.off { cursor: pointer; }
 .over.open { display: flex; animation: fadein .35s .55s forwards; }
 @keyframes fadein { from { visibility: visible; } to { opacity: 1; visibility: visible; } }
 .over.open.shown { opacity: 1; visibility: visible; animation: none; }
-.over-box { width: 100%; max-width: 340px; max-height: 100%; background: var(--panel-2); border-radius: 22px; padding: 20px 18px; text-align: center; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 0 0 1.5px rgba(var(--acc), .45), 0 20px 50px rgba(0, 0, 0, .5); }
+.over-box { width: 100%; max-width: 340px; max-height: 100%; background: var(--panel-2); border-radius: var(--r-panel); padding: 20px 18px; text-align: center; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 0 0 1.5px rgba(var(--acc), .45), 0 20px 50px rgba(0, 0, 0, .5); }
 .over-box > * { flex: none; }
 .over-star { width: 50px; height: 50px; margin: 0 auto; color: var(--gold); }
 .over-box h2 { font-size: 25px; line-height: 1.2; color: var(--gold); overflow-wrap: anywhere; }
 .over-note { font-size: 14px; color: var(--ink); }
 .over-list { display: flex; flex-direction: column; gap: 5px; text-align: left; }
-.rank { display: flex; flex-wrap: wrap; align-items: center; gap: 0 8px; min-height: 36px; padding: 5px 10px; border-radius: 10px; background: rgba(0, 0, 0, .2); font-size: 15px; }
+.rank { display: flex; flex-wrap: wrap; align-items: center; gap: 0 8px; min-height: 36px; padding: 5px 10px; border-radius: var(--r-in); background: rgba(0, 0, 0, .2); font-size: 15px; }
 .rank b { flex: none; min-width: 20px; color: var(--mute); }
 .rank-name { flex: 0 1 auto; min-width: 0; max-width: 64%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; color: var(--ink); }
 .rank-tag { flex: 1 1 0; min-width: 0; font-size: 12px; line-height: 1.2; text-align: right; color: var(--mute); }
@@ -463,7 +462,7 @@ body.net-warn .over { top: calc(var(--sat) + 68px); }
 .rules-text .special li { display: flex; gap: 10px; align-items: flex-start; }
 .rules-text .special li > b { flex: none; min-width: 50px; text-align: center; padding: 3px 4px; border-radius: 8px; background: #f5f2e9; color: var(--blk); font-size: 14px; }
 .rules-text .special i { font-style: normal; font-weight: 700; color: var(--ink); }
-.rules-text .rank-line { padding: 8px 12px; border-radius: 10px; background: rgba(0, 0, 0, .22); font-weight: 700; font-size: 14px; }
+.rules-text .rank-line { padding: 8px 12px; border-radius: var(--r-in); background: rgba(0, 0, 0, .22); font-weight: 700; font-size: 14px; }
 .rules-text .rank-line span { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--mute); margin-bottom: 2px; }
 .muted { color: var(--mute); font-size: 14px; }
 .menu-note { text-align: center; padding: 2px 0 4px; }
@@ -471,9 +470,9 @@ body.net-warn .over { top: calc(var(--sat) + 68px); }
 .menu-code span { color: var(--mute); font-size: 14px; }
 .menu-code b { flex: 1; font-size: 24px; letter-spacing: .1em; color: var(--gold); -webkit-user-select: text; user-select: text; }
 .menu-btns { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
-.link-out { width: 100%; margin-top: 10px; border-radius: 12px; border: 0; padding: 12px; font-size: 16px; color: var(--ink); background: rgba(0, 0, 0, .3); box-shadow: inset 0 0 0 1px var(--line); resize: none; word-break: break-all; }
+.link-out { width: 100%; margin-top: 10px; border-radius: var(--r-in); border: 0; padding: 12px; font-size: 16px; color: var(--ink); background: rgba(0, 0, 0, .3); box-shadow: inset 0 0 0 1px var(--line); resize: none; word-break: break-all; }
 .center-wrap { align-items: center; padding: 20px; z-index: 80; }
-.dialog { width: 100%; max-width: 340px; background: var(--panel-2); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 20px 50px rgba(0, 0, 0, .55); animation: sheetin .2s; }
+.dialog { width: 100%; max-width: 340px; background: var(--panel-2); border-radius: var(--r-panel); padding: 20px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 20px 50px rgba(0, 0, 0, .55); animation: sheetin .2s; }
 .dialog h2 { font-size: 19px; }
 .dialog p { color: var(--mute); font-size: 15px; }
 .dialog p:empty { display: none; }
@@ -488,7 +487,7 @@ body.net-warn .over { top: calc(var(--sat) + 68px); }
 .fx .ghost-pile { position: absolute; will-change: transform, opacity; }
 .fx .ghost-pile .card { --w: var(--pw); position: absolute; top: 0; left: 0; }
 .toast { position: absolute; left: 16px; right: 16px; bottom: calc(var(--sab) + 84px); display: flex; justify-content: center; transform: translateY(10px); opacity: 0; pointer-events: none; z-index: 90; transition: opacity .2s, transform .2s; }
-.toast span { max-width: 100%; padding: 10px 18px; border-radius: 14px; background: rgba(var(--dk), .94); color: var(--ink); font-size: 15px; font-weight: 600; text-align: center; box-shadow: 0 0 0 1px var(--line), 0 10px 30px rgba(0, 0, 0, .5); }
+.toast span { max-width: 100%; padding: 10px 18px; border-radius: var(--r-panel); background: rgba(var(--dk), .94); color: var(--ink); font-size: 15px; font-weight: 600; text-align: center; box-shadow: 0 0 0 1px var(--line), 0 10px 30px rgba(0, 0, 0, .5); }
 .toast.show { opacity: 1; transform: none; }
 /* am Spieltisch oben, damit die Meldung nicht über den eigenen Karten liegt */
 body[data-screen="game"] .toast { bottom: auto; top: calc(var(--sat) + 50px); }
@@ -583,11 +582,12 @@ html.prison .origin { display: block; }
 html.prison .tagline { margin-bottom: 0; }
 
 /* Einstellungen im Menü: Design (Host, für alle) und Töne (pro Gerät) */
-.menu-set { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; padding: 10px 12px; border-radius: 14px; background: rgba(0, 0, 0, .2); }
+.menu-set { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; padding: 10px 12px; border-radius: var(--r-panel); background: rgba(0, 0, 0, .2); }
 .set-row { display: flex; align-items: center; gap: 10px; min-height: 40px; }
 .set-row > span { flex: none; width: 54px; font-size: 14px; font-weight: 600; color: var(--mute); }
 .seg { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
-.seg button { min-height: 40px; padding: 0 2px; border-radius: 10px; font-size: 13px; font-weight: 700; color: var(--ink); background: rgba(255, 255, 255, .09); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.seg button { min-height: 40px; padding: 0 2px; border-radius: var(--r-in); font-size: 13px; font-weight: 700; color: var(--ink); background: rgba(255, 255, 255, .09); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.seg button:active { filter: brightness(1.35); }
 .seg button[aria-pressed="true"] { color: var(--on-acc); background: var(--gold); box-shadow: none; }
 .seg.n2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .seg.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -625,7 +625,7 @@ html.prison .tagline { margin-bottom: 0; }
 html.prison .tally { display: inline-flex; }
 .tally svg { height: 17px; width: auto; display: block; flex: none; }
 .wall { display: none; }
-html.prison .wall { display: block; text-align: left; padding: 8px 10px 9px; border-radius: 10px; background: rgba(0, 0, 0, .22); }
+html.prison .wall { display: block; text-align: left; padding: 8px 10px 9px; border-radius: var(--r-in); background: rgba(0, 0, 0, .22); }
 .wall-title { font-size: 11px; font-weight: 600; color: var(--mute); margin-bottom: 4px; }
 .wall-row { display: flex; align-items: center; gap: 10px; min-height: 23px; font-size: 13px; font-weight: 700; }
 .wall-row > span:first-child { flex: 0 1 auto; min-width: 0; max-width: 46%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -705,7 +705,8 @@ html[data-table="stahl"] .seg button { font-size: 14px; letter-spacing: .04em; }
 html[data-table="stahl"] .tbar { font-size: 17px; }
 html[data-table="stahl"] .opp-name { font-size: 14px; }
 html[data-table="stahl"] .logo { font-weight: 700; letter-spacing: .16em; margin-right: -.16em; font-size: 56px; }
-html[data-table="stahl"] .chip { font-size: 16px; letter-spacing: .1em; }
+html[data-table="stahl"] .chip { font-size: 17px; letter-spacing: .1em; }
+html[data-table="stahl"] .chip small { letter-spacing: .05em; text-transform: uppercase; font-size: .7em; }
 
 /* ---------- Tisch „Hof“: Betonboden im Gefängnishof, Kreide, Abendsonne ---------- */
 html[data-table="hof"] {
@@ -860,6 +861,65 @@ html[data-cards="hood"] .card.jk .jt { font-size: calc(var(--w) * .17); -webkit-
 /* Hinweise liegen frei auf dem Tischbild */
 .act-hint, #turnText, .dir-note { text-shadow: 0 1px 3px rgba(0, 0, 0, .75); }
 
+/* ====================================================================
+   Feinschliff: Ecken je Tisch, Sonderkarten-Zeichen, Design-Kacheln, Startseite, Rückmeldungen
+   ==================================================================== */
+html[data-table="stahl"] { --r-panel: 5px; --r-in: 4px; --r-chip: 3px; }
+html[data-table="hof"] { --r-panel: 10px 14px 9px 13px / 13px 9px 14px 10px; --r-in: 8px 11px 7px 10px / 10px 7px 11px 8px; --r-chip: 7px 9px 6px 8px / 8px 6px 9px 7px; }
+html[data-table="nacht"] { --r-panel: 8px; --r-in: 6px; --r-chip: 5px; }
+html[data-table="boss"] { --r-panel: 14px; --r-in: 10px; --r-chip: 999px; }
+
+/* Sonderkarten: kleines Zeichen unten links (2 frei, 3 Richtungswechsel, 7 tiefer, 10 brennt). Mit der Spielhilfe abschaltbar. */
+.card .fxi { position: absolute; left: calc(var(--w) * .085); bottom: calc(var(--w) * .085); width: calc(var(--w) * .23); height: calc(var(--w) * .23); opacity: .78; }
+.card .fxi svg { display: block; width: 100%; height: 100%; }
+.card.mini .fxi, body.no-help .card .fxi { display: none; }
+html[data-cards="schwarz"] .card .fxi, html[data-cards="tattoo"] .card .fxi, html[data-cards="hood"] .card .fxi { left: calc(var(--w) * .12); bottom: calc(var(--w) * .12); }
+html[data-cards="hood"] .card .fxi { opacity: 1; left: calc(var(--w) * .1); width: calc(var(--w) * .21); height: calc(var(--w) * .21); }
+
+/* Design-Auswahl: Kacheln mit Vorschaubild */
+#menuDesign { display: flex; flex-direction: column; gap: 6px; }
+.design-set { gap: 6px; }
+.design-set .dz + .set-head { margin-top: 4px; }
+.dz { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.dz button { display: flex; flex-direction: column; gap: 3px; padding: 3px 3px 4px; border-radius: var(--r-in); background: rgba(255, 255, 255, .08); box-shadow: inset 0 0 0 1px var(--line); font-size: 13px; font-weight: 700; line-height: 1.3; color: var(--mute); transition: transform .08s; }
+.dz button:active { transform: scale(.96); }
+.dz button i { display: block; width: 100%; height: 0; padding-bottom: 68%; border-radius: 3px; background: #111 center / cover no-repeat; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .35); }
+.dz button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dz button[aria-pressed="true"] { color: var(--on-acc); background: var(--gold); box-shadow: 0 0 0 1px var(--gold), 0 0 14px rgba(var(--acc), .45); }
+.dz [data-table="stahl"] i { background-image: url("img/s-t-stahl.jpg"); }
+.dz [data-table="hof"] i { background-image: url("img/s-t-hof.jpg"); }
+.dz [data-table="nacht"] i { background-image: url("img/s-t-nacht.jpg"); }
+.dz [data-table="boss"] i { background-image: url("img/s-t-boss.jpg"); }
+.dz [data-cards="stift"] i { background: #f9ecc0 url("img/s-c-stift.jpg") center 22% / cover no-repeat; background-blend-mode: multiply; }
+.dz [data-cards="schwarz"] i { background: #000 url("img/s-c-schwarz.jpg") center 22% / cover no-repeat; }
+.dz [data-cards="tattoo"] i { background: #fae4bf url("img/s-c-tattoo.jpg") center 22% / cover no-repeat; background-blend-mode: multiply; }
+.dz [data-cards="hood"] i { background: #f2714e url("img/s-c-hood.jpg") center 22% / cover no-repeat; }
+html.prison .dz button, html.prison .set-head { font-family: var(--f-head); }
+html[data-table="stahl"] .dz button, html[data-table="stahl"] .set-head { text-transform: uppercase; letter-spacing: .06em; }
+
+/* Startseite: fünf Karten als Fächer, der sich beim Öffnen auffaltet */
+.logo-fan { position: relative; height: 124px; width: 220px; margin: 0 auto; }
+.logo-fan .card { --w: 64px; position: absolute; left: 78px; top: 14px; transform-origin: 50% 145%; animation: fanout .7s cubic-bezier(.2, .9, .3, 1.15) backwards; box-shadow: var(--face-in), var(--card-out), 0 10px 18px rgba(0, 0, 0, .45); }
+.logo-fan .card:nth-child(1) { transform: rotate(-36deg); }
+.logo-fan .card:nth-child(2) { transform: rotate(-18deg); animation-delay: .04s; }
+.logo-fan .card:nth-child(3) { transform: rotate(0deg); animation-delay: .08s; }
+.logo-fan .card:nth-child(4) { transform: rotate(18deg); animation-delay: .12s; }
+.logo-fan .card:nth-child(5) { transform: rotate(36deg); animation-delay: .16s; }
+@keyframes fanout { from { transform: rotate(0deg) translateY(14%); opacity: 0; } }
+
+/* Rückmeldungen: „Du bist dran“ springt kurz auf, der Stapel federt, wenn eine Karte landet */
+.tbar.me { animation: turnpop .42s cubic-bezier(.2, .9, .3, 1.3); }
+@keyframes turnpop { from { transform: scale(.9); } 55% { transform: scale(1.05); } }
+.pile-tap.thud .pile { animation: thud .2s ease-out; }
+@keyframes thud { 35% { transform: scale(.955); } }
+.icon-btn:active { transform: scale(.92); }
+.prow .icon-btn:active { color: var(--ink); }
+/* Blätter und Dialoge: der Tisch dahinter wird weich */
+.sheet-wrap, .over { -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); }
+.sheet, .dialog, .over-box, .won-box { box-shadow: inset 0 0 0 1px var(--line), 0 18px 44px rgba(0, 0, 0, .55); }
+.won-box, .over-box { box-shadow: inset 0 0 0 1.5px rgba(var(--acc), .5), 0 18px 44px rgba(0, 0, 0, .6); }
+@media (prefers-reduced-motion: reduce) { .logo-fan .card, .tbar.me, .pile-tap.thud .pile { animation: none; } }
+
 </style>
 </head>
 <body data-screen="start">
@@ -881,6 +941,11 @@ html[data-cards="hood"] .card.jk .jt { font-size: calc(var(--w) * .17); -webkit-
   <symbol id="p-C" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g clip-path="url(#pc-C)" stroke-width="1.5"><path d="M0 3L3 0M0 6L6 0M0 9L9 0M0 12L12 0M0 15L15 0M0 18L18 0M0 21L21 0M0 24L24 0M0 27L27 0M0 30L30 0M0 33L33 0M0 36L36 0M0 39L39 0M0 42L42 0M0 45L45 0"/><path d="M-21 0L3 24M-18 0L6 24M-15 0L9 24M-12 0L12 24M-9 0L15 24M-6 0L18 24M-3 0L21 24M0 0L24 24M3 0L27 24M6 0L30 24M9 0L33 24M12 0L36 24M15 0L39 24M18 0L42 24M21 0L45 24"/></g><path stroke-width="1.7" d="M12 3.1a4.1 4.1 0 1 0 .1 0ZM6.9 9.7a4.1 4.1 0 1 0 .1 0ZM17.2 9.8a4.1 4.1 0 1 0 .1 0ZM11.5 12.5C11.6 16.4 10.9 19.3 9.2 21.4H15C13.2 19.2 12.5 16.5 12.6 12.5Z"/></g></symbol>
   <clipPath id="pc-J"><path d="M12 1.8l2.9 6.6 7.2.7-5.4 4.8 1.6 7L12 17.2l-6.3 3.7 1.6-7-5.4-4.8 7.2-.7z"/></clipPath>
   <symbol id="p-J" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g clip-path="url(#pc-J)" stroke-width="1.5"><path d="M0 3L3 0M0 6L6 0M0 9L9 0M0 12L12 0M0 15L15 0M0 18L18 0M0 21L21 0M0 24L24 0M0 27L27 0M0 30L30 0M0 33L33 0M0 36L36 0M0 39L39 0M0 42L42 0M0 45L45 0"/><path d="M-21 0L3 24M-18 0L6 24M-15 0L9 24M-12 0L12 24M-9 0L15 24M-6 0L18 24M-3 0L21 24M0 0L24 24M3 0L27 24M6 0L30 24M9 0L33 24M12 0L36 24M15 0L39 24M18 0L42 24M21 0L45 24"/></g><path stroke-width="1.7" d="M12 1.8l2.9 6.6 7.2.7-5.4 4.8 1.6 7L12 17.2l-6.3 3.7 1.6-7-5.4-4.8 7.2-.7z"/></g></symbol>
+  <!-- Sonderkarten: 2 = frei (offenes Schloss), 3 = Richtungswechsel, 7 = tiefer, 10 = Stapel brennt -->
+  <symbol id="e-2" viewBox="0 0 24 24"><path fill="currentColor" d="M5.500 11h13a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-13a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1z"/><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M8 11V7.600a4 4 0 0 1 7.700-1.500"/></symbol>
+  <symbol id="e-3" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.600" stroke-linecap="round" stroke-linejoin="round" d="M4.500 10.500a7.700 7.700 0 0 1 13.800-3.300M19.500 13.500a7.700 7.700 0 0 1-13.800 3.300M19 3v4.500h-4.500M5 21v-4.500h4.500"/></symbol>
+  <symbol id="e-7" viewBox="0 0 24 24"><path fill="currentColor" d="M9.200 2.500h5.600v9.700h4.700L12 21.500 4.500 12.200h4.700z"/></symbol>
+  <symbol id="e-10" viewBox="0 0 24 24"><path fill="currentColor" d="M13.200 1.800c.5 3.500 5.300 5.700 5.300 11.200 0 4-2.900 7.200-6.500 7.200S5.500 17 5.500 13c0-2.500 1.200-4.400 2.600-5.900.2 2.100 1 3.400 2.200 4.100-.5-3.600.5-7.100 2.900-9.400z"/></symbol>
   <symbol id="i-menu" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></symbol>
   <symbol id="i-flag" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M6 21V4M6 5h11.5l-2.6 4 2.6 4H6"/></symbol>
@@ -918,7 +983,7 @@ html[data-cards="hood"] .card.jk .jt { font-size: calc(var(--w) * .17); -webkit-
         <button id="btnRules" class="btn ghost" data-act="rules">Regeln</button>
         <button class="btn ghost" data-act="settings">Einstellungen</button>
       </div>
-      <div class="build">Version 2026-11-25 00:00</div>
+      <div class="build">Version 2026-11-25 18:19</div>
     </div>
   </section>
 
@@ -946,9 +1011,10 @@ html[data-cards="hood"] .card.jk .jt { font-size: calc(var(--w) * .17); -webkit-
         <button id="btnShare" class="btn sec small" data-act="share">Link teilen</button>
       </div>
       <p id="lobbyHint" class="hint"></p>
-      <div id="lobbyOpts" class="menu-set room-opts" hidden></div>
       <div id="lobbyList" class="plist"></div>
       <button id="btnAddBot" class="btn sec host-only">Bot hinzufügen</button>
+      <div id="lobbyDesign" class="menu-set room-opts design-set host-only"></div>
+      <div id="lobbyOpts" class="menu-set room-opts" hidden></div>
     </div>
     <footer class="foot">
       <button id="btnStart" class="btn host-only">Spiel starten</button>
@@ -1149,6 +1215,7 @@ html[data-cards="hood"] .card.jk .jt { font-size: calc(var(--w) * .17); -webkit-
         <p>Karte antippen und „Legen“ drücken, den Ablagestapel antippen – oder die Karte einfach in die Tischmitte ziehen. Mehrere gleiche Handkarten nacheinander antippen, um sie zusammen zu legen. Neu gezogene Karten leuchten kurz blau auf.</p>
         <p>Bist du dran, hörst du einen Ton, das Handy vibriert (wo der Browser das kann) und der Bildschirmrand leuchtet kurz auf – nur bei dir, nicht bei den anderen.</p>
         <p>Unter <b>Einstellungen</b> (im Menü und auf der Startseite) stellt jeder für sein Gerät ein: Töne mit eigener Lautstärke für „Du bist dran“ und für die Karten, den Klang, Vibration, Randleuchten und die <b>Spielhilfe</b>. Ist die Spielhilfe an, steht am Stapel, was gerade passt, und unpassende Karten sind abgedunkelt. Ist sie aus, gibt es beides nicht – legen kannst du trotzdem nur, was erlaubt ist.</p>
+        <p>Karten mit Wirkung tragen unten links ein kleines Zeichen: ein <b>offenes Schloss</b> auf der 2 (frei), <b>zwei Pfeile</b> auf der 3 (Richtungswechsel), ein <b>Pfeil nach unten</b> auf der 7 (niedriger spielen) und eine <b>Flamme</b> auf der 10 (Stapel weg). Auch diese Zeichen gehören zur Spielhilfe.</p>
         <p>Der <b>Host</b> stellt für alle ein: Decks, Zugzeit, Plätze mischen und das <b>Design</b> von Tisch und Karten.</p>
         <p>Die Bildkarten: <b>König</b> = der Boss, <b>Dame</b> = die Queen, <b>Bube</b> = der Läufer. Der <b>schwarze Joker</b> ist der Dealer, der <b>rote Joker</b> der Wärter – der Wärter schlägt den Dealer.</p>
         <p>Mit vielen Mitspielern lohnt es sich, das Handy zu <b>drehen</b>: Im Querformat sind alle größer zu sehen.</p>
@@ -1163,13 +1230,8 @@ html[data-cards="hood"] .card.jk .jt { font-size: calc(var(--w) * .17); -webkit-
       <div class="menu-code"><span>Raum</span><b id="menuCode"></b><button class="btn sec small" data-act="share">Link teilen</button></div>
       <div id="menuList" class="plist compact"></div>
       <div id="menuOpts" class="menu-set room-opts" hidden></div>
-      <div class="menu-set">
-        <div class="set-row host-only"><span>Tisch</span><div id="segTable" class="seg" role="group" aria-label="Tisch-Design für alle">
-          <button data-table="stahl">Stahl</button><button data-table="hof">Hof</button><button data-table="nacht">Nacht</button><button data-table="boss">Boss</button>
-        </div></div>
-        <div class="set-row host-only"><span>Karten</span><div id="segCards" class="seg" role="group" aria-label="Karten-Design für alle">
-          <button data-cards="stift">Stift</button><button data-cards="schwarz">Schwarz</button><button data-cards="tattoo">Tattoo</button><button data-cards="hood">Hood</button>
-        </div></div>
+      <div class="menu-set design-set">
+        <div id="menuDesign" class="host-only"></div>
         <p id="designNote" class="set-note"></p>
       </div>
       <div class="menu-btns">
@@ -3266,6 +3328,11 @@ html[data-cards="hood"] .card.jk .jt { font-size: calc(var(--w) * .17); -webkit-
   function drop(n) { if (n && n.parentNode) n.parentNode.removeChild(n); }
   function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   function rectOf(n) { var r = n.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; }
+  /* Wie rectOf, aber ohne Drehung: Karten im aufgefächerten Blatt liegen schräg, ihr Umriss wäre sonst zu groß. */
+  function flatRect(n) {
+    var r = n.getBoundingClientRect(), w = n.offsetWidth || r.width, h = n.offsetHeight || r.height;
+    return { x: r.left + r.width / 2 - w / 2, y: r.top + r.height / 2 - h / 2, w: w, h: h };
+  }
   function svgUse(id) { return '<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#' + id + '"/></svg>'; }
 
   /* Farbsymbol einer Karte: gedruckt (u-s) und mit Stift gezeichnet (u-p); welches zu sehen ist, entscheidet das Karten-Design per CSS. */
@@ -3284,6 +3351,8 @@ html[data-cards="hood"] .card.jk .jt { font-size: calc(var(--w) * .17); -webkit-
   var RANK_NAME = { 11: 'Bube', 12: 'Dame', 13: 'König', 14: 'Ass' };
   /* Bildkarten: Bube = Läufer, Dame = Queen, König = Boss, Ass = Emblem; schwarzer Joker = Dealer, roter Joker = Wärter. */
   var FIG_OF = { 11: 'j', 12: 'q', 13: 'k', 14: 'a' };
+  /* Karten mit Wirkung tragen unten links ein kleines Zeichen: 2 = frei, 3 = Richtungswechsel, 7 = tiefer, 10 = Stapel brennt. */
+  var EFFECT = { 2: 1, 3: 1, 7: 1, 10: 1 };
   var SUIT_NAME = { S: 'Pik', H: 'Herz', D: 'Karo', C: 'Kreuz' };
   var SUIT_ORDER = { S: 0, H: 1, C: 2, D: 3, J: 4 };
   function rankName(r) { return RANK_NAME[r] || String(r); }
@@ -3303,7 +3372,7 @@ html[data-cards="hood"] .card.jk .jt { font-size: calc(var(--w) * .17); -webkit-
       var s = E.suit(id), r = E.rank(id);
       if (s === 'H' || s === 'D') d.className += ' red';
       if (FIG_OF[r]) d.className += ' fc f-' + FIG_OF[r];
-      d.innerHTML = (FIG_OF[r] ? '<div class="fig"></div>' : '') + '<div class="ci"><span class="rk' + (r === 10 ? ' ten' : '') + '">' + (RANK_LABEL[r] || r) + '</span>' + suitSvg(s) + '</div>' + (FIG_OF[r] ? '' : '<div class="big">' + suitSvg(s) + '</div>');
+      d.innerHTML = (FIG_OF[r] ? '<div class="fig"></div>' : '') + '<div class="ci"><span class="rk' + (r === 10 ? ' ten' : '') + '">' + (RANK_LABEL[r] || r) + '</span>' + suitSvg(s) + '</div>' + (FIG_OF[r] ? '' : '<div class="big">' + suitSvg(s) + '</div>') + (EFFECT[r] ? '<div class="fxi">' + svgUse('e-' + r) + '</div>' : '');
       d.setAttribute('aria-label', SUIT_NAME[s] + ' ' + rankName(r));
     }
     return d;
@@ -3917,6 +3986,7 @@ html[data-cards="hood"] .card.jk .jt { font-size: calc(var(--w) * .17); -webkit-
     $('lobbyHint').textContent = hint;
     $('btnShare').hidden = soloOnly;
     renderRoomOpts($('lobbyOpts'));
+    syncDesignPick();
     $('btnAddBot').disabled = n >= N.MAX_PLAYERS;
     $('btnStart').disabled = n < 2;
     $('btnStart').textContent = n < 2 ? 'Mindestens 2 Spieler' : 'Spiel starten (' + n + ' Spieler)';
@@ -4121,14 +4191,15 @@ html[data-cards="hood"] .card.jk .jt { font-size: calc(var(--w) * .17); -webkit-
   }
   /* Was jetzt passt – nur zur Anzeige. Ob eine Karte wirklich geht, sagt allein die Engine (view.my.playable).
    * Die Sonderkarten 2, 7, 10 und Joker gehen immer – sie werden immer alle genannt. */
-  var ALWAYS = ' · immer: 2, 7, 10, Joker';
+  var ALWAYS = 'immer: 2 · 7 · 10 · Joker';
+  /* [Hauptzeile, kleine Zeile darunter] */
   function reqText(req) {
     switch (req.k) {
-      case 'min': return (req.rank >= 14 ? 'Ass' : rankName(req.rank) + ' oder höher') + ALWAYS;
-      case 'seven': return 'Unter 7 (3 bis 6)' + ALWAYS;
-      case 'jokerB': return 'Schwarzer Joker: aufnehmen oder mit Rot kontern';
-      case 'jokerR': return 'Roter Joker: aufnehmen';
-      default: return 'Beliebige Karte';
+      case 'min': return [req.rank >= 14 ? 'Ass' : rankName(req.rank) + ' oder höher', ALWAYS];
+      case 'seven': return ['Unter 7 (3 bis 6)', ALWAYS];
+      case 'jokerB': return ['Schwarzer Joker', 'aufnehmen oder mit Rot kontern'];
+      case 'jokerR': return ['Roter Joker', 'du musst aufnehmen'];
+      default: return ['Beliebige Karte', ''];
     }
   }
   function nameOf(v, seat) { return v.players[seat] ? v.players[seat].name : '?'; }
@@ -4295,7 +4366,13 @@ html[data-cards="hood"] .card.jk .jt { font-size: calc(var(--w) * .17); -webkit-
     renderPile(d.pile);
     renderStock(d.stock);
     var ended = v.phase === 'over' && !ov;
-    chip.textContent = ended ? 'Runde beendet' : reqText(req);
+    var rq = ended ? ['Runde beendet', ''] : reqText(req), rkey = rq.join('|');
+    if (chip.getAttribute('data-t') !== rkey) {
+      chip.setAttribute('data-t', rkey);
+      clear(chip);
+      chip.appendChild(el('b', null, rq[0]));
+      if (rq[1]) chip.appendChild(el('small', null, rq[1]));
+    }
     chip.className = 'chip' + (ended ? '' : req.k === 'jokerR' ? ' warn' : req.k === 'jokerB' ? ' dark' : '') + (!help && !ended ? ' off' : '');
     ring.classList.toggle('ccw', v.dir === -1);
     ring.classList.toggle('none', n < 3);
@@ -4346,7 +4423,12 @@ html[data-cards="hood"] .card.jk .jt { font-size: calc(var(--w) * .17); -webkit-
     handStep = step;
     box.style.width = Math.ceil(total) + 'px';
     sc.classList.toggle('scrolls', total > avail + 1);
-    for (var i = 0; i < n; i++) handNodes[handOrder[i]].style.transform = 'translate3d(' + (i * step).toFixed(1) + 'px,0,0)';
+    /* Passt das Blatt auf den Bildschirm, liegt es leicht aufgefächert: außen schräger und etwas tiefer. */
+    var fan = n > 1 && total <= avail + 1 ? Math.min(2.6 * (n - 1), 13) : 0;
+    for (var i = 0; i < n; i++) {
+      var t = n > 1 ? i / (n - 1) - 0.5 : 0;
+      handNodes[handOrder[i]].style.transform = 'translate3d(' + (i * step).toFixed(1) + 'px,' + (fan * t * t * cw * 0.0085).toFixed(1) + 'px,0)' + (fan ? ' rotate(' + (fan * t).toFixed(2) + 'deg)' : '');
+    }
     var info = $('handInfo');
     info.hidden = n <= 12;
     if (n > 12) info.textContent = n + ' Karten \u2190 wischen \u2192';
@@ -4565,10 +4647,34 @@ html[data-cards="hood"] .card.jk .jt { font-size: calc(var(--w) * .17); -webkit-
     $('btnMenuLobby').hidden = !(s.isHost && s.stage === 'game');
     $('btnLeave').textContent = s.isHost ? 'Raum schließen' : 'Spiel verlassen';
     renderRoomOpts($('menuOpts'));
-    pressSeg('segTable', 'data-table', design.table);
-    pressSeg('segCards', 'data-cards', design.cards);
+    syncDesignPick();
     $('designNote').textContent = cur && cur.isHost ? 'Tisch und Karten gelten für alle im Raum.'
       : 'Design: Tisch ' + TABLE_NAME[design.table] + ', Karten ' + CARDS_NAME[design.cards] + '. Das stellt der Host ein.';
+  }
+  /* Design-Auswahl des Hosts (Lobby und Menü): je vier Kacheln mit Vorschaubild für Tisch und Karten. */
+  function buildDesignPick(box) {
+    [['Tisch', 'data-table', N.DESIGNS.table, TABLE_NAME], ['Karten', 'data-cards', N.DESIGNS.cards, CARDS_NAME]].forEach(function (g) {
+      var row = el('div', 'dz');
+      row.setAttribute('role', 'group');
+      row.setAttribute('aria-label', g[0] + '-Design für alle');
+      g[2].forEach(function (k) {
+        var b = el('button');
+        b.setAttribute(g[1], k);
+        b.appendChild(el('i'));
+        b.appendChild(el('span', null, g[3][k]));
+        row.appendChild(b);
+      });
+      box.appendChild(el('h3', 'set-head', g[0]));
+      box.appendChild(row);
+    });
+    box.addEventListener('click', pickDesign);
+  }
+  function syncDesignPick() {
+    var bs = doc.querySelectorAll('.dz button');
+    for (var i = 0; i < bs.length; i++) {
+      var on = bs[i].getAttribute('data-table') === design.table || bs[i].getAttribute('data-cards') === design.cards;
+      bs[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
   }
   function pressSeg(id, attr, val) {
     var bs = $(id).children;
@@ -4816,7 +4922,7 @@ html[data-cards="hood"] .card.jk .jt { font-size: calc(var(--w) * .17); -webkit-
       else node = panel.querySelector('[data-down="' + slot + '"]');
       if (!node) { node = panel; exact = false; }
     }
-    var r = rectOf(node);
+    var r = exact && seat === me ? flatRect(node) : rectOf(node);
     if (!exact) r = { x: r.x + r.w / 2 - 12, y: r.y + r.h / 2 - 17, w: 24, h: 34 };
     return r;
   }
@@ -4858,6 +4964,10 @@ html[data-cards="hood"] .card.jk .jt { font-size: calc(var(--w) * .17); -webkit-
     });
     return wait(dur + (items.length - 1) * 50 + 30).then(function () {
       items.forEach(function (o) { o.node.classList.remove('inflight'); drop(o.g); });
+      var tap = $('pileTap');
+      tap.classList.remove('thud');
+      void tap.offsetWidth;
+      tap.classList.add('thud');
     });
   }
   /* Der Stapel verbrennt (10) bzw. verbrauchte Joker verschwinden: Glut, Flammen und Funken über dem Stapel. */
@@ -5161,7 +5271,7 @@ html[data-cards="hood"] .card.jk .jt { font-size: calc(var(--w) * .17); -webkit-
       }
     }
     if (lock) { afterLock = function () { tryPlay(ids, null); }; return true; }
-    if (!rects) rects = ids.map(function (id) { var n = myCardNode(id); return n ? rectOf(n) : null; });
+    if (!rects) rects = ids.map(function (id) { var n = myCardNode(id); return n ? flatRect(n) : null; });
     opt = { kind: 'play', cards: ids.slice(), seq: d.v.seq, after: snapCount };
     Hap.fire('tap');
     sel = [];
@@ -5238,12 +5348,12 @@ html[data-cards="hood"] .card.jk .jt { font-size: calc(var(--w) * .17); -webkit-
     if (f) f();
   }
   function beginDrag() {
-    var info = press.info, ids = info.ids(), main = rectOf(info.node), layer = $('fx');
+    var info = press.info, ids = info.ids(), main = flatRect(info.node), layer = $('fx');
     var group = el('div', 'drag-group'), items = [];
     ids.forEach(function (id) {
       var node = info.nodeFor(id);
       if (!node) return;
-      var r = rectOf(node), g = cardFace(id, 'ghost');
+      var r = flatRect(node), g = cardFace(id, 'ghost');
       g.style.setProperty('--w', main.w + 'px');
       g.style.left = r.x + 'px';
       g.style.top = r.y + 'px';
@@ -5411,6 +5521,7 @@ html[data-cards="hood"] .card.jk .jt { font-size: calc(var(--w) * .17); -webkit-
   on('btnHelp', function () {
     help = !help;
     sSet(LS, 'karma.help', help ? '1' : '0');
+    body.classList.toggle('no-help', !help);
     renderSettings();
     if (cur && cur.stage === 'game') renderAll();
     toast(help ? 'Spielhilfe an: Du siehst, welche Karten passen' : 'Spielhilfe aus: keine Hinweise, keine grauen Karten');
@@ -5441,10 +5552,11 @@ html[data-cards="hood"] .card.jk .jt { font-size: calc(var(--w) * .17); -webkit-
   function pickDesign(e) {
     var b = e.target && e.target.closest ? e.target.closest('button') : null;
     if (!b || !cur || !cur.isHost) return;
+    Hap.fire('tick');
     session.lobby({ op: 'design', table: b.getAttribute('data-table'), cards: b.getAttribute('data-cards') });
   }
-  $('segTable').addEventListener('click', pickDesign);
-  $('segCards').addEventListener('click', pickDesign);
+  buildDesignPick($('lobbyDesign'));
+  buildDesignPick($('menuDesign'));
   on('btnMute', function () {
     Snd.setMute(!Snd.muted());
     renderSettings();
@@ -5560,7 +5672,8 @@ html[data-cards="hood"] .card.jk .jt { font-size: calc(var(--w) * .17); -webkit-
 
   (function init() {
     var fan = $('logoFan');
-    ['S13', 'JR', 'H12'].forEach(function (id) { fan.appendChild(cardFace(id)); });
+    ['S11', 'S13', 'JR', 'H12', 'S14'].forEach(function (id) { fan.appendChild(cardFace(id)); });
+    body.classList.toggle('no-help', !help);
     $('inName').value = sGet(LS, NAME_KEY) || '';
     var hc = hashCode();
     if (hc) $('inCode').value = hc;

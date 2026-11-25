@@ -47,5 +47,13 @@ crop rueck-stift.jpg    40 35 1045 1435 c-stift-back.jpg 340 476 70
 crop rueck-schwarz.jpg  45 20 1403 1964 c-schwarz-back.jpg 340 476 70
 crop rueck-hood.jpg     45 30 1030 1440 c-hood-back.jpg 340 476 70
 crop rueck-tattoo.jpg   75 60 1345 1883 c-tattoo-back.jpg 340 476 70
+# Vorschaubilder für die Design-Auswahl (Lobby und Menü): Tisch-Ausschnitt und je Kartensatz der Boss
+for t in stahl hof nacht boss; do
+  sips -c 700 960 "$O/t-$t.jpg" --out "$TMP/s.png" -s format png >/dev/null 2>&1
+  sips -z 140 192 "$TMP/s.png" -s format jpeg -s formatOptions 60 --out "$O/s-t-$t.jpg" >/dev/null 2>&1
+done
+for c in stift schwarz tattoo hood; do
+  sips --resampleWidth 132 "$O/c-$c-k.jpg" -s format jpeg -s formatOptions 64 --out "$O/s-c-$c.jpg" >/dev/null 2>&1
+done
 rm -rf "$TMP"
 ls -la $O | awk '{s+=$5} END {print NR-3 " Dateien, " int(s/1024) " kB"}'

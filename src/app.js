@@ -17,6 +17,11 @@
   function drop(n) { if (n && n.parentNode) n.parentNode.removeChild(n); }
   function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   function rectOf(n) { var r = n.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; }
+  /* Wie rectOf, aber ohne Drehung: Karten im aufgefächerten Blatt liegen schräg, ihr Umriss wäre sonst zu groß. */
+  function flatRect(n) {
+    var r = n.getBoundingClientRect(), w = n.offsetWidth || r.width, h = n.offsetHeight || r.height;
+    return { x: r.left + r.width / 2 - w / 2, y: r.top + r.height / 2 - h / 2, w: w, h: h };
+  }
   function svgUse(id) { return '<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#' + id + '"/></svg>'; }
 
   /* Farbsymbol einer Karte: gedruckt (u-s) und mit Stift gezeichnet (u-p); welches zu sehen ist, entscheidet das Karten-Design per CSS. */
@@ -35,6 +40,8 @@
   var RANK_NAME = { 11: 'Bube', 12: 'Dame', 13: 'König', 14: 'Ass' };
   /* Bildkarten: Bube = Läufer, Dame = Queen, König = Boss, Ass = Emblem; schwarzer Joker = Dealer, roter Joker = Wärter. */
   var FIG_OF = { 11: 'j', 12: 'q', 13: 'k', 14: 'a' };
+  /* Karten mit Wirkung tragen unten links ein kleines Zeichen: 2 = frei, 3 = Richtungswechsel, 7 = tiefer, 10 = Stapel brennt. */
+  var EFFECT = { 2: 1, 3: 1, 7: 1, 10: 1 };
   var SUIT_NAME = { S: 'Pik', H: 'Herz', D: 'Karo', C: 'Kreuz' };
   var SUIT_ORDER = { S: 0, H: 1, C: 2, D: 3, J: 4 };
   function rankName(r) { return RANK_NAME[r] || String(r); }
@@ -54,7 +61,7 @@
       var s = E.suit(id), r = E.rank(id);
       if (s === 'H' || s === 'D') d.className += ' red';
       if (FIG_OF[r]) d.className += ' fc f-' + FIG_OF[r];
-      d.innerHTML = (FIG_OF[r] ? '<div class="fig"></div>' : '') + '<div class="ci"><span class="rk' + (r === 10 ? ' ten' : '') + '">' + (RANK_LABEL[r] || r) + '</span>' + suitSvg(s) + '</div>' + (FIG_OF[r] ? '' : '<div class="big">' + suitSvg(s) + '</div>');
+      d.innerHTML = (FIG_OF[r] ? '<div class="fig"></div>' : '') + '<div class="ci"><span class="rk' + (r === 10 ? ' ten' : '') + '">' + (RANK_LABEL[r] || r) + '</span>' + suitSvg(s) + '</div>' + (FIG_OF[r] ? '' : '<div class="big">' + suitSvg(s) + '</div>') + (EFFECT[r] ? '<div class="fxi">' + svgUse('e-' + r) + '</div>' : '');
       d.setAttribute('aria-label', SUIT_NAME[s] + ' ' + rankName(r));
     }
     return d;
@@ -668,6 +675,7 @@
     $('lobbyHint').textContent = hint;
     $('btnShare').hidden = soloOnly;
     renderRoomOpts($('lobbyOpts'));
+    syncDesignPick();
     $('btnAddBot').disabled = n >= N.MAX_PLAYERS;
     $('btnStart').disabled = n < 2;
     $('btnStart').textContent = n < 2 ? 'Mindestens 2 Spieler' : 'Spiel starten (' + n + ' Spieler)';
@@ -872,14 +880,15 @@
   }
   /* Was jetzt passt – nur zur Anzeige. Ob eine Karte wirklich geht, sagt allein die Engine (view.my.playable).
    * Die Sonderkarten 2, 7, 10 und Joker gehen immer – sie werden immer alle genannt. */
-  var ALWAYS = ' · immer: 2, 7, 10, Joker';
+  var ALWAYS = 'immer: 2 · 7 · 10 · Joker';
+  /* [Hauptzeile, kleine Zeile darunter] */
   function reqText(req) {
     switch (req.k) {
-      case 'min': return (req.rank >= 14 ? 'Ass' : rankName(req.rank) + ' oder höher') + ALWAYS;
-      case 'seven': return 'Unter 7 (3 bis 6)' + ALWAYS;
-      case 'jokerB': return 'Schwarzer Joker: aufnehmen oder mit Rot kontern';
-      case 'jokerR': return 'Roter Joker: aufnehmen';
-      default: return 'Beliebige Karte';
+      case 'min': return [req.rank >= 14 ? 'Ass' : rankName(req.rank) + ' oder höher', ALWAYS];
+      case 'seven': return ['Unter 7 (3 bis 6)', ALWAYS];
+      case 'jokerB': return ['Schwarzer Joker', 'aufnehmen oder mit Rot kontern'];
+      case 'jokerR': return ['Roter Joker', 'du musst aufnehmen'];
+      default: return ['Beliebige Karte', ''];
     }
   }
   function nameOf(v, seat) { return v.players[seat] ? v.players[seat].name : '?'; }
@@ -1046,7 +1055,13 @@
     renderPile(d.pile);
     renderStock(d.stock);
     var ended = v.phase === 'over' && !ov;
-    chip.textContent = ended ? 'Runde beendet' : reqText(req);
+    var rq = ended ? ['Runde beendet', ''] : reqText(req), rkey = rq.join('|');
+    if (chip.getAttribute('data-t') !== rkey) {
+      chip.setAttribute('data-t', rkey);
+      clear(chip);
+      chip.appendChild(el('b', null, rq[0]));
+      if (rq[1]) chip.appendChild(el('small', null, rq[1]));
+    }
     chip.className = 'chip' + (ended ? '' : req.k === 'jokerR' ? ' warn' : req.k === 'jokerB' ? ' dark' : '') + (!help && !ended ? ' off' : '');
     ring.classList.toggle('ccw', v.dir === -1);
     ring.classList.toggle('none', n < 3);
@@ -1097,7 +1112,12 @@
     handStep = step;
     box.style.width = Math.ceil(total) + 'px';
     sc.classList.toggle('scrolls', total > avail + 1);
-    for (var i = 0; i < n; i++) handNodes[handOrder[i]].style.transform = 'translate3d(' + (i * step).toFixed(1) + 'px,0,0)';
+    /* Passt das Blatt auf den Bildschirm, liegt es leicht aufgefächert: außen schräger und etwas tiefer. */
+    var fan = n > 1 && total <= avail + 1 ? Math.min(2.6 * (n - 1), 13) : 0;
+    for (var i = 0; i < n; i++) {
+      var t = n > 1 ? i / (n - 1) - 0.5 : 0;
+      handNodes[handOrder[i]].style.transform = 'translate3d(' + (i * step).toFixed(1) + 'px,' + (fan * t * t * cw * 0.0085).toFixed(1) + 'px,0)' + (fan ? ' rotate(' + (fan * t).toFixed(2) + 'deg)' : '');
+    }
     var info = $('handInfo');
     info.hidden = n <= 12;
     if (n > 12) info.textContent = n + ' Karten \u2190 wischen \u2192';
@@ -1316,10 +1336,34 @@
     $('btnMenuLobby').hidden = !(s.isHost && s.stage === 'game');
     $('btnLeave').textContent = s.isHost ? 'Raum schließen' : 'Spiel verlassen';
     renderRoomOpts($('menuOpts'));
-    pressSeg('segTable', 'data-table', design.table);
-    pressSeg('segCards', 'data-cards', design.cards);
+    syncDesignPick();
     $('designNote').textContent = cur && cur.isHost ? 'Tisch und Karten gelten für alle im Raum.'
       : 'Design: Tisch ' + TABLE_NAME[design.table] + ', Karten ' + CARDS_NAME[design.cards] + '. Das stellt der Host ein.';
+  }
+  /* Design-Auswahl des Hosts (Lobby und Menü): je vier Kacheln mit Vorschaubild für Tisch und Karten. */
+  function buildDesignPick(box) {
+    [['Tisch', 'data-table', N.DESIGNS.table, TABLE_NAME], ['Karten', 'data-cards', N.DESIGNS.cards, CARDS_NAME]].forEach(function (g) {
+      var row = el('div', 'dz');
+      row.setAttribute('role', 'group');
+      row.setAttribute('aria-label', g[0] + '-Design für alle');
+      g[2].forEach(function (k) {
+        var b = el('button');
+        b.setAttribute(g[1], k);
+        b.appendChild(el('i'));
+        b.appendChild(el('span', null, g[3][k]));
+        row.appendChild(b);
+      });
+      box.appendChild(el('h3', 'set-head', g[0]));
+      box.appendChild(row);
+    });
+    box.addEventListener('click', pickDesign);
+  }
+  function syncDesignPick() {
+    var bs = doc.querySelectorAll('.dz button');
+    for (var i = 0; i < bs.length; i++) {
+      var on = bs[i].getAttribute('data-table') === design.table || bs[i].getAttribute('data-cards') === design.cards;
+      bs[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
   }
   function pressSeg(id, attr, val) {
     var bs = $(id).children;
@@ -1567,7 +1611,7 @@
       else node = panel.querySelector('[data-down="' + slot + '"]');
       if (!node) { node = panel; exact = false; }
     }
-    var r = rectOf(node);
+    var r = exact && seat === me ? flatRect(node) : rectOf(node);
     if (!exact) r = { x: r.x + r.w / 2 - 12, y: r.y + r.h / 2 - 17, w: 24, h: 34 };
     return r;
   }
@@ -1609,6 +1653,10 @@
     });
     return wait(dur + (items.length - 1) * 50 + 30).then(function () {
       items.forEach(function (o) { o.node.classList.remove('inflight'); drop(o.g); });
+      var tap = $('pileTap');
+      tap.classList.remove('thud');
+      void tap.offsetWidth;
+      tap.classList.add('thud');
     });
   }
   /* Der Stapel verbrennt (10) bzw. verbrauchte Joker verschwinden: Glut, Flammen und Funken über dem Stapel. */
@@ -1912,7 +1960,7 @@
       }
     }
     if (lock) { afterLock = function () { tryPlay(ids, null); }; return true; }
-    if (!rects) rects = ids.map(function (id) { var n = myCardNode(id); return n ? rectOf(n) : null; });
+    if (!rects) rects = ids.map(function (id) { var n = myCardNode(id); return n ? flatRect(n) : null; });
     opt = { kind: 'play', cards: ids.slice(), seq: d.v.seq, after: snapCount };
     Hap.fire('tap');
     sel = [];
@@ -1989,12 +2037,12 @@
     if (f) f();
   }
   function beginDrag() {
-    var info = press.info, ids = info.ids(), main = rectOf(info.node), layer = $('fx');
+    var info = press.info, ids = info.ids(), main = flatRect(info.node), layer = $('fx');
     var group = el('div', 'drag-group'), items = [];
     ids.forEach(function (id) {
       var node = info.nodeFor(id);
       if (!node) return;
-      var r = rectOf(node), g = cardFace(id, 'ghost');
+      var r = flatRect(node), g = cardFace(id, 'ghost');
       g.style.setProperty('--w', main.w + 'px');
       g.style.left = r.x + 'px';
       g.style.top = r.y + 'px';
@@ -2162,6 +2210,7 @@
   on('btnHelp', function () {
     help = !help;
     sSet(LS, 'karma.help', help ? '1' : '0');
+    body.classList.toggle('no-help', !help);
     renderSettings();
     if (cur && cur.stage === 'game') renderAll();
     toast(help ? 'Spielhilfe an: Du siehst, welche Karten passen' : 'Spielhilfe aus: keine Hinweise, keine grauen Karten');
@@ -2192,10 +2241,11 @@
   function pickDesign(e) {
     var b = e.target && e.target.closest ? e.target.closest('button') : null;
     if (!b || !cur || !cur.isHost) return;
+    Hap.fire('tick');
     session.lobby({ op: 'design', table: b.getAttribute('data-table'), cards: b.getAttribute('data-cards') });
   }
-  $('segTable').addEventListener('click', pickDesign);
-  $('segCards').addEventListener('click', pickDesign);
+  buildDesignPick($('lobbyDesign'));
+  buildDesignPick($('menuDesign'));
   on('btnMute', function () {
     Snd.setMute(!Snd.muted());
     renderSettings();
@@ -2311,7 +2361,8 @@
 
   (function init() {
     var fan = $('logoFan');
-    ['S13', 'JR', 'H12'].forEach(function (id) { fan.appendChild(cardFace(id)); });
+    ['S11', 'S13', 'JR', 'H12', 'S14'].forEach(function (id) { fan.appendChild(cardFace(id)); });
+    body.classList.toggle('no-help', !help);
     $('inName').value = sGet(LS, NAME_KEY) || '';
     var hc = hashCode();
     if (hc) $('inCode').value = hc;
