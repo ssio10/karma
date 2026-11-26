@@ -406,6 +406,16 @@
   <div id="turnGlow" class="turn-glow" aria-hidden="true"></div>
   <div id="fx" class="fx" aria-hidden="true"></div>
   <div id="toast" class="toast" role="status"></div>
+  <!-- Messpunkt und Hinweis: Dunkelmodus-Erweiterungen (Noir, Dark Reader …) färben die Seite um; app.js erkennt das am Messpunkt -->
+  <i id="dmProbe" class="dm-probe" aria-hidden="true"></i>
+  <div id="dmNote" class="dm-note" role="alert" hidden>
+    <div class="dm-box">
+      <b>Die Farben stimmen nicht</b>
+      <p>Eine Dunkelmodus-Erweiterung in deinem Browser (zum Beispiel Noir oder Dark Reader) färbt diese Seite um. Karten und Tisch sehen dadurch falsch aus.</p>
+      <p>So stellst du es ab: In Safari links in der Adressleiste auf das Symbol tippen, die Erweiterung auswählen und sie für diese Website ausschalten. Danach die Seite neu laden.</p>
+      <button type="button" id="dmOk" class="btn small">Trotzdem weiter</button>
+    </div>
+  </div>
 </div>
 
 <script src="engine.js"></script>

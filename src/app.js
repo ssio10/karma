@@ -2381,11 +2381,34 @@
     if (e.target && e.target.closest && e.target.closest('input, textarea, .rules-text, .code-big')) return;
     e.preventDefault();
   });
+  /* ---------- Dunkelmodus-Erweiterungen (Noir, Dark Reader …) ----------
+   * Sie schreiben die Farben der Seite um und entfernen Hintergrundbilder; abstellen lässt sich das von der Seite aus nicht
+   * zuverlässig. Deshalb: am Messpunkt #dmProbe nachsehen, ob seine festen Farben noch stimmen, und sonst sagen, woran es liegt. */
+  var dmOff = false;
+  function dmAltered() {
+    var p = $('dmProbe');
+    if (!p || !window.getComputedStyle) return false;
+    var cs = getComputedStyle(p);
+    var rgb = function (v) { var m = /(\d+)[,\s]+(\d+)[,\s]+(\d+)/.exec(v || ''); return m ? m[1] + ',' + m[2] + ',' + m[3] : ''; };
+    if (rgb(cs.backgroundColor) !== '249,236,192' || rgb(cs.color) !== '30,42,120') return true;
+    if (!/url\(/.test(cs.backgroundImage || '')) return true;
+    return !!(cs.filter && cs.filter !== 'none') || !!(getComputedStyle(doc.documentElement).filter || '').replace('none', '');
+  }
+  function dmCheck() {
+    var bad = false;
+    try { bad = dmAltered(); } catch (e) { bad = false; }
+    $('dmNote').hidden = dmOff || !bad;
+  }
+  $('dmOk').addEventListener('click', function () { dmOff = true; dmCheck(); });
+  // Erweiterungen greifen oft erst kurz nach dem Laden ein – und wieder, wenn man sie umschaltet
+  [300, 1500, 4000, 9000].forEach(function (ms) { setTimeout(dmCheck, ms); });
+
   function wake() {
     try { session.wake(); } catch (e) {}
     syncWakeLock();
     syncWatch();
     if (watcher) watcher.kick();
+    setTimeout(dmCheck, 600);
   }
   doc.addEventListener('visibilitychange', function () { if (doc.visibilityState === 'visible') wake(); else { syncWakeLock(); syncWatch(); } });
   window.addEventListener('pageshow', wake);

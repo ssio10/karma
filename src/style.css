@@ -923,3 +923,11 @@ html[data-table="stahl"] .dz button, html[data-table="stahl"] .set-head { text-t
 .rrow.busy { opacity: .78; }
 .rrow.busy .rgo { background: none; color: var(--mute); padding: 0 8px; font-weight: 600; }
 html[data-table="stahl"] .rgo { text-transform: uppercase; letter-spacing: .06em; }
+
+/* ---------- Dunkelmodus-Erweiterungen: Messpunkt (app.js vergleicht seine Farben) und Hinweis ---------- */
+.dm-probe { position: absolute; left: -20px; top: 0; width: 4px; height: 4px; pointer-events: none; color: #1e2a78; background-color: #f9ecc0; background-image: url("img/s-t-stahl.jpg"); }
+.dm-note { position: absolute; left: 0; right: 0; bottom: 0; z-index: 90; padding: 10px 10px calc(var(--sab) + 10px); display: flex; justify-content: center; pointer-events: none; }
+.dm-note[hidden] { display: none; }
+.dm-box { pointer-events: auto; max-width: 440px; padding: 12px 14px; border-radius: 8px; background: #7a1c12; color: #fff; font-size: 14px; line-height: 1.4; box-shadow: 0 8px 26px rgba(0, 0, 0, .6); display: flex; flex-direction: column; gap: 7px; }
+.dm-box b { font-size: 16px; }
+.dm-box .btn { align-self: flex-end; margin-top: 2px; }

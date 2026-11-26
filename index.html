@@ -944,6 +944,14 @@ html[data-table="stahl"] .dz button, html[data-table="stahl"] .set-head { text-t
 .rrow.busy .rgo { background: none; color: var(--mute); padding: 0 8px; font-weight: 600; }
 html[data-table="stahl"] .rgo { text-transform: uppercase; letter-spacing: .06em; }
 
+/* ---------- Dunkelmodus-Erweiterungen: Messpunkt (app.js vergleicht seine Farben) und Hinweis ---------- */
+.dm-probe { position: absolute; left: -20px; top: 0; width: 4px; height: 4px; pointer-events: none; color: #1e2a78; background-color: #f9ecc0; background-image: url("img/s-t-stahl.jpg"); }
+.dm-note { position: absolute; left: 0; right: 0; bottom: 0; z-index: 90; padding: 10px 10px calc(var(--sab) + 10px); display: flex; justify-content: center; pointer-events: none; }
+.dm-note[hidden] { display: none; }
+.dm-box { pointer-events: auto; max-width: 440px; padding: 12px 14px; border-radius: 8px; background: #7a1c12; color: #fff; font-size: 14px; line-height: 1.4; box-shadow: 0 8px 26px rgba(0, 0, 0, .6); display: flex; flex-direction: column; gap: 7px; }
+.dm-box b { font-size: 16px; }
+.dm-box .btn { align-self: flex-end; margin-top: 2px; }
+
 </style>
 </head>
 <body data-screen="start">
@@ -1013,7 +1021,7 @@ html[data-table="stahl"] .rgo { text-transform: uppercase; letter-spacing: .06em
         <button id="btnRules" class="btn ghost" data-act="rules">Regeln</button>
         <button class="btn ghost" data-act="settings">Einstellungen</button>
       </div>
-      <div class="build">Version 2026-11-26 19:32</div>
+      <div class="build">Version 2026-11-26 19:45</div>
     </div>
   </section>
 
@@ -1333,6 +1341,16 @@ html[data-table="stahl"] .rgo { text-transform: uppercase; letter-spacing: .06em
   <div id="turnGlow" class="turn-glow" aria-hidden="true"></div>
   <div id="fx" class="fx" aria-hidden="true"></div>
   <div id="toast" class="toast" role="status"></div>
+  <!-- Messpunkt und Hinweis: Dunkelmodus-Erweiterungen (Noir, Dark Reader …) färben die Seite um; app.js erkennt das am Messpunkt -->
+  <i id="dmProbe" class="dm-probe" aria-hidden="true"></i>
+  <div id="dmNote" class="dm-note" role="alert" hidden>
+    <div class="dm-box">
+      <b>Die Farben stimmen nicht</b>
+      <p>Eine Dunkelmodus-Erweiterung in deinem Browser (zum Beispiel Noir oder Dark Reader) färbt diese Seite um. Karten und Tisch sehen dadurch falsch aus.</p>
+      <p>So stellst du es ab: In Safari links in der Adressleiste auf das Symbol tippen, die Erweiterung auswählen und sie für diese Website ausschalten. Danach die Seite neu laden.</p>
+      <button type="button" id="dmOk" class="btn small">Trotzdem weiter</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -5834,11 +5852,34 @@ html[data-table="stahl"] .rgo { text-transform: uppercase; letter-spacing: .06em
     if (e.target && e.target.closest && e.target.closest('input, textarea, .rules-text, .code-big')) return;
     e.preventDefault();
   });
+  /* ---------- Dunkelmodus-Erweiterungen (Noir, Dark Reader …) ----------
+   * Sie schreiben die Farben der Seite um und entfernen Hintergrundbilder; abstellen lässt sich das von der Seite aus nicht
+   * zuverlässig. Deshalb: am Messpunkt #dmProbe nachsehen, ob seine festen Farben noch stimmen, und sonst sagen, woran es liegt. */
+  var dmOff = false;
+  function dmAltered() {
+    var p = $('dmProbe');
+    if (!p || !window.getComputedStyle) return false;
+    var cs = getComputedStyle(p);
+    var rgb = function (v) { var m = /(\d+)[,\s]+(\d+)[,\s]+(\d+)/.exec(v || ''); return m ? m[1] + ',' + m[2] + ',' + m[3] : ''; };
+    if (rgb(cs.backgroundColor) !== '249,236,192' || rgb(cs.color) !== '30,42,120') return true;
+    if (!/url\(/.test(cs.backgroundImage || '')) return true;
+    return !!(cs.filter && cs.filter !== 'none') || !!(getComputedStyle(doc.documentElement).filter || '').replace('none', '');
+  }
+  function dmCheck() {
+    var bad = false;
+    try { bad = dmAltered(); } catch (e) { bad = false; }
+    $('dmNote').hidden = dmOff || !bad;
+  }
+  $('dmOk').addEventListener('click', function () { dmOff = true; dmCheck(); });
+  // Erweiterungen greifen oft erst kurz nach dem Laden ein – und wieder, wenn man sie umschaltet
+  [300, 1500, 4000, 9000].forEach(function (ms) { setTimeout(dmCheck, ms); });
+
   function wake() {
     try { session.wake(); } catch (e) {}
     syncWakeLock();
     syncWatch();
     if (watcher) watcher.kick();
+    setTimeout(dmCheck, 600);
   }
   doc.addEventListener('visibilitychange', function () { if (doc.visibilityState === 'visible') wake(); else { syncWakeLock(); syncWatch(); } });
   window.addEventListener('pageshow', wake);
