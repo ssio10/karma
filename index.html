@@ -183,7 +183,9 @@ input[type="text"]:focus { box-shadow: inset 0 0 0 2px var(--gold); }
 
 /* ---------- Lobby ---------- */
 .lobby-body { flex: 1; min-height: 0; padding: 4px 16px 12px; display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 520px; margin: 0 auto; }
-.lobby-body > * { flex: none; }
+/* Die zwei Gruppen (Code und Spieler · Design und Einstellungen) stehen hochkant einfach untereinander; quer werden sie zu Spalten */
+.lob-col { display: contents; }
+.lob-col > * { flex: none; }
 .lobby-body { -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 22px), rgba(0, 0, 0, 0)); mask-image: linear-gradient(180deg, #000 calc(100% - 22px), rgba(0, 0, 0, 0)); padding-bottom: 24px; }
 .code-card { background: var(--panel); border-radius: var(--r-panel); padding: 10px 12px 10px 16px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 10px; box-shadow: inset 0 0 0 1px var(--line); }
 .code-label { grid-column: 1 / 3; font-size: 11px; font-weight: 600; color: var(--mute); text-transform: uppercase; letter-spacing: .12em; }
@@ -543,36 +545,81 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
     --mwb: clamp(22px, calc(var(--vh) * 7), 32px);
     --sw: clamp(46px, min(12vw, calc(var(--vh) * 26)), 100px);
   }
-  body[data-screen="game"] #game { display: grid; grid-template-columns: minmax(0, 1fr) minmax(250px, 42%); grid-template-rows: auto minmax(0, 1fr); }
-  #game .g-top { grid-column: 1 / 3; height: 40px; }
-  #game .table { grid-column: 1; grid-row: 2; }
-  #game .mine { grid-column: 2; grid-row: 2; display: flex; flex-direction: column; justify-content: flex-end; min-width: 0; padding-bottom: max(6px, var(--sab)); }
+  /* Tisch über die ganze Breite: Gegner oben, Stapel in der Mitte, die Ansage rechts daneben.
+     Unten ein Band: Aufgeben · eigene Auslage · Handkarten in der Mitte · Knöpfe rechts. */
+  #game .g-top { height: 38px; }
+  #game .table { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  #game .opp-top { grid-row: 1; justify-content: center; gap: 12px; }
+  #game .mid { grid-row: 2; grid-column: 1; margin: 0; align-self: center; }
+  #game .center { height: calc(var(--pw) * 1.74); }
+  #game .req-row { grid-row: 2; grid-column: 1; align-self: center; justify-self: center; margin: 0; padding: 0; width: 200px; align-items: flex-start; transform: translateX(calc(100px + var(--pw) * .9 + 12px)); pointer-events: none; }
+  #game .req-row .chip { max-width: 100%; padding: 4px 10px; font-size: 13px; }
+  #game .tinfo { text-align: left; padding-left: 2px; }
+  /* Meldungen links neben dem Stapel statt darüber */
+  #game .g-toast { position: relative; left: auto; right: auto; bottom: auto; grid-row: 2; grid-column: 1; align-self: center; justify-self: start; width: calc(50% - var(--pw) * .9 - 14px); justify-content: flex-end; z-index: 4; }
+  #game .g-toast span { font-size: 15px; padding: 6px 12px; }
+  #game .opp-side { gap: 4px; }
+  /* Bis 7 Gegner ist oben Platz: der Name darf breiter sein als die drei Karten */
+  #game .table:not([data-k="8"]):not([data-k="9"]):not([data-k="10"]):not([data-k="11"]) .opp-head { width: auto; min-width: calc(var(--mw) * 3 + 6px); gap: 8px; }
+  #game .table:not([data-k="8"]):not([data-k="9"]):not([data-k="10"]):not([data-k="11"]) .opp-name { max-width: 92px; }
+  #game .opp-row { justify-content: center; }
+  #game .mine { --aw: clamp(150px, 22vw, 190px); display: grid; grid-template-columns: auto auto minmax(0, 1fr) var(--aw); align-items: end; column-gap: 8px; padding: 0 8px max(6px, var(--sab)) 8px; }
+  #game .give-up { grid-column: 1; position: static; align-self: end; justify-self: start; width: 50px; min-height: 44px; margin-bottom: 8px; }
+  #game .my-table { grid-column: 2; padding: 0 0 8px; gap: calc(var(--tw) * .12); }
+  #game .hand-wrap { grid-column: 3; position: relative; }
+  #game .hand-info { top: -14px; right: 50%; transform: translateX(50%); max-width: none; white-space: nowrap; padding: 2px 8px; }
+  #game .actions { grid-column: 4; flex-direction: column; justify-content: flex-end; align-items: stretch; gap: 5px; width: auto; height: auto; padding: 0 0 8px; }
+  #game .actions .btn { flex: none; min-height: 38px; }
+  #game .actions .btn.quiet { order: 0; }
+  #game .act-hint { flex: none; font-size: 12px; line-height: 1.2; }
+  #game .act-hint.strong { font-size: 13px; }
+  /* Zwei Knöpfe füllen die Spalte: dann weicht der Hinweistext */
+  #game .actions:has(.btn:not([hidden]) ~ .btn:not([hidden])) .act-hint { display: none; }
+  #game .mine.done { display: block; }
+  #game .done-panel { flex-direction: row; justify-content: center; flex-wrap: wrap; padding: 8px 12px 4px; column-gap: 14px; }
   .tbar { height: 30px; }
   .over { top: calc(var(--sat) + 40px); }
   /* Im Querformat ist der Tisch breiter: Auch mit vielen Mitspielern bleiben die Gegner groß. */
-  .table[data-k="6"], .table[data-k="7"] { --os: 1; }
+  .table[data-k="1"], .table[data-k="2"], .table[data-k="3"], .table[data-k="4"] { --os: 1.25; }
+  .table[data-k="5"], .table[data-k="6"], .table[data-k="7"] { --os: 1; }
   .table[data-k="8"], .table[data-k="9"], .table[data-k="10"], .table[data-k="11"] { --os: .84; }
   .table[data-k="8"] .opp-head, .table[data-k="9"] .opp-head, .table[data-k="10"] .opp-head, .table[data-k="11"] .opp-head { font-size: 11px; height: 15px; }
-  body[data-screen="game"] #game:has(.table[data-k="8"], .table[data-k="9"], .table[data-k="10"], .table[data-k="11"]) { grid-template-columns: minmax(0, 1fr) minmax(230px, 38%); }
   .over-star, .won-star, .logo-fan { display: none; }
   .over-box { padding: 14px 18px; gap: 8px; max-width: 420px; }
   .over-btns { flex-direction: row; }
   .over-btns .btn { flex: 1; }
-  .hand-scroll { padding-top: 16px; }
-  .actions { height: 48px; }
-  .actions .btn { min-height: 44px; }
-  .req-row { padding-bottom: 3px; }
-  /* die eigene Spalte ist unten ausgerichtet: oben links ist Platz */
-  .give-up { top: 2px; flex-direction: row; width: auto; min-height: 40px; padding: 0 12px; gap: 6px; font-size: 12px; }
+  .hand-scroll { padding-top: 16px; padding-bottom: 8px; }
   .swap-body { display: grid; grid-template-columns: auto auto; grid-template-rows: auto auto auto auto; column-gap: 28px; row-gap: 4px; align-content: center; justify-content: center; }
   .swap-body .hint { grid-column: 1 / 3; min-height: 0; max-width: none; }
   .swap-body .sw-label { grid-row: 2; margin: 0; text-align: center; }
   .swap-body .sw-row { grid-row: 3; }
   .swap-body .chips { grid-column: 1 / 3; }
+  /* Lobby quer: links Code und Spieler, rechts Design und Einstellungen */
+  .lobby-body { flex-direction: row; align-items: flex-start; gap: 14px; max-width: 900px; padding-top: 2px; }
+  .lob-col { display: flex; flex-direction: column; gap: 8px; flex: 1 1 0; min-width: 0; }
+  #lobby .foot { padding-top: 4px; }
   .topbar { height: 40px; }
   .start-inner { padding-top: 8px; gap: 8px; }
   .logo { font-size: 32px; }
   .foot { padding-top: 4px; padding-bottom: calc(6px + var(--sab)); }
+}
+
+/* Sehr flach (Safari quer mit Tab-Leiste, kleine Telefone): alles etwas kleiner, damit sich nichts überlappt */
+@media (orientation: landscape) and (max-height: 310px) and (min-width: 520px) {
+  :root { --sw: clamp(42px, min(11vw, calc(var(--vh) * 20)), 80px); --pw: clamp(38px, calc(var(--vh) * 14), 60px); }
+  .table[data-k="1"], .table[data-k="2"], .table[data-k="3"], .table[data-k="4"] { --os: 1.05; }
+  #game .g-top { height: 34px; }
+  #game .hand-scroll { padding-top: 13px; padding-bottom: 5px; }
+  #game .my-table, #game .actions { padding-bottom: 5px; }
+  #swap .topbar { height: 32px; }
+  .swap-body .hint { font-size: 13px; line-height: 1.25; }
+  .swap-body .sw-label { font-size: 10px; }
+  #swap .foot { padding-top: 2px; }
+}
+
+/* Breite Telefone quer: links so viel Platz wie rechts für die Knöpfe – Auslage und Hand liegen zusammen in der Mitte */
+@media (orientation: landscape) and (max-height: 520px) and (min-width: 760px) {
+  #game .mine { grid-template-columns: var(--aw) auto minmax(0, 1fr) var(--aw); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1021,7 +1068,7 @@ html[data-table="stahl"] .rgo { text-transform: uppercase; letter-spacing: .06em
         <button id="btnRules" class="btn ghost" data-act="rules">Regeln</button>
         <button class="btn ghost" data-act="settings">Einstellungen</button>
       </div>
-      <div class="build">Version 2026-11-26 19:45</div>
+      <div class="build">Version 2026-11-26 21:12</div>
     </div>
   </section>
 
@@ -1043,6 +1090,7 @@ html[data-table="stahl"] .rgo { text-transform: uppercase; letter-spacing: .06em
       <span class="tb-side"></span>
     </header>
     <div class="lobby-body scrolly">
+      <div class="lob-col">
       <div class="code-card">
         <div id="codeLabel" class="code-label">Raumcode</div>
         <div id="lobbyCode" class="code-big">–</div>
@@ -1051,8 +1099,11 @@ html[data-table="stahl"] .rgo { text-transform: uppercase; letter-spacing: .06em
       <p id="lobbyHint" class="hint"></p>
       <div id="lobbyList" class="plist"></div>
       <button id="btnAddBot" class="btn sec host-only">Bot hinzufügen</button>
+      </div>
+      <div class="lob-col">
       <div id="lobbyDesign" class="menu-set room-opts design-set host-only"></div>
       <div id="lobbyOpts" class="menu-set room-opts" hidden></div>
+      </div>
     </div>
     <footer class="foot">
       <button id="btnStart" class="btn host-only">Spiel starten</button>
@@ -4515,7 +4566,13 @@ html[data-table="stahl"] .rgo { text-transform: uppercase; letter-spacing: .06em
     return box;
   }
   /* Wie viele Gegner an jeder Seite sitzen (der Rest oben): bis 5 Gegner je einer, bis 7 je zwei, darüber je drei. */
-  function sideCount(k) { return k < 3 ? 0 : k <= 5 ? 1 : k <= 7 ? 2 : 3; }
+  /* Querformat am Telefon: breit und flach. Dort sitzen die Gegner in einer Reihe oben; erst ab 7 Gegnern rücken welche an die Seiten. */
+  var WIDE_Q = '(orientation: landscape) and (max-height: 520px) and (min-width: 520px)';
+  function isWide() { return !!(window.matchMedia && window.matchMedia(WIDE_Q).matches); }
+  function sideCount(k) {
+    if (isWide()) return k <= 6 ? 0 : k <= 9 ? 1 : 2;
+    return k < 3 ? 0 : k <= 5 ? 1 : k <= 7 ? 2 : 3;
+  }
   function renderOpps(d) {
     var n = d.v.players.length, k = n - 1, top = $('oppTop'), L = $('oppL'), R = $('oppR'), side = sideCount(k);
     clear(top); clear(L); clear(R);
@@ -5884,12 +5941,15 @@ html[data-table="stahl"] .rgo { text-transform: uppercase; letter-spacing: .06em
   doc.addEventListener('visibilitychange', function () { if (doc.visibilityState === 'visible') wake(); else { syncWakeLock(); syncWatch(); } });
   window.addEventListener('pageshow', wake);
   window.addEventListener('online', wake);
-  var resizeTimer = 0;
+  var resizeTimer = 0, wasWide = isWide();
   function onResize() {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(function () {
       cwCache = 0;
-      if (body.getAttribute('data-screen') === 'game' && cur && cur.view) layoutHand();
+      if (body.getAttribute('data-screen') === 'game' && cur && cur.view) {
+        if (isWide() !== wasWide) { wasWide = isWide(); renderAll(); }   // Hoch ↔ quer: die Gegner sitzen anders
+        layoutHand();
+      }
     }, 60);
   }
   window.addEventListener('resize', onResize);

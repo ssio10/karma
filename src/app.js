@@ -1044,7 +1044,13 @@
     return box;
   }
   /* Wie viele Gegner an jeder Seite sitzen (der Rest oben): bis 5 Gegner je einer, bis 7 je zwei, darüber je drei. */
-  function sideCount(k) { return k < 3 ? 0 : k <= 5 ? 1 : k <= 7 ? 2 : 3; }
+  /* Querformat am Telefon: breit und flach. Dort sitzen die Gegner in einer Reihe oben; erst ab 7 Gegnern rücken welche an die Seiten. */
+  var WIDE_Q = '(orientation: landscape) and (max-height: 520px) and (min-width: 520px)';
+  function isWide() { return !!(window.matchMedia && window.matchMedia(WIDE_Q).matches); }
+  function sideCount(k) {
+    if (isWide()) return k <= 6 ? 0 : k <= 9 ? 1 : 2;
+    return k < 3 ? 0 : k <= 5 ? 1 : k <= 7 ? 2 : 3;
+  }
   function renderOpps(d) {
     var n = d.v.players.length, k = n - 1, top = $('oppTop'), L = $('oppL'), R = $('oppR'), side = sideCount(k);
     clear(top); clear(L); clear(R);
@@ -2413,12 +2419,15 @@
   doc.addEventListener('visibilitychange', function () { if (doc.visibilityState === 'visible') wake(); else { syncWakeLock(); syncWatch(); } });
   window.addEventListener('pageshow', wake);
   window.addEventListener('online', wake);
-  var resizeTimer = 0;
+  var resizeTimer = 0, wasWide = isWide();
   function onResize() {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(function () {
       cwCache = 0;
-      if (body.getAttribute('data-screen') === 'game' && cur && cur.view) layoutHand();
+      if (body.getAttribute('data-screen') === 'game' && cur && cur.view) {
+        if (isWide() !== wasWide) { wasWide = isWide(); renderAll(); }   // Hoch ↔ quer: die Gegner sitzen anders
+        layoutHand();
+      }
     }, 60);
   }
   window.addEventListener('resize', onResize);
