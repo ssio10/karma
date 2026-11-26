@@ -32,6 +32,8 @@
 @supports (height: 100dvh) { :root { --vh: 1dvh; } }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+/* Die Seite ist immer dunkel – Browser und Dunkelmodus-Erweiterungen sollen sie nicht umfärben. */
+:root { color-scheme: dark; }
 html, body {
   margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; overscroll-behavior: none;
   background: var(--bg0); color: var(--ink);

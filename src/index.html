@@ -8,6 +8,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Karma">
 <meta name="theme-color" content="#1d2226">
+<!-- Die Seite ist bereits dunkel: Dunkelmodus-Erweiterungen (Dark Reader, Noir …) und erzwungenes Abdunkeln des Browsers sollen sie nicht umfärben -->
+<meta name="color-scheme" content="dark">
+<meta name="darkreader-lock">
 <!-- Das zuletzt gesehene Tisch-Design gilt schon vor dem ersten Bild: iPhone-Safari färbt Status- und Werkzeugleiste nach dem, was es zuerst sieht. -->
 <script>(function () { try { var d = (localStorage.getItem('karma.design') || '').split('|'), r = document.documentElement, c = { stahl: '#1d2226', hof: '#5a4630', nacht: '#070a12', boss: '#2a110d' }; if (c[d[0]]) { r.setAttribute('data-table', d[0]); document.querySelector('meta[name="theme-color"]').setAttribute('content', c[d[0]]); } if (/^(stift|schwarz|tattoo|hood)$/.test(d[1])) r.setAttribute('data-cards', d[1]); } catch (e) {} })();</script>
 <meta name="format-detection" content="telephone=no">
